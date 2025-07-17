@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_lot_form_attributes" model="ir.ui.view">
+            <field name="name">stock.lot.form.attributes</field>
+            <field name="model">stock.lot</field>
+            <field name="inherit_id" ref="stock.view_production_lot_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Atributos" name="lot_attributes">
+                        <field name="attribute_line_ids" nolabel="1">
+                            <tree editable="bottom">
+                                <field name="attribute_id" 
+                                       domain="[('is_lot_attribute', '=', True)]"
+                                       options="{'no_create': True, 'no_open': True}"/>
+                                <field name="value_id" 
+                                       context="{'default_attribute_id': attribute_id}"
+                                       options="{'no_create': True, 'no_open': True}"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

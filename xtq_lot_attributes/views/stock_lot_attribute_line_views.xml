@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_stock_lot_attribute_line_tree" model="ir.ui.view">
+            <field name="name">stock.lot.attribute.line.tree</field>
+            <field name="model">stock.lot.attribute.line</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="lot_id"/>
+                    <field name="attribute_id"/>
+                    <field name="value_id"/>
+                </tree>
+            </field>
+        </record>
+        <record id="view_stock_lot_attribute_line_form" model="ir.ui.view">
+            <field name="name">stock.lot.attribute.line.form</field>
+            <field name="model">stock.lot.attribute.line</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="lot_id"/>
+                            <field name="attribute_id" domain="[('is_lot_attribute', '=', True)]"/>
+                            <field name="value_id" context="{'default_attribute_id': attribute_id}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="action_stock_lot_attribute_line" model="ir.actions.act_window">
+            <field name="name">Líneas de Atributos de Lote</field>
+            <field name="res_model">stock.lot.attribute.line</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <menuitem
+            id="menu_stock_lot_attribute_line"
+            name="Líneas de Atributos de Lote"
+            parent="stock.menu_product_in_config_stock"
+            action="action_stock_lot_attribute_line"
+            sequence="100"/>
+    </data>
+</odoo>
