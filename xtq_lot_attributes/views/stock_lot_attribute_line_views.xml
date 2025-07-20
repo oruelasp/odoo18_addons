@@ -31,6 +31,7 @@
             <field name="name">Líneas de Atributos de Lote</field>
             <field name="res_model">stock.lot.attribute.line</field>
             <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_stock_lot_attribute_line_tree"/>
         </record>
         <menuitem
             id="menu_stock_lot_attribute_line"
