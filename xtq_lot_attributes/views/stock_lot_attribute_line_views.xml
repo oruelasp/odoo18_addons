@@ -21,7 +21,7 @@
                         <group>
                             <field name="lot_id"/>
                             <field name="attribute_id" domain="[('is_lot_attribute', '=', True)]"/>
-                            <field name="value_id" context="{'default_attribute_id': attribute_id}"/>
+                            <field name="value_id"/>
                         </group>
                     </sheet>
                 </form>
