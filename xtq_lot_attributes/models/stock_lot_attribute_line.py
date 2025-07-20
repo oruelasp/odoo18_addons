@@ -21,8 +21,7 @@ class StockLotAttributeLine(models.Model):
     value_id = fields.Many2one(
         'product.attribute.value', 
         string='Valor',
-        required=True,
-        domain="[('attribute_id', '=', attribute_id)]" 
+        required=True
     )
 
     _sql_constraints = [
