@@ -13,9 +13,9 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        #'views/stock_lot_attribute_line_views.xml',
         'views/stock_lot_views.xml',
         'views/product_attribute_views.xml',
-        #'views/stock_lot_attribute_line_views.xml',
     ],
     'license': 'OEEL-1',
     'installable': True,

@@ -1,0 +1,24 @@
+<!-- views/mrp_production_views.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="view_mrp_production_matrix_editable_app" model="ir.ui.view">
+        <field name="name">mrp.production.matrix.editable.app</field>
+        <field name="model">mrp.production</field>
+        <field name="arch" type="xml">
+            <matrix_editable 
+                string="Matriz de Planificación"
+                get_data_route="/xtq_mrp_matrix_view/get_data"
+                save_route="/xtq_mrp_matrix_view/save"
+                recalc_route="/xtq_mrp_matrix_view/recalculate"
+                row_field="x_studio_tono" 
+                col_field="x_studio_talla"
+                value_field="product_qty"
+            />
+        </field>
+    </record>
+
+    <record id="mrp.mrp_production_action" model="ir.actions.act_window">
+        <field name="view_mode">tree,kanban,form,calendar,pivot,graph,activity,matrix_editable</field>
+        <field name="view_ids" eval="[(0, 0, {'view_mode': 'matrix_editable', 'view_id': ref('view_mrp_production_matrix_editable_app')})]"/>
+    </record>
+</odoo> 

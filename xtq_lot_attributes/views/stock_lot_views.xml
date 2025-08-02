@@ -10,14 +10,14 @@
                     <page string="Atributos" name="lot_attributes">
                         <field name="attribute_line_ids" nolabel="1">
                             
-                            <tree editable="bottom">
+                            <!--<tree editable="bottom">
                                 <field name="attribute_id" 
                                        domain="[('is_lot_attribute', '=', True)]"
                                        options="{'no_create': True, 'no_open': True}"/>
                                 <field name="value_id" 
                                        domain="[('attribute_id', '=', attribute_id)]"
                                        options="{'no_create': True, 'no_open': True}"/>
-                            </tree>
+                            </tree>-->
                         </field>
                     </page>
                 </xpath>
