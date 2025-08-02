@@ -9,7 +9,8 @@
     'version': '18.0.3.0.0',
     'depends': [
         'stock',
-        'product'
+        'product',
+        'sale_stock'
     ],
     'data': [
         'security/ir.model.access.csv',
