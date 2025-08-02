@@ -4,6 +4,7 @@ from odoo import models, fields, api
 class StockLotAttributeLine(models.Model):
     _name = 'stock.lot.attribute.line'
     _description = 'Línea de Atributos para Lote/Número de Serie'
+    _rec_name = 'attribute_id'
 
     lot_id = fields.Many2one(
         'stock.lot', 
