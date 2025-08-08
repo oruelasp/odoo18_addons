@@ -12,13 +12,13 @@
             <xpath expr="//field[@name='is_create_draft']" position="after">
                 <field
                     name="batch_by_group"
-                    attrs="{'invisible': [('mode', '=', 'existing')]}"
+                    modifiers='{"invisible": [["mode", "=", "existing"]]}'
                 />
             </xpath>
             <xpath expr="//footer" position="before">
                 <group
                     string="Create multiple batch picking grouped by..."
-                    attrs="{'invisible': ['|', ('batch_by_group', '=', False), ('mode', '=', 'existing')]}"
+                    modifiers='{"invisible": ["|", ["batch_by_group", "=", false], ["mode", "=", "existing"]]}'
                 >
                     <field name="group_field_ids" nolabel="1" colspan="2">
                         <list editable="bottom">
