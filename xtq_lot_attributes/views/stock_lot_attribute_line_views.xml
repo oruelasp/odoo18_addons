@@ -5,11 +5,11 @@
             <field name="name">stock.lot.attribute.line.tree</field>
             <field name="model">stock.lot.attribute.line</field>
             <field name="arch" type="xml">
-                <tree>
+                <list>
                     <field name="lot_id"/>
                     <field name="attribute_id"/>
                     <field name="value_id"/>
-                </tree>
+                </list>
             </field>
         </record>
         <record id="view_stock_lot_attribute_line_form" model="ir.ui.view">
@@ -30,7 +30,7 @@
         <record id="action_stock_lot_attribute_line" model="ir.actions.act_window">
             <field name="name">Líneas de Atributos de Lote</field>
             <field name="res_model">stock.lot.attribute.line</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="view_id" ref="view_stock_lot_attribute_line_tree1"/>
         </record>
         <!--
