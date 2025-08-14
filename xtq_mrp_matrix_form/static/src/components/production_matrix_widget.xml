@@ -19,18 +19,12 @@
                             </t>
                             <th class="text-center">Total Programado</th>
                         </tr>
-                        <!-- Segunda fila de cabecera (solo si hay proporciones en eje Y) -->
-                        <t t-if="state.axis_y.values[0] &amp;&amp; state.axis_y.values[0].proportion !== undefined">
+                        <!-- Segunda fila de cabecera: Proporción por columna (axis_x) -->
+                        <t t-if="state.axis_x.values[0] &amp;&amp; state.axis_x.values[0].proportion !== undefined">
                             <tr class="bg-light">
                                 <th class="o_matrix_header_cell">Proporción</th>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
-                                    <th class="text-center">
-                                        <!-- Aquí la proporción debería ser del eje Y (fila), no del X (columna)
-                                             Necesita un ajuste si la proporción es por columna.
-                                             Por ahora, muestra un guion si no hay proporción clara por columna.
-                                        -->
-                                        -
-                                    </th>
+                                    <th class="text-center" t-esc="x_val.proportion"/>
                                 </t>
                                 <th class="text-center"></th>
                             </tr>
@@ -41,9 +35,6 @@
                             <tr>
                                 <th class="bg-light">
                                     <t t-esc="y_val.name"/>
-                                    <t t-if="y_val.proportion !== undefined &amp;&amp; y_val.proportion > 0">
-                                        (<t t-esc="y_val.proportion"/>)
-                                    </t>
                                 </th>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                     <td>

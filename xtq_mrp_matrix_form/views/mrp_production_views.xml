@@ -31,6 +31,9 @@
                 <button name="action_produce_lots" string="Producir Lotes" type="object"
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
+                <button name="action_apply_curve" string="Aplicar Curva" type="object"
+                        class="oe_highlight"
+                        invisible="matrix_state != 'pending'"/>
                 <field name="matrix_state" widget="statusbar" statusbar_visible="pending,planned,progress,done"/>
             </xpath>
         </field>
@@ -67,6 +70,7 @@
                             <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
                         </group>
                     </group>
+                    <label for="matrix_curve_ids" string="Curva de Tallas (Eje Columna)"/>
                 </div>
             </xpath>
         </field>

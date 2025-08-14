@@ -141,8 +141,9 @@ class MrpProduction(models.Model):
     @api.onchange('matrix_attribute_row_id')
     def _onchange_attribute_row_set_values_domain(self):
         self.matrix_values_row_ids = False
-        self.matrix_curve_ids = [(5,0,0)] # Limpiar curva al cambiar atributo de fila
-        if not self.matrix_attribute_row_id or not self.product_id: return {'domain': {'matrix_values_row_ids': [('id', 'in', [])]}}
+        # Ya no pre-poblamos la curva al cambiar el atributo de FILA; la curva corresponde al eje COLUMNA
+        if not self.matrix_attribute_row_id or not self.product_id:
+            return {'domain': {'matrix_values_row_ids': [('id', 'in', [])]}}
 
         attribute_line = self.env['product.template.attribute.line'].search([
             ('product_tmpl_id', '=', self.product_id.product_tmpl_id.id),
@@ -151,14 +152,6 @@ class MrpProduction(models.Model):
 
         if attribute_line:
             domain = [('id', 'in', attribute_line.value_ids.ids)]
-            # Pre-poblar la curva de tallas con los valores de la fila
-            commands = []
-            for val in attribute_line.value_ids:
-                commands.append((0, 0, {
-                    'attribute_value_id': val.id,
-                    'proportion': 1, # Default a 1 o 0, se recalculará
-                }))
-            self.matrix_curve_ids = commands
         else:
             domain = [('id', 'in', [])]
         return {'domain': {'matrix_values_row_ids': domain}}
@@ -166,7 +159,10 @@ class MrpProduction(models.Model):
     @api.onchange('matrix_attribute_col_id')
     def _onchange_attribute_col_set_values_domain(self):
         self.matrix_values_col_ids = False
-        if not self.matrix_attribute_col_id or not self.product_id: return {'domain': {'matrix_values_col_ids': [('id', 'in', [])]}}
+        # Al cambiar el atributo de COLUMNA, la curva de tallas debe reinicializarse con sus valores
+        self.matrix_curve_ids = [(5, 0, 0)]
+        if not self.matrix_attribute_col_id or not self.product_id:
+            return {'domain': {'matrix_values_col_ids': [('id', 'in', [])]}}
 
         attribute_line = self.env['product.template.attribute.line'].search([
             ('product_tmpl_id', '=', self.product_id.product_tmpl_id.id),
@@ -175,6 +171,14 @@ class MrpProduction(models.Model):
 
         if attribute_line:
             domain = [('id', 'in', attribute_line.value_ids.ids)]
+            # Pre-poblar curva con valores del eje COLUMNA (tallas)
+            commands = []
+            for val in attribute_line.value_ids:
+                commands.append((0, 0, {
+                    'attribute_value_id': val.id,
+                    'proportion': 1,
+                }))
+            self.matrix_curve_ids = commands
         else:
             domain = [('id', 'in', [])]
         return {'domain': {'matrix_values_col_ids': domain}}
@@ -195,50 +199,15 @@ class MrpProduction(models.Model):
         return {
             'axis_y': {
                 'name': self.matrix_attribute_row_id.name,
-                'values': [{'id': v.id, 'name': v.name, 'proportion': curve_proportions.get(v.id, 0)} for v in self.matrix_values_row_ids]
+                'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
             },
             'axis_x': {
                 'name': self.matrix_attribute_col_id.name,
-                'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_col_ids]
+                'values': [{'id': v.id, 'name': v.name, 'proportion': curve_proportions.get(v.id, 0)} for v in self.matrix_values_col_ids]
             },
             'quantities': quantities,
-            'matrix_state': self.matrix_state, # Pasar el estado al frontend
+            'matrix_state': self.matrix_state,
         }
-
-    def _create_lots_for_finished_move(self):
-        # Esta es la definición del método que faltaba.
-        self.ensure_one()
-        finished_move = self.move_finished_ids.filtered(lambda m: m.product_id == self.product_id and m.state == 'done')
-        if not finished_move: 
-            return
-
-        # Limpiamos las líneas de movimiento autogeneradas para reemplazarlas con nuestro desglose.
-        finished_move.move_line_ids.unlink()
-
-        for line in self.matrix_line_ids.filtered(lambda l: l.product_qty > 0):
-            # Aquí se construye el nombre del lote
-            lot_name = f"{self.product_id.default_code or self.product_id.name}-{line.row_value_id.name}-{line.col_value_id.name}-{self.name}"
-            
-            # Aquí se crea el registro del lote
-            lot = self.env['stock.lot'].create({
-                'name': lot_name, 
-                'product_id': self.product_id.id, 
-                'company_id': self.company_id.id
-            })
-            
-            # Y aquí se asigna ese lote a un movimiento de inventario
-            self.env['stock.move.line'].create({
-                'move_id': finished_move.id, 
-                'lot_id': lot.id, 
-                'qty_done': line.product_qty,
-                'product_id': self.product_id.id, 
-                'product_uom_id': self.product_uom_id.id,
-                'location_id': finished_move.location_id.id, 
-                'location_dest_id': finished_move.location_dest_id.id,
-                'company_id': self.company_id.id
-            })
-
-    # Métodos de los botones
 
     def action_recalculate_matrix(self):
         self.ensure_one()
@@ -252,31 +221,34 @@ class MrpProduction(models.Model):
         if float_is_zero(total_qty_mo, precision_rounding=self.product_uom_id.rounding):
             raise UserError("La cantidad a producir de la OP es cero. Ingrese una cantidad válida.")
 
-        total_proportion = sum(curve.proportion for curve in self.matrix_curve_ids)
+        num_rows = len(self.matrix_values_row_ids)
+        if num_rows <= 0:
+            raise UserError("No hay valores configurados para el eje Fila.")
+        num_cols = len(self.matrix_values_col_ids)
+        if num_cols <= 0:
+            raise UserError("No hay valores configurados para el eje Columna.")
+
+        # Distribución: primero dividir equitativamente por filas (p. ej., Tonos)
+        per_row_qty = total_qty_mo / num_rows
+
+        # Luego distribuir por columnas usando la curva de tallas
+        curve_map = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
+        total_proportion = sum(curve_map.values())
         if total_proportion == 0:
             raise UserError("La suma de las proporciones de la curva de tallas es cero. Ajuste la configuración de la curva.")
 
-        new_matrix_lines_commands = [(5, 0, 0)] # Borrar y recrear
-
+        new_matrix_lines_commands = [(5, 0, 0)]
         for row_val in self.matrix_values_row_ids:
-            row_proportion = next((curve.proportion for curve in self.matrix_curve_ids if curve.attribute_value_id == row_val), 0)
-            if total_proportion > 0:
-                row_qty = (total_qty_mo * row_proportion) / total_proportion
-            else:
-                row_qty = 0 # Fallback si total_proportion es 0, aunque ya se validó antes
-
-            # Distribuir la cantidad de la fila entre las columnas del eje X
-            num_cols = len(self.matrix_values_col_ids)
-            qty_per_cell = row_qty / num_cols if num_cols > 0 else 0
-
             for col_val in self.matrix_values_col_ids:
+                col_prop = curve_map.get(col_val.id, 0)
+                qty_per_cell = per_row_qty * (col_prop / total_proportion)
                 existing_line = self.matrix_line_ids.filtered(
                     lambda l: l.row_value_id == row_val and l.col_value_id == col_val
                 )
                 if existing_line:
                     new_matrix_lines_commands.append((1, existing_line.id, {
                         'product_qty': qty_per_cell,
-                        'qty_producing': 0, # Reset qty_producing on recalculate
+                        'qty_producing': 0,
                     }))
                 else:
                     new_matrix_lines_commands.append((0, 0, {
@@ -380,3 +352,10 @@ class MrpProduction(models.Model):
                 }
         else:
             raise UserError("No se produjo ninguna cantidad en la matriz. Asegúrese de ingresar cantidades a producir.")
+
+    def action_apply_curve(self):
+        """Aplica la curva de tallas sobre la matriz.
+        Alias del recálculo mientras el estado está en 'pending'.
+        """
+        self.ensure_one()
+        return self.action_recalculate_matrix()
