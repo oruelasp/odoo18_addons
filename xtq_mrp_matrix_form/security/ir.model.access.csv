@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mrp_production_matrix_line_mrp_user,xtqgroup.mrp.production.matrix.line.user,model_mrp_production_matrix_line,mrp.group_mrp_user,1,1,1,1
+access_mrp_production_curve_line_user,mrp.production.curve.line.user,model_mrp_production_curve_line,group_mrp_user,1,1,1,1
