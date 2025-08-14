@@ -31,9 +31,9 @@ class MrpProduction(models.Model):
         help="Define la proporción de cada talla en la curva de producción."
     )
 
-    @api.depends('matrix_line_ids.quantity')
+    @api.depends('matrix_line_ids.product_qty')
     def _compute_total_matrix_quantity(self):
-        for mo in self: mo.total_matrix_quantity = sum(line.quantity for line in mo.matrix_line_ids)
+        for mo in self: mo.total_matrix_quantity = sum(line.product_qty for line in mo.matrix_line_ids)
 
     # --- La lógica de sincronización JSON se mantiene ---
     @api.model_create_multi
@@ -83,7 +83,7 @@ class MrpProduction(models.Model):
         moves_values = []
         template = self.product_id.product_tmpl_id # Obtenemos la plantilla una sola vez
 
-        for line in self.matrix_line_ids.filtered(lambda l: l.quantity > 0):
+        for line in self.matrix_line_ids.filtered(lambda l: l.product_qty > 0):
             # 1. BÚSQUEDA EN TIEMPO REAL: Buscamos la variante aquí y ahora.
             variant_product = self.env['product.product'].search([
                 ('product_tmpl_id', '=', template.id),
@@ -98,7 +98,7 @@ class MrpProduction(models.Model):
             # 3. CREACIÓN DEL MOVIMIENTO: Usamos el 'variant_product' que acabamos de encontrar.
             move_vals = {
                 'name': self.name, 'origin': self.name, 'product_id': variant_product.id,
-                'product_uom_qty': line.quantity, 'product_uom': variant_product.uom_id.id,
+                'product_uom_qty': line.product_qty, 'product_uom': variant_product.uom_id.id,
                 'location_id': self.product_id.with_company(self.company_id).property_stock_production.id,
                 'location_dest_id': self.location_dest_id.id, 'production_id': self.id,
                 'company_id': self.company_id.id, 'group_id': self.procurement_group_id.id
@@ -215,7 +215,7 @@ class MrpProduction(models.Model):
         # Limpiamos las líneas de movimiento autogeneradas para reemplazarlas con nuestro desglose.
         finished_move.move_line_ids.unlink()
 
-        for line in self.matrix_line_ids.filtered(lambda l: l.quantity > 0):
+        for line in self.matrix_line_ids.filtered(lambda l: l.product_qty > 0):
             # Aquí se construye el nombre del lote
             lot_name = f"{self.product_id.default_code or self.product_id.name}-{line.row_value_id.name}-{line.col_value_id.name}-{self.name}"
             
@@ -230,7 +230,7 @@ class MrpProduction(models.Model):
             self.env['stock.move.line'].create({
                 'move_id': finished_move.id, 
                 'lot_id': lot.id, 
-                'quantity': line.quantity,
+                'qty_done': line.product_qty,
                 'product_id': self.product_id.id, 
                 'product_uom_id': self.product_uom_id.id,
                 'location_id': finished_move.location_id.id, 
