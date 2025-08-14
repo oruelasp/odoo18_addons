@@ -2,8 +2,7 @@
 <odoo>
 
     <!--
-        VISTA 1: Filtra el campo 'Producto' y añade el campo JSON oculto.
-        Esta es la herencia de más alta prioridad para asegurar que se aplique primero y sin conflictos.
+        VISTA 1: Filtra el campo 'Producto', añade el JSON y los nuevos botones/estado.
     -->
     <record id="mrp_production_view_form_filter_product" model="ir.ui.view">
         <field name="name">xtq.mrp.production.form.filter.product</field>
@@ -17,28 +16,28 @@
             <field name="name" position="after">
                 <field name="matrix_data_json" invisible="1"/>
             </field>
-            <!-- AÑADIR matrix_state y botones en el header.
-                 El xpath podría variar dependiendo de la estructura exacta del header de tu vista.
-                 Este es un ejemplo común.
-            -->
+
             <xpath expr="//header" position="inside">
+                <!--
+                    *** CORRECCIÓN DE SINTAXIS ODOO 18 ***
+                    Se reemplaza 'attrs' por el atributo directo 'invisible' con una expresión booleana.
+                -->
                 <button name="action_recalculate_matrix" string="Recalcular Matriz" type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': [('matrix_state', '!=', 'pending')]}" />
+                        invisible="matrix_state != 'pending'" />
                 <button name="action_confirm_planning" string="Confirmar Planificación" type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': [('matrix_state', '!=', 'pending')]}" />
+                        invisible="matrix_state != 'pending'" />
                 <button name="action_produce_lots" string="Producir Lotes" type="object"
                         class="oe_highlight"
-                        attrs="{'invisible': [('matrix_state', 'not in', ['planned', 'progress'])]}" />
+                        invisible="matrix_state not in ['planned', 'progress']" />
                 <field name="matrix_state" widget="statusbar" statusbar_visible="pending,planned,progress,done"/>
             </xpath>
         </field>
     </record>
 
     <!--
-        VISTA 2 (LA CORRECCIÓN DE DISEÑO): Añade el panel de configuración en la cabecera,
-        usando el xpath correcto para ocupar todo el ancho de la pantalla.
+        VISTA 2: Añade el panel de configuración en la cabecera.
     -->
     <record id="mrp_production_view_form_add_config" model="ir.ui.view">
         <field name="name">xtq.mrp.production.form.add.config</field>
@@ -55,7 +54,7 @@
                         <group>
                             <field name="matrix_attribute_row_id"/>
                             <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
-                            <!-- AÑADIR CAMPO PARA CURVA DE TALLAS -->
+                            <!-- El campo para Curva de Tallas se mantiene -->
                             <field name="matrix_curve_ids">
                                 <tree editable="bottom">
                                     <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_row_id)]"/>
