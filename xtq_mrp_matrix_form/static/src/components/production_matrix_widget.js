@@ -13,55 +13,124 @@ export class ProductionMatrixWidget extends Component {
 
     setup() {
         this.orm = useService("orm");
-        this.state = useState({ axis_x: { name: "X", values: [] }, axis_y: { name: "Y", values: [] }, quantities: {}, rowTotals: {}, colTotals: {}, grandTotal: 0, error: null, });
+        this.state = useState({
+            axis_x: { name: "X", values: [] },
+            axis_y: { name: "Y", values: [] },
+            quantities: {}, // Almacenará {y_id-x_id: {product_qty: X, qty_producing: Y}}
+            rowTotals: {},
+            colTotals: {},
+            grandTotal: 0,
+            error: null,
+            matrix_state: 'pending', // Añadir estado de la matriz
+        });
         onWillStart(() => this.loadMatrixData());
         onWillUpdateProps((nextProps) => this.loadMatrixData(nextProps));
         this.debouncedSave = debounce(this.saveMatrixState, 400);
     }
 
-    resetStateOnError(errorMessage) { this.state.error = errorMessage; this.state.axis_x = { name: "X", values: [] }; this.state.axis_y = { name: "Y", values: [] }; this.state.quantities = {}; this.calculateTotals(); }
+    resetStateOnError(errorMessage) {
+        this.state.error = errorMessage;
+        this.state.axis_x = { name: "X", values: [] };
+        this.state.axis_y = { name: "Y", values: [] };
+        this.state.quantities = {};
+        this.calculateTotals();
+    }
+
     async loadMatrixData(props = this.props) {
         const record = props.record;
-        if (record.isNew) { this.resetStateOnError(null); return; }
+        this.state.matrix_state = record.data.matrix_state || 'pending'; // Actualizar el estado desde el record
+
+        if (record.isNew) {
+            this.resetStateOnError(null);
+            return;
+        }
         try {
+            // Asegúrate que el backend envíe 'matrix_state' y las proporciones
             const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId]);
-            if (!data || data.error) { this.resetStateOnError(data ? data.error : "No se recibieron datos del servidor."); } 
-            else {
+            if (!data || data.error) {
+                this.resetStateOnError(data ? data.error : "No se recibieron datos del servidor.");
+            } else {
                 this.state.axis_x = data.axis_x;
                 this.state.axis_y = data.axis_y;
-                this.state.quantities = data.quantities;
+                this.state.quantities = data.quantities; // {y_id-x_id: {product_qty: X, qty_producing: Y}}
                 this.state.error = null;
+                this.state.matrix_state = data.matrix_state; // Confirmar el estado desde el backend
                 this.calculateTotals();
             }
-        } catch (e) { this.resetStateOnError("No se pudo cargar la información de la matriz."); console.error(e); }
+        } catch (e) {
+            this.resetStateOnError("No se pudo cargar la información de la matriz.");
+            console.error(e);
+        }
     }
-    getQuantity(yValueId, xValueId) { return this.state.quantities[`${yValueId}-${xValueId}`] || 0; }
+
+    // Adaptar para obtener product_qty o qty_producing
+    getQuantity(yValueId, xValueId, type) {
+        const key = `${yValueId}-${xValueId}`;
+        const cellData = this.state.quantities[key];
+        if (!cellData) {
+            return 0;
+        }
+        return type === 'product_qty' ? cellData.product_qty : cellData.qty_producing;
+    }
+
     calculateTotals() {
-        this.state.rowTotals = {}; this.state.colTotals = {}; this.state.grandTotal = 0;
+        this.state.rowTotals = {};
+        this.state.colTotals = {};
+        this.state.grandTotal = 0;
+
         if (!this.state.axis_y.values || !this.state.axis_x.values) return;
-        for (const y_val of this.state.axis_y.values) { this.state.rowTotals[y_val.id] = this.state.axis_x.values.reduce((sum, x_val) => sum + this.getQuantity(y_val.id, x_val.id), 0); }
-        for (const x_val of this.state.axis_x.values) { this.state.colTotals[x_val.id] = this.state.axis_y.values.reduce((sum, y_val) => sum + this.getQuantity(y_val.id, x_val.id), 0); }
+
+        for (const y_val of this.state.axis_y.values) {
+            this.state.rowTotals[y_val.id] = this.state.axis_x.values.reduce((sum, x_val) =>
+                sum + this.getQuantity(y_val.id, x_val.id, 'product_qty')
+            , 0);
+        }
+        for (const x_val of this.state.axis_x.values) {
+            this.state.colTotals[x_val.id] = this.state.axis_y.values.reduce((sum, y_val) =>
+                sum + this.getQuantity(y_val.id, x_val.id, 'product_qty')
+            , 0);
+        }
+        // Total basado en product_qty, no en qty_producing para la suma principal
         this.state.grandTotal = Object.values(this.state.colTotals).reduce((sum, val) => sum + val, 0);
     }
 
-    _onQuantityChange(ev, yValueId, xValueId) {
+    _onQtyProducingChange(ev, yValueId, xValueId) {
         const value = parseFloat(ev.target.value) || 0;
-        this.state.quantities[`${yValueId}-${xValueId}`] = value;
-        this.calculateTotals();
+        const key = `${yValueId}-${xValueId}`;
+        this.state.quantities[key] = {
+            ...this.state.quantities[key],
+            qty_producing: value,
+        };
+        // Re-calcular totales si es necesario (generalmente los totales son de product_qty)
+        // this.calculateTotals(); // No es necesario si los totales son de product_qty
+
         this.debouncedSave();
     }
 
     async saveMatrixState() {
         const lines = [];
-        for (const [key, qty] of Object.entries(this.state.quantities)) {
-            if (qty > 0) {
-                const [yValueId, xValueId] = key.split('-').map(Number);
-                lines.push({ yValueId, xValueId, quantity: qty });
-            }
+        for (const [key, cellData] of Object.entries(this.state.quantities)) {
+            const [yValueId, xValueId] = key.split('-').map(Number);
+            lines.push({
+                yValueId: yValueId,
+                xValueId: xValueId,
+                product_qty: cellData.product_qty, // Asegurarse de enviar product_qty
+                qty_producing: cellData.qty_producing,
+            });
         }
         const jsonData = JSON.stringify(lines);
-        
+
         await this.props.record.update({ matrix_data_json: jsonData });
+    }
+
+    // Método para determinar si qty_producing es editable
+    isQtyProducingEditable() {
+        return ['planned', 'progress'].includes(this.state.matrix_state);
+    }
+
+    // Método para determinar si product_qty es editable
+    isProductQtyEditable() {
+        return this.state.matrix_state === 'pending';
     }
 }
 

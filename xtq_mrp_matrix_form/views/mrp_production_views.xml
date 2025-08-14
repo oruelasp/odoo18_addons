@@ -17,6 +17,22 @@
             <field name="name" position="after">
                 <field name="matrix_data_json" invisible="1"/>
             </field>
+            <!-- AÑADIR matrix_state y botones en el header.
+                 El xpath podría variar dependiendo de la estructura exacta del header de tu vista.
+                 Este es un ejemplo común.
+            -->
+            <xpath expr="//header" position="inside">
+                <button name="action_recalculate_matrix" string="Recalcular Matriz" type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('matrix_state', '!=', 'pending')]}" />
+                <button name="action_confirm_planning" string="Confirmar Planificación" type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('matrix_state', '!=', 'pending')]}" />
+                <button name="action_produce_lots" string="Producir Lotes" type="object"
+                        class="oe_highlight"
+                        attrs="{'invisible': [('matrix_state', 'not in', ['planned', 'progress'])]}" />
+                <field name="matrix_state" widget="statusbar" statusbar_visible="pending,planned,progress,done"/>
+            </xpath>
         </field>
     </record>
 
@@ -39,6 +55,13 @@
                         <group>
                             <field name="matrix_attribute_row_id"/>
                             <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                            <!-- AÑADIR CAMPO PARA CURVA DE TALLAS -->
+                            <field name="matrix_curve_ids">
+                                <tree editable="bottom">
+                                    <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_row_id)]"/>
+                                    <field name="proportion"/>
+                                </tree>
+                            </field>
                         </group>
                         <group>
                             <field name="matrix_attribute_col_id"/>
@@ -64,7 +87,9 @@
                     <div class="alert alert-info text-center" role="alert" invisible="matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids">
                         Configure Fila, Columna y sus respectivos Valores para ver la matriz.
                     </div>
-                    <field name="matrix_line_ids" nolabel="1" widget="production_matrix_xy" invisible="not (matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids)"/>
+                    <field name="matrix_line_ids" nolabel="1" widget="production_matrix_xy"
+                           context="{'matrix_state': matrix_state}"
+                           invisible="not (matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids)"/>
                     <group class="oe_subtotal_footer oe_right" invisible="total_matrix_quantity == 0">
                          <field name="total_matrix_quantity"/>
                     </group>

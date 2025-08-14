@@ -5,10 +5,11 @@
             <t t-if="state.error">
                 <div class="alert alert-danger" role="alert" t-esc="state.error"/>
             </t>
-            
+
             <t t-elif="state.axis_x &amp;&amp; state.axis_x.values &amp;&amp; state.axis_y &amp;&amp; state.axis_y.values &amp;&amp; state.axis_x.values.length > 0 &amp;&amp; state.axis_y.values.length > 0">
                 <table class="table table-bordered table-sm o_matrix_table">
                     <thead>
+                        <!-- Primera fila de cabecera: Eje Y vs Eje X -->
                         <tr class="bg-light">
                             <th class="o_matrix_header_cell">
                                 <t t-esc="state.axis_y.name"/> \ <t t-esc="state.axis_x.name"/>
@@ -16,19 +17,42 @@
                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                 <th class="text-center" t-esc="x_val.name"/>
                             </t>
-                            <th class="text-center">Total</th>
+                            <th class="text-center">Total Programado</th>
                         </tr>
+                        <!-- Segunda fila de cabecera (solo si hay proporciones en eje Y) -->
+                        <t t-if="state.axis_y.values[0] &amp;&amp; state.axis_y.values[0].proportion !== undefined">
+                            <tr class="bg-light">
+                                <th class="o_matrix_header_cell">Proporción</th>
+                                <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
+                                    <th class="text-center">
+                                        <!-- Aquí la proporción debería ser del eje Y (fila), no del X (columna)
+                                             Necesita un ajuste si la proporción es por columna.
+                                             Por ahora, muestra un guion si no hay proporción clara por columna.
+                                        -->
+                                        -
+                                    </th>
+                                </t>
+                                <th class="text-center"></th>
+                            </tr>
+                        </t>
                     </thead>
                     <tbody>
                         <t t-foreach="state.axis_y.values" t-as="y_val" t-key="y_val.id">
                             <tr>
-                                <th class="bg-light" t-esc="y_val.name"/>
+                                <th class="bg-light">
+                                    <t t-esc="y_val.name"/>
+                                    <t t-if="y_val.proportion !== undefined &amp;&amp; y_val.proportion > 0">
+                                        (<t t-esc="y_val.proportion"/>)
+                                    </t>
+                                </th>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                     <td>
-                                        <input type="number" class="o_input text-center" min="0" step="1"
-                                            t-att-value="getQuantity(y_val.id, x_val.id)"
-                                            t-on-change="(ev) => this._onQuantityChange(ev, y_val.id, x_val.id)"
+                                        <input type="number" class="o_input text-center d-inline-block w-50" min="0" step="1"
+                                            t-att-value="getQuantity(y_val.id, x_val.id, 'qty_producing')"
+                                            t-on-change="(ev) => _onQtyProducingChange(ev, y_val.id, x_val.id)"
+                                            t-att-readonly="!isQtyProducingEditable() || null"
                                         />
+                                        <span class="d-inline-block w-40 text-muted"> / <t t-esc="getQuantity(y_val.id, x_val.id, 'product_qty') || 0"/></span>
                                     </td>
                                 </t>
                                 <th class="text-center bg-light fw-bold" t-esc="state.rowTotals[y_val.id] || 0"/>
