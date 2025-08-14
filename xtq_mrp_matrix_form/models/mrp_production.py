@@ -68,13 +68,12 @@ class MrpProduction(models.Model):
         
         self.with_context(tracking_disable=True).write({'matrix_line_ids': commands})
   
-
-    @api.constrains('product_qty', 'total_matrix_quantity')
-    def _check_quantity_match(self):
-        for mo in self:
+    # @api.constrains('product_qty', 'total_matrix_quantity')
+    #def _check_quantity_match(self):
+        # for mo in self:
             # La validación ahora debe ser sobre product_qty de la matriz (product_qty) vs product_qty de la MO
-            if mo.matrix_line_ids and not float_is_zero(mo.product_qty - sum(line.product_qty for line in mo.matrix_line_ids), precision_rounding=mo.product_uom_id.rounding):
-                raise ValidationError(f"Conflicto de Cantidades: La cantidad a producir de la OP ({mo.product_qty}) no coincide con el total de la matriz planificada ({sum(line.product_qty for line in mo.matrix_line_ids)}).")
+            #if mo.matrix_line_ids and not float_is_zero(mo.product_qty - sum(line.product_qty for line in mo.matrix_line_ids), precision_rounding=mo.product_uom_id.rounding):
+                #raise ValidationError(f"Conflicto de Cantidades: La cantidad a producir de la OP ({mo.product_qty}) no coincide con el total de la matriz planificada ({sum(line.product_qty for line in mo.matrix_line_ids)}).")
 
     # *** CORRECCIÓN DEFINITIVA EN LA LÓGICA DE FINALIZACIÓN ***
     def _get_moves_finished_values(self):
