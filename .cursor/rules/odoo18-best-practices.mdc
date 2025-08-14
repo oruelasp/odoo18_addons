@@ -1,0 +1,68 @@
+# .cursorrules - Setup base para proyectos Odoo 18 con Cursor AI
+
+description: |
+  Cursor AI rules para proyectos haciendo addons personalizados en Odoo 18.
+  Incluye convenciones para Python backend, OWL 2.0 frontend, y estructura estándar de módulos.
+  Proporciona guía para seguridad (ACLs, reglas), uso del ORM y hooks personalizados en OWL.
+  
+globs:
+  - "**/*.py"       # Backend Python
+  - "**/*.xml"      # Vistas, reportes, templates QWeb
+  - "**/*.js"       # Código JS OWL en frontend
+
+rules:
+  - name: odoo-python-best-practices
+    description: "Seguir estilo Python y convención Odoo para modelos y lógica."
+    pattern: "*.py"
+    instructions: |
+      - Usa el estilo PEP8 para Python.
+      - Define modelos con clases que heredan de models.Model de Odoo.
+      - Usa campos y relaciones de Odoo (fields.Char, fields.Many2one, etc.).
+      - Incluye docstrings claros y comentados.
+      - Aplica las reglas ACL y record rules para seguridad.
+      - Evita consultas SQL directas a menos que sea necesario, usa el ORM.
+      - Sigue la convención 'convention over configuration' de Odoo 18 para minimizar código repetitivo.
+
+  - name: odoo-xml-templates
+    description: "Define correctamente vistas, reportes y templates QWeb con namespaces y prefijos."
+    pattern: "*.xml"
+    instructions: |
+      - Usa prefijos de módulo para nombres de templates (ejemplo: 'mi_modulo.template_vista').
+      - Emplea namespaces XML cuando sea requerido.
+      - Estructura bien las vistas tree, form, kanban según Odoo 18.
+      - Incluye validación de estructura XML para prevenir errores.
+      - Documenta los templates con comentarios.
+
+  - name: odoo-owl-js-best-practices
+    description: "Desarrolla frontend OWL 2.0 en módulos estáticos siguiendo patrones recomendados."
+    pattern: "*.js"
+    instructions: |
+      - Usa imports completos y explícitos siempre con '@odoo-module' al inicio.
+      - Prefiere funciones flecha para callbacks.
+      - Desarrolla componentes OWL con clase y método setup adecuadamente.
+      - Aprovecha hooks personalizados para gestión de estado reactivo.
+      - Exporta componentes y funciones para registrar en registry.
+      - Organiza archivos JS en static/src/js para mantener orden.
+      
+  - name: odoo-addon-structure
+    description: "Estructura estándar para cada addon de Odoo 18."
+    pattern: "/addons/*/"
+    instructions: |
+      - Incluye '__init__.py' y '__manifest__.py' correctamente declarados.
+      - Usa carpeta 'static/src/js' para código frontend OWL.
+      - Usa carpetas 'models' para código Python de negocio.
+      - Usa carpetas 'views' para XML de vistas.
+      - Documenta cada módulo y sus funcionalidades.
+      - Aplica best practices de seguridad (grupos, reglas, ACL).
+      
+  - name: odoo-hooks-custom
+    description: "Uso de hooks OWL 2.0 personalizados para extender UI."
+    pattern: "static/src/js/**/*.js"
+    instructions: |
+      - Define hooks reutilizables con import de useState, onWillDestroy, etc.
+      - Limpia listeners o efectos secundarios en onWillDestroy.
+      - Documenta la lógica interna del hook para facilitar reuso.
+      - Registra hooks en componentes que los consumen adecuadamente.
+      - Optimiza rendimiento evitando operaciones innecesarias.
+
+alwaysApply: true

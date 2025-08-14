@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <t t-name="xtq_mrp_matrix_form.ProductionMatrixWidget" owl="1">
+        <div class="o_production_matrix table-responsive">
+            <t t-if="state.error">
+                <div class="alert alert-danger" role="alert" t-esc="state.error"/>
+            </t>
+            
+            <t t-elif="state.axis_x &amp;&amp; state.axis_x.values &amp;&amp; state.axis_y &amp;&amp; state.axis_y.values &amp;&amp; state.axis_x.values.length > 0 &amp;&amp; state.axis_y.values.length > 0">
+                <table class="table table-bordered table-sm o_matrix_table">
+                    <thead>
+                        <tr class="bg-light">
+                            <th class="o_matrix_header_cell">
+                                <t t-esc="state.axis_y.name"/> \ <t t-esc="state.axis_x.name"/>
+                            </th>
+                            <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
+                                <th class="text-center" t-esc="x_val.name"/>
+                            </t>
+                            <th class="text-center">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="state.axis_y.values" t-as="y_val" t-key="y_val.id">
+                            <tr>
+                                <th class="bg-light" t-esc="y_val.name"/>
+                                <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
+                                    <td>
+                                        <input type="number" class="o_input text-center" min="0" step="1"
+                                            t-att-value="getQuantity(y_val.id, x_val.id)"
+                                            t-on-change="(ev) => this._onQuantityChange(ev, y_val.id, x_val.id)"
+                                        />
+                                    </td>
+                                </t>
+                                <th class="text-center bg-light fw-bold" t-esc="state.rowTotals[y_val.id] || 0"/>
+                            </tr>
+                        </t>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light fw-bold">
+                            <th class="text-center">Total</th>
+                            <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
+                                <th class="text-center" t-esc="state.colTotals[x_val.id] || 0"/>
+                            </t>
+                            <th class="text-center bg-primary text-white" t-esc="state.grandTotal || 0"/>
+                        </tr>
+                    </tfoot>
+                </table>
+            </t>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        VISTA 1: Filtra el campo 'Producto' y añade el campo JSON oculto.
+        Esta es la herencia de más alta prioridad para asegurar que se aplique primero y sin conflictos.
+    -->
+    <record id="mrp_production_view_form_filter_product" model="ir.ui.view">
+        <field name="name">xtq.mrp.production.form.filter.product</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="priority">10</field> <!-- Prioridad alta -->
+        <field name="arch" type="xml">
+            <field name="product_id" position="attributes">
+                <attribute name="domain">[('product_template_attribute_value_ids', '=', False)]</attribute>
+            </field>
+            <field name="name" position="after">
+                <field name="matrix_data_json" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+    <!--
+        VISTA 2 (LA CORRECCIÓN DE DISEÑO): Añade el panel de configuración en la cabecera,
+        usando el xpath correcto para ocupar todo el ancho de la pantalla.
+    -->
+    <record id="mrp_production_view_form_add_config" model="ir.ui.view">
+        <field name="name">xtq.mrp.production.form.add.config</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="priority">20</field> <!-- Prioridad media -->
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group[1]" position="after">
+                <div class="oe_form_sheet_bg px-0" invisible="not product_id">
+                    <h2 class="oe_title">
+                        <span>Configuración Matriz</span>
+                    </h2>
+                    <group groups="base.group_system">
+                        <group>
+                            <field name="matrix_attribute_row_id"/>
+                            <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                        </group>
+                        <group>
+                            <field name="matrix_attribute_col_id"/>
+                            <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                        </group>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!--
+        VISTA 3: Añade la pestaña de la Matriz al final.
+    -->
+    <record id="mrp_production_view_form_add_page" model="ir.ui.view">
+        <field name="name">xtq.mrp.production.form.add.page</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="priority">30</field> <!-- La última en aplicarse -->
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                 <page name="matrix_breakdown_xy" string="Matriz X,Y">
+                    <div class="alert alert-info text-center" role="alert" invisible="matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids">
+                        Configure Fila, Columna y sus respectivos Valores para ver la matriz.
+                    </div>
+                    <field name="matrix_line_ids" nolabel="1" widget="production_matrix_xy" invisible="not (matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids)"/>
+                    <group class="oe_subtotal_footer oe_right" invisible="total_matrix_quantity == 0">
+                         <field name="total_matrix_quantity"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
