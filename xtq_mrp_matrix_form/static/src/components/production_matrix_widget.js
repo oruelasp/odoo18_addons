@@ -107,6 +107,26 @@ export class ProductionMatrixWidget extends Component {
         this.debouncedSave();
     }
 
+    _onProductQtyChange(ev, yValueId, xValueId) {
+        const value = parseFloat(ev.target.value) || 0;
+        const key = `${yValueId}-${xValueId}`;
+        
+        // Ensure the cell data object exists
+        if (!this.state.quantities[key]) {
+            this.state.quantities[key] = { product_qty: 0, qty_producing: 0 };
+        }
+
+        this.state.quantities[key] = {
+            ...this.state.quantities[key],
+            product_qty: value,
+        };
+        
+        // Recalculate totals when planned quantity changes
+        this.calculateTotals();
+
+        this.debouncedSave();
+    }
+
     async saveMatrixState() {
         const lines = [];
         for (const [key, cellData] of Object.entries(this.state.quantities)) {
