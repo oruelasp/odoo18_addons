@@ -32,8 +32,6 @@
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
             </xpath>
-             <!-- Eliminar la configuración de la cabecera -->
-            <xpath expr="//div[hasclass('oe_form_sheet_bg')]/h2[contains(., 'Configuración Matriz')]/parent::div" position="replace"/>
         </field>
     </record>
 
