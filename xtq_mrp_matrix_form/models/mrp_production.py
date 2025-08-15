@@ -1,6 +1,6 @@
-from odoo import models, fields, api
+from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_is_zero
+from odoo.tools import float_compare, float_is_zero
 import json
 import math
 
