@@ -252,47 +252,75 @@ class MrpProduction(models.Model):
 
     def action_recalculate_matrix(self):
         """
-        Recalcula la distribución de cantidades en la matriz basándose en la
-        curva de tallas y el total a producir.
+        Recalcula la distribución de cantidades en la matriz.
+        Esta versión robusta borra las líneas existentes y las recrea
+        siguiendo la lógica de distribución por filas y luego por columnas.
         """
         self.ensure_one()
-        total_qty = self.product_qty
-        if total_qty <= 0:
-            raise UserError("La cantidad a producir debe ser mayor que cero para recalcular la matriz.")
+        if self.matrix_state != 'pending':
+            raise UserError("La matriz solo se puede recalcular en estado 'Pendiente'.")
 
-        # Sincronizar la curva de tallas con los valores de columna seleccionados
-        existing_curve_ids = self.matrix_curve_ids.mapped('attribute_value_id')
-        selected_col_ids = self.matrix_values_col_ids
+        # Forzar sincronización de la curva de tallas para usar datos frescos
+        existing_proportions = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
         curve_commands = []
-        for value in selected_col_ids:
-            if value not in existing_curve_ids:
-                curve_commands.append((0, 0, {
-                    'attribute_value_id': value.id,
-                    'proportion': 0.0,
-                }))
+        for value in self.matrix_values_col_ids:
+            curve_commands.append((0, 0, {
+                'attribute_value_id': value.id,
+                'proportion': existing_proportions.get(value.id, 1.0)
+            }))
         if curve_commands:
-            self.matrix_curve_ids = curve_commands
+            self.matrix_curve_ids = [(5, 0, 0)] + curve_commands
 
-        total_proportion = sum(self.matrix_curve_ids.mapped('proportion'))
+        # Validaciones
+        total_qty_mo = self.product_qty
+        num_rows = len(self.matrix_values_row_ids)
+        if total_qty_mo <= 0 or num_rows == 0:
+            self.matrix_line_ids = [(5, 0, 0)] # Limpiar la matriz si no hay nada que calcular
+            return True
+
+        curve_map = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
+        selected_col_ids = self.matrix_values_col_ids.ids
+        total_proportion = sum(prop for val_id, prop in curve_map.items() if val_id in selected_col_ids)
+
         if total_proportion == 0:
-            raise UserError("La curva de tallas no tiene proporciones definidas. Por favor, configure las proporciones antes de recalcular.")
+            raise UserError("La suma de las proporciones para las columnas seleccionadas es cero. Ajuste la curva.")
 
-        # Actualizar las líneas de la matriz con las cantidades recalculadas
-        lines_to_update = self.matrix_line_ids.filtered(lambda line: line.col_value_id in selected_col_ids)
-        distributed_sum = 0.0
+        # Lógica de distribución y redondeo inteligente
+        matrix_values = {}
+        qty_per_row = total_qty_mo / num_rows
+        
+        for row_val in self.matrix_values_row_ids:
+            row_cells = []
+            for col_val in self.matrix_values_col_ids:
+                col_prop = curve_map.get(col_val.id, 0)
+                ideal_val = qty_per_row * (col_prop / total_proportion)
+                rounded_val = math.ceil(ideal_val)
+                cell_key = (row_val.id, col_val.id)
+                matrix_values[cell_key] = {'ideal': ideal_val, 'rounded': rounded_val, 'final': rounded_val}
+                row_cells.append(cell_key)
 
-        for line in lines_to_update:
-            proportion = next((c.proportion for c in self.matrix_curve_ids if c.attribute_value_id == line.col_value_id), 0)
-            qty_to_distribute = math.ceil((proportion / total_proportion) * total_qty)
-            line.product_qty = qty_to_distribute
-            distributed_sum += qty_to_distribute
+            # Ajuste por fila
+            total_rounded_in_row = sum(matrix_values[key]['rounded'] for key in row_cells)
+            excess_in_row = total_rounded_in_row - round(qty_per_row, self.product_uom_id.rounding)
+            if excess_in_row > 0:
+                sorted_cells = sorted(row_cells, key=lambda k: (matrix_values[k]['rounded'] - matrix_values[k]['ideal']), reverse=True)
+                for i in range(int(excess_in_row)):
+                    matrix_values[sorted_cells[i % len(sorted_cells)]]['final'] -= 1
 
-        # Ajuste final por redondeo
-        difference = total_qty - distributed_sum
-        if difference != 0 and lines_to_update:
-            lines_to_update[0].product_qty += difference
-
-        self._compute_total_matrix_quantity()
+        # Ajuste final para el total general
+        final_total = sum(v['final'] for v in matrix_values.values())
+        final_difference = total_qty_mo - final_total
+        if final_difference != 0 and matrix_values:
+            first_key = next(iter(matrix_values.keys()))
+            matrix_values[first_key]['final'] += final_difference
+            
+        # Crear nuevas líneas
+        new_lines_cmds = [
+            (0, 0, {'row_value_id': r, 'col_value_id': c, 'product_qty': v['final'], 'qty_producing': 0})
+            for (r, c), v in matrix_values.items()
+        ]
+        
+        self.matrix_line_ids = [(5, 0, 0)] + new_lines_cmds
         return True
 
     def action_produce_lots(self):

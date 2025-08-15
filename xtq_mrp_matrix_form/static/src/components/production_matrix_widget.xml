@@ -7,57 +7,62 @@
             </t>
 
             <t t-elif="state.axis_x &amp;&amp; state.axis_x.values &amp;&amp; state.axis_y &amp;&amp; state.axis_y.values &amp;&amp; state.axis_x.values.length > 0 &amp;&amp; state.axis_y.values.length > 0">
-                <table class="table table-bordered table-sm o_matrix_table">
+                <div class="o_field_x2many_list_container">
+                <table class="o_list_table table table-sm table-hover table-striped w-100">
                     <thead>
-                        <!-- Primera fila de cabecera: Eje Y vs Eje X -->
-                        <tr class="bg-light">
-                            <th class="o_matrix_header_cell">
-                                <t t-esc="state.axis_y.name"/> \ <t t-esc="state.axis_x.name"/>
-                            </th>
+                        <tr>
+                            <th style="min-width: 120px;" t-esc="state.axis_y.name + ' \\ ' + state.axis_x.name"/>
                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                 <th class="text-center" t-esc="x_val.name"/>
                             </t>
-                            <th class="text-center">Total</th>
+                            <th class="text-center" style="min-width: 100px;">Total</th>
                         </tr>
-                        <!-- Segunda fila de cabecera: Proporción por columna (axis_x) -->
-                        <t t-if="state.axis_x.values[0] &amp;&amp; state.axis_x.values[0].proportion !== undefined">
-                            <tr class="bg-light">
-                                <th class="o_matrix_header_cell">Proporción</th>
-                                <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
-                                    <th class="text-center" t-esc="x_val.proportion"/>
-                                </t>
-                                <th class="text-center"></th>
-                            </tr>
-                        </t>
+                         <tr>
+                            <th>Proporción</th>
+                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
+                                 <th class="text-center" t-esc="x_val.proportion || '0'"/>
+                             </t>
+                             <th/>
+                        </tr>
                     </thead>
                     <tbody>
                         <t t-foreach="state.axis_y.values" t-as="y_val" t-key="y_val.id">
                             <tr>
-                                <th class="bg-light">
-                                    <t t-esc="y_val.name"/>
-                                </th>
+                                <td t-esc="y_val.name"/>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                     <td>
-                                        <strong>
-                                            <t t-esc="state.totals.rows[y_val.id].qty_producing"/> / <t t-esc="state.totals.rows[y_val.id].product_qty"/>
-                                        </strong>
+                                        <div class="d-flex align-items-center">
+                                            <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
+                                                t-att-value="getQuantity(y_val.id, x_val.id, 'qty_producing')"
+                                                t-on-change="(ev) => _onQtyProducingChange(ev, y_val.id, x_val.id)"
+                                                t-att-readonly="!isQtyProducingEditable() || null"/>
+                                            <span class="px-1">/</span>
+                                            <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
+                                                t-att-value="getQuantity(y_val.id, x_val.id, 'product_qty')"
+                                                t-on-change="(ev) => _onProductQtyChange(ev, y_val.id, x_val.id)"
+                                                t-att-readonly="!isProductQtyEditable() || null"/>
+                                        </div>
                                     </td>
                                 </t>
-                                <th class="text-center bg-light fw-bold" t-esc="state.rowTotals[y_val.id] || 0"/>
+                                <td class="text-center table-secondary">
+                                    <strong>
+                                        <t t-esc="state.totals.rows[y_val.id].qty_producing"/> / <t t-esc="state.totals.rows[y_val.id].product_qty"/>
+                                    </strong>
+                                </td>
                             </tr>
                         </t>
                     </tbody>
                     <tfoot>
-                        <tr>
+                        <tr class="table-secondary">
                             <td><strong>Total</strong></td>
                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
-                                <td>
+                                <td class="text-center">
                                     <strong>
                                         <t t-esc="state.totals.cols[x_val.id].qty_producing"/> / <t t-esc="state.totals.cols[x_val.id].product_qty"/>
                                     </strong>
                                 </td>
                             </t>
-                            <td class="table-primary">
+                            <td class="text-center table-primary">
                                 <strong>
                                     <t t-esc="state.totals.grand_total.qty_producing"/> / <t t-esc="state.totals.grand_total.product_qty"/>
                                 </strong>
@@ -65,6 +70,7 @@
                         </tr>
                     </tfoot>
                 </table>
+            </div>
             </t>
         </div>
     </t>
