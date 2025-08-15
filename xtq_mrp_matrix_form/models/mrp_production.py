@@ -82,39 +82,39 @@ class MrpProduction(models.Model):
                 #raise ValidationError(f"Conflicto de Cantidades: La cantidad a producir de la OP ({mo.product_qty}) no coincide con el total de la matriz planificada ({sum(line.product_qty for line in mo.matrix_line_ids)}).")
 
     # *** CORRECCIÓN DEFINITIVA EN LA LÓGICA DE FINALIZACIÓN ***
-    def _get_moves_finished_values(self):
-        if not self.matrix_line_ids:
-            return super()._get_moves_finished_values()
+    # def _get_moves_finished_values(self):
+        #if not self.matrix_line_ids:
+            #return super()._get_moves_finished_values()
 
-        moves_values = []
-        template = self.product_id.product_tmpl_id # Obtenemos la plantilla una sola vez
+        #moves_values = []
+        #template = self.product_id.product_tmpl_id # Obtenemos la plantilla una sola vez
 
-        for line in self.matrix_line_ids.filtered(lambda l: l.product_qty > 0):
+        #for line in self.matrix_line_ids.filtered(lambda l: l.product_qty > 0):
             # 1. BÚSQUEDA EN TIEMPO REAL: Buscamos la variante aquí y ahora.
-            variant_product = self.env['product.product'].search([
-                ('product_tmpl_id', '=', template.id),
-                ('product_template_attribute_value_ids', '=', line.row_value_id.id),
-                ('product_template_attribute_value_ids', '=', line.col_value_id.id)
-            ], limit=1)
+            #variant_product = self.env['product.product'].search([
+                #('product_tmpl_id', '=', template.id),
+                #('product_template_attribute_value_ids', '=', line.row_value_id.id),
+                #('product_template_attribute_value_ids', '=', line.col_value_id.id)
+            #], limit=1)
 
             # 2. VALIDACIÓN: Comprobamos si la búsqueda tuvo éxito.
-            if not variant_product:
-                raise UserError(f"No se encontró una variante de producto para la combinación: {line.row_value_id.name} / {line.col_value_id.name}. Por favor, asegúrese de que esta variante exista en la configuración del producto.")
+            #if not variant_product:
+                #raise UserError(f"No se encontró una variante de producto para la combinación: {line.row_value_id.name} / {line.col_value_id.name}. Por favor, asegúrese de que esta variante exista en la configuración del producto.")
 
             # 3. CREACIÓN DEL MOVIMIENTO: Usamos el 'variant_product' que acabamos de encontrar.
-            move_vals = {
-                'name': self.name, 'origin': self.name, 'product_id': variant_product.id,
-                'product_uom_qty': line.product_qty, 'product_uom': variant_product.uom_id.id,
-                'location_id': self.product_id.with_company(self.company_id).property_stock_production.id,
-                'location_dest_id': self.location_dest_id.id, 'production_id': self.id,
-                'company_id': self.company_id.id, 'group_id': self.procurement_group_id.id
-            }
-            moves_values.append(move_vals)
+            #move_vals = {
+                #'name': self.name, 'origin': self.name, 'product_id': variant_product.id,
+                #'product_uom_qty': line.product_qty, 'product_uom': variant_product.uom_id.id,
+                #'location_id': self.product_id.with_company(self.company_id).property_stock_production.id,
+                #'location_dest_id': self.location_dest_id.id, 'production_id': self.id,
+                #'company_id': self.company_id.id, 'group_id': self.procurement_group_id.id
+            #}
+            #moves_values.append(move_vals)
 
-        if not moves_values and self.product_qty > 0:
-            raise UserError("La matriz no tiene cantidades para producir.")
+        #if not moves_values and self.product_qty > 0:
+            #raise UserError("La matriz no tiene cantidades para producir.")
         
-        return moves_values
+        #return moves_values
 
     # ... (El resto de los onchange y get_matrix_data se mantienen igual) ...
     @api.onchange('product_id')
