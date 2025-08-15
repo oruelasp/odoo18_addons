@@ -31,9 +31,6 @@
                 <button name="action_produce_lots" string="Producir Lotes" type="object"
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
-                <button name="action_apply_curve" string="Aplicar Curva" type="object"
-                        class="oe_highlight"
-                        invisible="matrix_state != 'pending'"/>
                 <field name="matrix_state" widget="statusbar" statusbar_visible="pending,planned,progress,done"/>
             </xpath>
         </field>
@@ -57,17 +54,19 @@
                         <group>
                             <field name="matrix_attribute_row_id"/>
                             <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
-                            <!-- El campo para Curva de Tallas se mantiene -->
-                            <field name="matrix_curve_ids">
-                                <list editable="bottom">
-                                    <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_row_id)]"/>
-                                    <field name="proportion"/>
-                                </list>
-                            </field>
+                            
                         </group>
                         <group>
                             <field name="matrix_attribute_col_id"/>
                             <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                            <!-- El campo para Curva de Tallas se mantiene -->
+                            <field name="matrix_curve_ids">
+                                <list editable="bottom">
+                                    <field name="attribute_value_id" 
+                                    domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]"/>
+                                    <field name="proportion"/>
+                                </list>
+                            </field>
                         </group>
                     </group>
                     <label for="matrix_curve_ids" string="Curva de Tallas (Eje Columna)"/>

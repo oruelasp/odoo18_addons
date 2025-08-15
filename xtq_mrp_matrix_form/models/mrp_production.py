@@ -2,6 +2,7 @@ from odoo import models, fields, api
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_is_zero
 import json
+import math
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
@@ -183,6 +184,41 @@ class MrpProduction(models.Model):
             domain = [('id', 'in', [])]
         return {'domain': {'matrix_values_col_ids': domain}}
 
+    @api.onchange('matrix_values_col_ids')
+    def _onchange_values_col_ids_sync_curve(self):
+        """
+        Sincroniza la curva de tallas con los valores de columna seleccionados.
+        Mantiene las proporciones existentes si es posible.
+        """
+        if not self.matrix_values_col_ids:
+            self.matrix_curve_ids = [(5, 0, 0)]
+            return
+
+        # Guardar proporciones existentes en un diccionario
+        existing_proportions = {
+            curve.attribute_value_id.id: curve.proportion
+            for curve in self.matrix_curve_ids
+        }
+
+        commands = []
+        # Eliminar líneas de la curva que ya no están en los valores de columna seleccionados
+        valid_col_ids = self.matrix_values_col_ids._origin.ids
+        for curve_line in self.matrix_curve_ids:
+            if curve_line.attribute_value_id.id not in valid_col_ids:
+                commands.append((2, curve_line.id, 0))
+        
+        # Añadir nuevas líneas si es necesario
+        for col_value in self.matrix_values_col_ids:
+            if not any(curve.attribute_value_id.id == col_value._origin.id for curve in self.matrix_curve_ids):
+                proportion = existing_proportions.get(col_value._origin.id, 1) # Usar _origin para IDs estables
+                commands.append((0, 0, {
+                    'attribute_value_id': col_value._origin.id,
+                    'proportion': proportion,
+                }))
+
+        if commands:
+            self.matrix_curve_ids = commands
+
     def get_matrix_data(self):
         self.ensure_one()
         if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
@@ -214,8 +250,8 @@ class MrpProduction(models.Model):
         if self.matrix_state != 'pending':
             raise UserError("La matriz solo se puede recalcular en estado 'Pendiente'.")
 
-        if not self.product_id or not self.matrix_attribute_row_id or not self.matrix_values_row_ids or not self.matrix_attribute_col_id or not self.matrix_values_col_ids or not self.matrix_curve_ids:
-            raise UserError("Por favor, configure todos los atributos de la matriz y la curva de tallas.")
+        if not self.product_id or not self.matrix_attribute_row_id or not self.matrix_values_row_ids or not self.matrix_attribute_col_id or not self.matrix_values_col_ids:
+            raise UserError("Por favor, configure todos los atributos de la matriz.")
 
         total_qty_mo = self.product_qty
         if float_is_zero(total_qty_mo, precision_rounding=self.product_uom_id.rounding):
@@ -224,37 +260,65 @@ class MrpProduction(models.Model):
         num_rows = len(self.matrix_values_row_ids)
         if num_rows <= 0:
             raise UserError("No hay valores configurados para el eje Fila.")
-        num_cols = len(self.matrix_values_col_ids)
-        if num_cols <= 0:
-            raise UserError("No hay valores configurados para el eje Columna.")
 
-        # Distribución: primero dividir equitativamente por filas (p. ej., Tonos)
-        per_row_qty = total_qty_mo / num_rows
-
-        # Luego distribuir por columnas usando la curva de tallas
         curve_map = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
-        total_proportion = sum(curve_map.values())
+        selected_col_ids = self.matrix_values_col_ids.ids
+        total_proportion = sum(prop for val_id, prop in curve_map.items() if val_id in selected_col_ids)
+
         if total_proportion == 0:
-            raise UserError("La suma de las proporciones de la curva de tallas es cero. Ajuste la configuración de la curva.")
+            raise UserError("La suma de las proporciones para las columnas seleccionadas es cero. Ajuste la configuración de la curva.")
+
+        # --- INICIO DE LA NUEVA LÓGICA DE REDONDEO ---
+        matrix_values = {}
+        total_calculated = 0
+
+        # Paso 1: Calcular valores ideales y redondear hacia arriba
+        for row_val in self.matrix_values_row_ids:
+            per_row_qty = total_qty_mo / num_rows
+            row_total_ideal = 0
+            for col_val in self.matrix_values_col_ids:
+                col_prop = curve_map.get(col_val.id, 0)
+                ideal_val = per_row_qty * (col_prop / total_proportion)
+                rounded_val = math.ceil(ideal_val)
+                matrix_values[(row_val.id, col_val.id)] = {
+                    'ideal': ideal_val,
+                    'rounded': rounded_val,
+                    'final': rounded_val
+                }
+                row_total_ideal += ideal_val
+            
+        # Paso 2: Ajustar el excedente
+        total_rounded = sum(v['rounded'] for v in matrix_values.values())
+        excess = total_rounded - total_qty_mo
+        
+        # Ordenar celdas para quitar el excedente de las que menos "perdieron" al redondear
+        if excess > 0:
+            sorted_cells = sorted(matrix_values.items(), key=lambda item: (item[1]['rounded'] - item[1]['ideal']), reverse=True)
+            
+            for i in range(int(excess)):
+                cell_key = sorted_cells[i % len(sorted_cells)][0]
+                matrix_values[cell_key]['final'] -= 1
+
+        # --- FIN DE LA NUEVA LÓGICA DE REDONDEO ---
 
         new_matrix_lines_commands = [(5, 0, 0)]
         for row_val in self.matrix_values_row_ids:
             for col_val in self.matrix_values_col_ids:
-                col_prop = curve_map.get(col_val.id, 0)
-                qty_per_cell = per_row_qty * (col_prop / total_proportion)
+                final_qty = matrix_values.get((row_val.id, col_val.id), {}).get('final', 0)
+                
                 existing_line = self.matrix_line_ids.filtered(
                     lambda l: l.row_value_id == row_val and l.col_value_id == col_val
                 )
                 if existing_line:
                     new_matrix_lines_commands.append((1, existing_line.id, {
-                        'product_qty': qty_per_cell,
+                        'product_qty': final_qty,
                         'qty_producing': 0,
                     }))
                 else:
                     new_matrix_lines_commands.append((0, 0, {
                         'row_value_id': row_val.id,
                         'col_value_id': col_val.id,
-                        'product_qty': qty_per_cell,
+                        'product_qty': final_qty,
                         'qty_producing': 0,
                     }))
         self.write({'matrix_line_ids': new_matrix_lines_commands})
@@ -352,10 +416,3 @@ class MrpProduction(models.Model):
                 }
         else:
             raise UserError("No se produjo ninguna cantidad en la matriz. Asegúrese de ingresar cantidades a producir.")
-
-    def action_apply_curve(self):
-        """Aplica la curva de tallas sobre la matriz.
-        Alias del recálculo mientras el estado está en 'pending'.
-        """
-        self.ensure_one()
-        return self.action_recalculate_matrix()
