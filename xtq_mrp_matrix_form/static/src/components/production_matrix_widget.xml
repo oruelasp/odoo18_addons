@@ -38,19 +38,21 @@
                                 </th>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                     <td>
-                                        <!-- Campo para 'Cantidad a Producir', editable cuando la planificación está confirmada -->
-                                        <input type="number" class="o_input text-center d-inline-block w-50" min="0" step="1"
-                                            t-att-value="getQuantity(y_val.id, x_val.id, 'qty_producing')"
-                                            t-on-change="(ev) => _onQtyProducingChange(ev, y_val.id, x_val.id)"
-                                            t-att-readonly="!isQtyProducingEditable() || null"
-                                        />
-                                        <span class="d-inline-block w-5 text-center">/</span>
-                                        <!-- Campo para 'Cantidad Programada', editable cuando está pendiente de planificación -->
-                                        <input type="number" class="o_input text-center d-inline-block w-40" min="0" step="1"
-                                            t-att-value="getQuantity(y_val.id, x_val.id, 'product_qty')"
-                                            t-on-change="(ev) => _onProductQtyChange(ev, y_val.id, x_val.id)"
-                                            t-att-readonly="!isProductQtyEditable() || null"
-                                        />
+                                        <div class="d-flex align-items-center">
+                                            <!-- Campo para 'Cantidad a Producir' -->
+                                            <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
+                                                t-att-value="getQuantity(y_val.id, x_val.id, 'qty_producing')"
+                                                t-on-change="(ev) => _onQtyProducingChange(ev, y_val.id, x_val.id)"
+                                                t-att-readonly="!isQtyProducingEditable() || null"
+                                            />
+                                            <span class="px-1">/</span>
+                                            <!-- Campo para 'Cantidad Programada' -->
+                                            <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
+                                                t-att-value="getQuantity(y_val.id, x_val.id, 'product_qty')"
+                                                t-on-change="(ev) => _onProductQtyChange(ev, y_val.id, x_val.id)"
+                                                t-att-readonly="!isProductQtyEditable() || null"
+                                            />
+                                        </div>
                                     </td>
                                 </t>
                                 <th class="text-center bg-light fw-bold" t-esc="state.rowTotals[y_val.id] || 0"/>

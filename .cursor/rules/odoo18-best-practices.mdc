@@ -29,7 +29,7 @@ rules:
     instructions: |
       - Usa prefijos de módulo para nombres de templates (ejemplo: 'mi_modulo.template_vista').
       - Emplea namespaces XML cuando sea requerido.
-      - Estructura bien las vistas tree, form, kanban según Odoo 18.
+      - Estructura bien las vistas tree, form, kanban según Odoo versión 18. IMPORTANTE: Tomar en consideración que en esta versión la sintaxis de algunas vistas han cambiado, como la vista "tree", que usa "list" ahora.
       - Incluye validación de estructura XML para prevenir errores.
       - Documenta los templates con comentarios.
 
