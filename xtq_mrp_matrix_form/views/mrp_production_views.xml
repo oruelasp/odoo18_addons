@@ -32,20 +32,26 @@
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
             </xpath>
+             <!-- Eliminar la configuración de la cabecera -->
+            <xpath expr="//div[hasclass('oe_form_sheet_bg')]/h2[contains(., 'Configuración Matriz')]/parent::div" position="replace"/>
         </field>
     </record>
 
     <!--
-        VISTA 2: Añade la pestaña de "Atributos" con la configuración de la matriz.
+        VISTA 2: ELIMINADA. Su lógica se ha fusionado con la VISTA 3 para evitar errores de dependencia.
     -->
-    <record id="mrp_production_view_form_add_config" model="ir.ui.view">
-        <field name="name">xtq.mrp.production.form.add.config.page</field>
+
+    <!--
+        VISTA 3 (AHORA VISTA 2): Añade AMBAS pestañas ("Atributos" y "Matriz") en un solo paso.
+    -->
+    <record id="mrp_production_view_form_add_page" model="ir.ui.view">
+        <field name="name">xtq.mrp.production.form.add.pages</field> <!-- Nombre actualizado -->
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
-        <field name="priority">20</field> <!-- Prioridad media -->
+        <field name="priority">30</field> <!-- Prioridad restaurada -->
         <field name="arch" type="xml">
-            <!-- Mover la configuración a una nueva pestaña antes de la matriz -->
-            <xpath expr="//page[@name='matrix_breakdown_xy']" position="before">
+            <xpath expr="//notebook" position="inside">
+                 <!-- Pestaña de Atributos (lógica movida aquí) -->
                 <page name="matrix_attributes" string="Atributos">
                     <group>
                         <group>
@@ -66,23 +72,8 @@
                         </field>
                     </group>
                 </page>
-            </xpath>
-            <!-- Eliminar la configuración de la cabecera -->
-            <xpath expr="//div[hasclass('oe_form_sheet_bg')]/h2[contains(., 'Configuración Matriz')]/parent::div" position="replace"/>
-        </field>
-    </record>
-
-    <!--
-        VISTA 3: Añade la pestaña de la Matriz al final.
-    -->
-    <record id="mrp_production_view_form_add_page" model="ir.ui.view">
-        <field name="name">xtq.mrp.production.form.add.page</field>
-        <field name="model">mrp.production</field>
-        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
-        <field name="priority">30</field> <!-- La última en aplicarse -->
-        <field name="arch" type="xml">
-            <xpath expr="//notebook" position="inside">
-                 <page name="matrix_breakdown_xy" string="Matriz X,Y">
+                <!-- Pestaña de Matriz X,Y -->
+                <page name="matrix_breakdown_xy" string="Matriz X,Y">
                     <div class="oe_button_box" name="button_box">
                          <field name="matrix_state" widget="badge" decoration-success="matrix_state == 'done'" decoration-info="matrix_state in ['planned', 'progress']" decoration-warning="matrix_state == 'pending'"/>
                     </div>
