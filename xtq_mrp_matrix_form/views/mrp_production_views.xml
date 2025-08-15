@@ -32,11 +32,6 @@
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
             </xpath>
-             <xpath expr="//page[@name='matrix_breakdown_xy']/div[1]" position="before">
-                <div class="oe_button_box" name="button_box">
-                     <field name="matrix_state" widget="badge" decoration-success="matrix_state == 'done'" decoration-info="matrix_state in ['planned', 'progress']" decoration-warning="matrix_state == 'pending'"/>
-                </div>
-            </xpath>
         </field>
     </record>
 
@@ -88,6 +83,9 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                  <page name="matrix_breakdown_xy" string="Matriz X,Y">
+                    <div class="oe_button_box" name="button_box">
+                         <field name="matrix_state" widget="badge" decoration-success="matrix_state == 'done'" decoration-info="matrix_state in ['planned', 'progress']" decoration-warning="matrix_state == 'pending'"/>
+                    </div>
                     <div class="alert alert-info text-center" role="alert" invisible="matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids">
                         Configure Fila, Columna y sus respectivos Valores para ver la matriz.
                     </div>
