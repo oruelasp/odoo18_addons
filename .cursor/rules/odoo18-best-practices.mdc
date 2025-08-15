@@ -1,5 +1,4 @@
-# .cursorrules - Setup base para proyectos Odoo 18 con Cursor AI
-
+---
 description: |
   Cursor AI rules para proyectos haciendo addons personalizados en Odoo 18.
   Incluye convenciones para Python backend, OWL 2.0 frontend, y estructura estándar de módulos.
@@ -17,9 +16,10 @@ rules:
     instructions: |
       - Usa el estilo PEP8 para Python.
       - Define modelos con clases que heredan de models.Model de Odoo.
+      - Al heredar modelos de Odoo (ej. 'sale.order'), primero busca la definición original en el código fuente del addon correspondiente (ej. el módulo 'sale') para entender sus campos y métodos existentes.
       - Usa campos y relaciones de Odoo (fields.Char, fields.Many2one, etc.).
       - Incluye docstrings claros y comentados.
-      - Aplica las reglas ACL y record rules para seguridad.
+      - Aplica las reglas ACL y record rules para seguridad, siguiendo los ejemplos de los módulos base.
       - Evita consultas SQL directas a menos que sea necesario, usa el ORM.
       - Sigue la convención 'convention over configuration' de Odoo 18 para minimizar código repetitivo.
 
@@ -38,22 +38,24 @@ rules:
     pattern: "*.js"
     instructions: |
       - Usa imports completos y explícitos siempre con '@odoo-module' al inicio.
+      - Al extender componentes OWL de Odoo (ej. un campo de widget), localiza el componente original en la carpeta 'static/src/js' del addon correspondiente para ver su estructura, props y hooks.
       - Prefiere funciones flecha para callbacks.
       - Desarrolla componentes OWL con clase y método setup adecuadamente.
-      - Aprovecha hooks personalizados para gestión de estado reactivo.
+      - Aprovecha los hooks estándar de Odoo (useState, onWillStart, etc.) y sigue los ejemplos del código fuente para crear hooks personalizados.
       - Exporta componentes y funciones para registrar en registry.
       - Organiza archivos JS en static/src/js para mantener orden.
       
   - name: odoo-addon-structure
     description: "Estructura estándar para cada addon de Odoo 18."
-    pattern: "/addons/*/"
+    pattern: "**/__manifest__.py" # Se aplica al editar o crear el manifiesto
     instructions: |
-      - Incluye '__init__.py' y '__manifest__.py' correctamente declarados.
-      - Usa carpeta 'static/src/js' para código frontend OWL.
-      - Usa carpetas 'models' para código Python de negocio.
-      - Usa carpetas 'views' para XML de vistas.
-      - Documenta cada módulo y sus funcionalidades.
-      - Aplica best practices de seguridad (grupos, reglas, ACL).
+      - Al trabajar en un módulo, asegúrate de que siga la estructura estándar de Odoo v18.
+      - Debe incluir '__init__.py' y '__manifest__.py' correctamente declarados.
+      - Usa la carpeta 'models' para el código Python de negocio.
+      - Usa la carpeta 'views' para los archivos XML de las vistas.
+      - Usa la carpeta 'static/src/js' para el código frontend de OWL.
+      - Documenta el propósito del módulo en el manifiesto y en un README.md.
+      - Aplica las best practices de seguridad (grupos, reglas, ACL) en la clave 'data' del manifiesto y en los archivos correspondientes.
       
   - name: odoo-hooks-custom
     description: "Uso de hooks OWL 2.0 personalizados para extender UI."
@@ -64,5 +66,6 @@ rules:
       - Documenta la lógica interna del hook para facilitar reuso.
       - Registra hooks en componentes que los consumen adecuadamente.
       - Optimiza rendimiento evitando operaciones innecesarias.
-
+  
 alwaysApply: true
+---

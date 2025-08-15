@@ -25,9 +25,6 @@
                 <button name="action_recalculate_matrix" string="Recalcular Matriz" type="object"
                         class="oe_highlight"
                         invisible="matrix_state != 'pending'" />
-                <button name="action_confirm_planning" string="Confirmar Planificación" type="object"
-                        class="oe_highlight"
-                        invisible="matrix_state != 'pending'" />
                 <button name="action_produce_lots" string="Producir Lotes" type="object"
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />

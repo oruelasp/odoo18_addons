@@ -215,89 +215,13 @@ class MrpProduction(models.Model):
             'matrix_state': self.matrix_state,
         }
 
-    def action_recalculate_matrix(self):
+    def button_plan(self):
+        """
+        Heredamos el botón 'Planificar' estándar de Odoo para integrar la confirmación
+        de la planificación de la matriz. Validamos que las cantidades coincidan antes
+        de proceder con la planificación estándar.
+        """
         self.ensure_one()
-        if self.matrix_state != 'pending':
-            raise UserError("La matriz solo se puede recalcular en estado 'Pendiente'.")
-
-        # --- INICIO DE LA CORRECCIÓN ---
-        # Paso 1: Forzar la sincronización de la Curva de Tallas con los Valores de Columna seleccionados.
-        # Esto elimina la dependencia del onchange y previene errores de estado.
-        existing_proportions = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
-        new_curve_lines = []
-        for value in self.matrix_values_col_ids:
-            new_curve_lines.append((0, 0, {
-                'attribute_value_id': value.id,
-                'proportion': existing_proportions.get(value.id, 1)
-            }))
-        
-        # Reemplazar la curva en memoria para usarla en el cálculo. Se guardará junto con las líneas de la matriz.
-        self.matrix_curve_ids = [(5, 0, 0)] + new_curve_lines
-        # --- FIN DE LA CORRECCIÓN ---
-
-        if not self.product_id or not self.matrix_attribute_row_id or not self.matrix_values_row_ids or not self.matrix_attribute_col_id or not self.matrix_values_col_ids:
-            raise UserError("Por favor, configure todos los atributos de la matriz.")
-
-        total_qty_mo = self.product_qty
-        if float_is_zero(total_qty_mo, precision_rounding=self.product_uom_id.rounding):
-            raise UserError("La cantidad a producir de la OP es cero. Ingrese una cantidad válida.")
-
-        num_rows = len(self.matrix_values_row_ids)
-        if num_rows <= 0:
-            raise UserError("No hay valores configurados para el eje Fila.")
-
-        curve_map = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
-        selected_col_ids = self.matrix_values_col_ids.ids
-        total_proportion = sum(prop for val_id, prop in curve_map.items() if val_id in selected_col_ids)
-
-        if total_proportion == 0:
-            raise UserError("La suma de las proporciones para las columnas seleccionadas es cero. Ajuste la configuración de la curva.")
-
-        matrix_values = {}
-        # ... (lógica de redondeo) ...
-        for row_val in self.matrix_values_row_ids:
-            per_row_qty = total_qty_mo / num_rows
-            for col_val in self.matrix_values_col_ids:
-                col_prop = curve_map.get(col_val.id, 0)
-                ideal_val = per_row_qty * (col_prop / total_proportion)
-                rounded_val = math.ceil(ideal_val)
-                matrix_values[(row_val.id, col_val.id)] = {
-                    'ideal': ideal_val,
-                    'rounded': rounded_val,
-                    'final': rounded_val
-                }
-        
-        total_rounded = sum(v['rounded'] for v in matrix_values.values())
-        excess = total_rounded - total_qty_mo
-        
-        if excess > 0:
-            sorted_cells = sorted(matrix_values.items(), key=lambda item: (item[1]['rounded'] - item[1]['ideal']), reverse=True)
-            for i in range(int(excess)):
-                cell_key = sorted_cells[i % len(sorted_cells)][0]
-                matrix_values[cell_key]['final'] -= 1
-
-        new_matrix_lines_commands = []
-        for row_val in self.matrix_values_row_ids:
-            for col_val in self.matrix_values_col_ids:
-                final_qty = matrix_values.get((row_val.id, col_val.id), {}).get('final', 0)
-                new_matrix_lines_commands.append((0, 0, {
-                    'row_value_id': row_val.id,
-                    'col_value_id': col_val.id,
-                    'product_qty': final_qty,
-                    'qty_producing': 0,
-                }))
-        
-        # Borrar líneas viejas y escribir las nuevas
-        self.matrix_line_ids = [(5, 0, 0)]
-        self.write({'matrix_line_ids': new_matrix_lines_commands})
-
-    def action_confirm_planning(self):
-        self.ensure_one()
-        if self.matrix_state != 'pending':
-            raise UserError("La planificación ya ha sido confirmada o se encuentra en otro estado.")
-        if not self.matrix_line_ids or all(float_is_zero(line.product_qty, precision_rounding=self.product_uom_id.rounding) for line in self.matrix_line_ids):
-            raise UserError("No hay cantidades planificadas en la matriz para confirmar.")
-
         if self.matrix_qty_mismatch:
             raise UserError(_(
                 "La cantidad total de la matriz (%s) es diferente de la cantidad a producir de la orden (%s). "
@@ -305,6 +229,66 @@ class MrpProduction(models.Model):
                 self.total_matrix_quantity, self.product_qty
             ))
         self.write({'matrix_state': 'planned'})
+        return super(MrpProduction, self).button_plan()
+
+    def button_unplan(self):
+        """
+        Heredamos el botón 'Anular planeación' para revertir el estado de la matriz.
+        Solo se permite si el estado de la matriz es 'Planificado'.
+        """
+        if any(production.matrix_state != 'planned' for production in self):
+            raise UserError(_(
+                "La anulación de la planificación de la matriz solo es posible si el estado es 'Planificado'. "
+                "No se puede anular si está pendiente, en progreso o finalizado."
+            ))
+        
+        res = super(MrpProduction, self).button_unplan()
+        self.write({'matrix_state': 'pending'})
+        return res
+
+    def action_recalculate_matrix(self):
+        """
+        Recalcula la distribución de cantidades en la matriz basándose en la
+        curva de tallas y el total a producir.
+        """
+        self.ensure_one()
+        total_qty = self.product_qty
+        if total_qty <= 0:
+            raise UserError("La cantidad a producir debe ser mayor que cero para recalcular la matriz.")
+
+        # Sincronizar la curva de tallas con los valores de columna seleccionados
+        existing_curve_ids = self.matrix_curve_ids.mapped('attribute_value_id')
+        selected_col_ids = self.matrix_values_col_ids
+        curve_commands = []
+        for value in selected_col_ids:
+            if value not in existing_curve_ids:
+                curve_commands.append((0, 0, {
+                    'attribute_value_id': value.id,
+                    'proportion': 0.0,
+                }))
+        if curve_commands:
+            self.matrix_curve_ids = curve_commands
+
+        total_proportion = sum(self.matrix_curve_ids.mapped('proportion'))
+        if total_proportion == 0:
+            raise UserError("La curva de tallas no tiene proporciones definidas. Por favor, configure las proporciones antes de recalcular.")
+
+        # Actualizar las líneas de la matriz con las cantidades recalculadas
+        lines_to_update = self.matrix_line_ids.filtered(lambda line: line.value_col_id in selected_col_ids)
+        distributed_sum = 0.0
+
+        for line in lines_to_update:
+            proportion = next((c.proportion for c in self.matrix_curve_ids if c.attribute_value_id == line.value_col_id), 0)
+            qty_to_distribute = math.ceil((proportion / total_proportion) * total_qty)
+            line.product_qty = qty_to_distribute
+            distributed_sum += qty_to_distribute
+
+        # Ajuste final por redondeo
+        difference = total_qty - distributed_sum
+        if difference != 0 and lines_to_update:
+            lines_to_update[0].product_qty += difference
+
+        self._compute_total_matrix_quantity()
         return True
 
     def action_produce_lots(self):
