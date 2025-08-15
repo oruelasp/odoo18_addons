@@ -1,6 +1,6 @@
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import float_compare, float_is_zero
+from odoo.tools import float_compare, float_is_zero, float_round
 import json
 import math
 
@@ -301,7 +301,8 @@ class MrpProduction(models.Model):
 
             # Ajuste por fila
             total_rounded_in_row = sum(matrix_values[key]['rounded'] for key in row_cells)
-            excess_in_row = total_rounded_in_row - round(qty_per_row, self.product_uom_id.rounding)
+            rounded_qty_per_row = float_round(qty_per_row, precision_rounding=self.product_uom_id.rounding)
+            excess_in_row = total_rounded_in_row - rounded_qty_per_row
             if excess_in_row > 0:
                 sorted_cells = sorted(row_cells, key=lambda k: (matrix_values[k]['rounded'] - matrix_values[k]['ideal']), reverse=True)
                 for i in range(int(excess_in_row)):
