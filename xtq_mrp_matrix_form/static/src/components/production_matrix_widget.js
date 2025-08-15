@@ -118,6 +118,7 @@ export class ProductionMatrixWidget extends Component {
 
     _onProductQtyChange = (ev, yValueId, xValueId) => {
         const value = parseFloat(ev.target.value) || 0;
+        const key = `${yValueId}-${xValueId}`;
         
         if (!this.state.quantities[key]) {
             this.state.quantities[key] = { product_qty: 0, qty_producing: 0 };

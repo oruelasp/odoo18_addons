@@ -240,6 +240,10 @@ class MrpProduction(models.Model):
         Heredamos el botón 'Anular planeación' para revertir el estado de la matriz.
         Solo se permite si el estado de la matriz es 'Planificado'.
         """
+        # Si la OP no usa la matriz, ejecutar la lógica estándar directamente.
+        if not self.matrix_attribute_row_id or not self.matrix_attribute_col_id:
+            return super(MrpProduction, self).button_unplan()
+
         if any(production.matrix_state != 'planned' for production in self):
             raise UserError(_(
                 "La anulación de la planificación de la matriz solo es posible si el estado es 'Planificado'. "
