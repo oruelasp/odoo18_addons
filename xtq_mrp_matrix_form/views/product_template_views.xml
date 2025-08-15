@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_matrix" model="ir.ui.view">
+        <field name="name">product.template.form.matrix</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Manufactura" name="manufacturing_matrix">
+                    <group>
+                        <group string="Configuración de Matriz de Producción">
+                            <field name="matrix_attribute_x_id" string="Atributo Matriz (Eje X, Columnas)"/>
+                            <field name="matrix_attribute_y_id" string="Atributo Matriz (Eje Y, Filas)"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

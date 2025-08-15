@@ -82,7 +82,14 @@
                            context="{'matrix_state': matrix_state}"
                            invisible="not (matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids)"/>
                     <group class="oe_subtotal_footer oe_right" invisible="total_matrix_quantity == 0">
-                         <field name="total_matrix_quantity"/>
+                        <field name="matrix_qty_mismatch" invisible="1"/>
+                        <label for="total_matrix_quantity"/>
+                        <div class="o_row">
+                            <field name="total_matrix_quantity"/>
+                            <span class="fa fa-exclamation-triangle text-danger mx-2"
+                                  invisible="not matrix_qty_mismatch"
+                                  title="La cantidad total de la matriz es diferente de la cantidad a producir de la orden."/>
+                        </div>
                     </group>
                 </page>
             </xpath>

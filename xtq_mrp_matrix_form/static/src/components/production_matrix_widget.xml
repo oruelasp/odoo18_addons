@@ -17,7 +17,7 @@
                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                 <th class="text-center" t-esc="x_val.name"/>
                             </t>
-                            <th class="text-center">Total Programado</th>
+                            <th class="text-center">Total</th>
                         </tr>
                         <!-- Segunda fila de cabecera: Proporción por columna (axis_x) -->
                         <t t-if="state.axis_x.values[0] &amp;&amp; state.axis_x.values[0].proportion !== undefined">

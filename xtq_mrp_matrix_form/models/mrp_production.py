@@ -15,6 +15,11 @@ class MrpProduction(models.Model):
     matrix_line_ids = fields.One2many('mrp.production.matrix.line', 'production_id', string='Desglose Matriz')
     matrix_data_json = fields.Text(string="Matrix Data JSON", copy=False)
     total_matrix_quantity = fields.Float(string="Cantidad Total en Matriz", compute='_compute_total_matrix_quantity', store=True)
+    matrix_qty_mismatch = fields.Boolean(
+        string="Desfase de Cantidad en Matriz",
+        compute="_compute_matrix_qty_mismatch",
+        help="Se activa si la cantidad total de la matriz no coincide con la cantidad a producir."
+    )
 
     matrix_state = fields.Selection([
         ('pending', 'Pendiente'),
@@ -293,7 +298,14 @@ class MrpProduction(models.Model):
         if not self.matrix_line_ids or all(float_is_zero(line.product_qty, precision_rounding=self.product_uom_id.rounding) for line in self.matrix_line_ids):
             raise UserError("No hay cantidades planificadas en la matriz para confirmar.")
 
+        if self.matrix_qty_mismatch:
+            raise UserError(_(
+                "La cantidad total de la matriz (%s) es diferente de la cantidad a producir de la orden (%s). "
+                "Por favor, regularice las cantidades antes de confirmar la planificación.",
+                self.total_matrix_quantity, self.product_qty
+            ))
         self.write({'matrix_state': 'planned'})
+        return True
 
     def action_produce_lots(self):
         self.ensure_one()
@@ -379,3 +391,14 @@ class MrpProduction(models.Model):
                 }
         else:
             raise UserError("No se produjo ninguna cantidad en la matriz. Asegúrese de ingresar cantidades a producir.")
+
+    @api.depends("total_matrix_quantity", "product_qty")
+    def _compute_matrix_qty_mismatch(self):
+        """
+        Compara el total de la matriz con la cantidad a producir de la OP.
+        Usa float_compare para manejar imprecisiones con decimales.
+        """
+        for production in self:
+            precision_digits = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+            qty_comparison = float_compare(production.total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
+            production.matrix_qty_mismatch = qty_comparison != 0
