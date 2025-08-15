@@ -184,33 +184,6 @@ class MrpProduction(models.Model):
             domain = [('id', 'in', [])]
         return {'domain': {'matrix_values_col_ids': domain}}
 
-    @api.onchange('matrix_values_col_ids')
-    def _onchange_values_col_ids_sync_curve(self):
-        """
-        Sincroniza la curva de tallas con los valores de columna seleccionados,
-        reconstruyendo la lista para garantizar coherencia.
-        """
-        if not self.matrix_attribute_col_id:
-            self.matrix_curve_ids = [(5, 0, 0)]
-            return
-
-        # Guardar las proporciones existentes para no perderlas
-        existing_proportions = {
-            curve.attribute_value_id.id: curve.proportion
-            for curve in self.matrix_curve_ids
-        }
-        
-        new_curve_lines = []
-        for value in self.matrix_values_col_ids:
-            # Reconstruir la lista de la curva basada en los valores de columna seleccionados
-            new_curve_lines.append((0, 0, {
-                'attribute_value_id': value._origin.id,
-                'proportion': existing_proportions.get(value._origin.id, 1) # Mantiene la proporción si existía, si no, default a 1
-            }))
-            
-        # Reemplazar completamente la curva de tallas con la nueva lista sincronizada
-        self.matrix_curve_ids = [(5, 0, 0)] + new_curve_lines
-
     def get_matrix_data(self):
         self.ensure_one()
         if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
@@ -242,6 +215,21 @@ class MrpProduction(models.Model):
         if self.matrix_state != 'pending':
             raise UserError("La matriz solo se puede recalcular en estado 'Pendiente'.")
 
+        # --- INICIO DE LA CORRECCIÓN ---
+        # Paso 1: Forzar la sincronización de la Curva de Tallas con los Valores de Columna seleccionados.
+        # Esto elimina la dependencia del onchange y previene errores de estado.
+        existing_proportions = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
+        new_curve_lines = []
+        for value in self.matrix_values_col_ids:
+            new_curve_lines.append((0, 0, {
+                'attribute_value_id': value.id,
+                'proportion': existing_proportions.get(value.id, 1)
+            }))
+        
+        # Reemplazar la curva en memoria para usarla en el cálculo. Se guardará junto con las líneas de la matriz.
+        self.matrix_curve_ids = [(5, 0, 0)] + new_curve_lines
+        # --- FIN DE LA CORRECCIÓN ---
+
         if not self.product_id or not self.matrix_attribute_row_id or not self.matrix_values_row_ids or not self.matrix_attribute_col_id or not self.matrix_values_col_ids:
             raise UserError("Por favor, configure todos los atributos de la matriz.")
 
@@ -260,14 +248,10 @@ class MrpProduction(models.Model):
         if total_proportion == 0:
             raise UserError("La suma de las proporciones para las columnas seleccionadas es cero. Ajuste la configuración de la curva.")
 
-        # --- INICIO DE LA NUEVA LÓGICA DE REDONDEO ---
         matrix_values = {}
-        total_calculated = 0
-
-        # Paso 1: Calcular valores ideales y redondear hacia arriba
+        # ... (lógica de redondeo) ...
         for row_val in self.matrix_values_row_ids:
             per_row_qty = total_qty_mo / num_rows
-            row_total_ideal = 0
             for col_val in self.matrix_values_col_ids:
                 col_prop = curve_map.get(col_val.id, 0)
                 ideal_val = per_row_qty * (col_prop / total_proportion)
@@ -277,42 +261,29 @@ class MrpProduction(models.Model):
                     'rounded': rounded_val,
                     'final': rounded_val
                 }
-                row_total_ideal += ideal_val
-            
-        # Paso 2: Ajustar el excedente
+        
         total_rounded = sum(v['rounded'] for v in matrix_values.values())
         excess = total_rounded - total_qty_mo
         
-        # Ordenar celdas para quitar el excedente de las que menos "perdieron" al redondear
         if excess > 0:
             sorted_cells = sorted(matrix_values.items(), key=lambda item: (item[1]['rounded'] - item[1]['ideal']), reverse=True)
-            
             for i in range(int(excess)):
                 cell_key = sorted_cells[i % len(sorted_cells)][0]
                 matrix_values[cell_key]['final'] -= 1
 
-        # --- FIN DE LA NUEVA LÓGICA DE REDONDEO ---
-
-        new_matrix_lines_commands = [(5, 0, 0)]
+        new_matrix_lines_commands = []
         for row_val in self.matrix_values_row_ids:
             for col_val in self.matrix_values_col_ids:
                 final_qty = matrix_values.get((row_val.id, col_val.id), {}).get('final', 0)
-                
-                existing_line = self.matrix_line_ids.filtered(
-                    lambda l: l.row_value_id == row_val and l.col_value_id == col_val
-                )
-                if existing_line:
-                    new_matrix_lines_commands.append((1, existing_line.id, {
-                        'product_qty': final_qty,
-                        'qty_producing': 0,
-                    }))
-                else:
-                    new_matrix_lines_commands.append((0, 0, {
-                        'row_value_id': row_val.id,
-                        'col_value_id': col_val.id,
-                        'product_qty': final_qty,
-                        'qty_producing': 0,
-                    }))
+                new_matrix_lines_commands.append((0, 0, {
+                    'row_value_id': row_val.id,
+                    'col_value_id': col_val.id,
+                    'product_qty': final_qty,
+                    'qty_producing': 0,
+                }))
+        
+        # Borrar líneas viejas y escribir las nuevas
+        self.matrix_line_ids = [(5, 0, 0)]
         self.write({'matrix_line_ids': new_matrix_lines_commands})
 
     def action_confirm_planning(self):
