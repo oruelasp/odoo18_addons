@@ -254,6 +254,20 @@ class MrpProduction(models.Model):
         self.write({'matrix_state': 'pending'})
         return res
 
+    def action_start_matrix_progress(self):
+        """
+        Pasa el estado de la matriz a 'En Progreso'.
+        """
+        self.write({'matrix_state': 'progress'})
+        return True
+
+    def action_revert_matrix_to_planned(self):
+        """
+        Revierte el estado de la matriz a 'Planificado'.
+        """
+        self.write({'matrix_state': 'planned'})
+        return True
+
     def action_recalculate_matrix(self):
         """
         Recalcula la distribución de cantidades en la matriz.

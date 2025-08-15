@@ -148,7 +148,7 @@ export class ProductionMatrixWidget extends Component {
 
     // Método para determinar si qty_producing es editable
     isQtyProducingEditable() {
-        return ['planned', 'progress'].includes(this.state.matrix_state);
+        return this.state.matrix_state === 'planned';
     }
 
     // Método para determinar si product_qty es editable

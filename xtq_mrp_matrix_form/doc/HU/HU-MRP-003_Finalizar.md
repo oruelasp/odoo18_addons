@@ -7,7 +7,7 @@
 **Para que** pueda ejecutar la producción masiva de todas las variantes de Tono y Talla de una sola vez, creando automáticamente los lotes con sus atributos correctos y, al finalizar, ver una lista de todas las órdenes de producción parciales que se generaron.
 
 ## 2. Flujo de Trabajo (Paso a Paso)
-1. Abre una OP cuyo estado de matriz sea "Planificación Confirmada" o "En Ejecución".
+1. Abre una OP cuyo estado de matriz sea "En Ejecución" o `progress`.
 2. Verifica que las cantidades en "Cantidad a Producir" de la matriz sean correctas.
 3. Hace clic en el botón **"Producir Lotes"**.
 4. El sistema ejecuta el proceso de "explosión" en segundo plano.
