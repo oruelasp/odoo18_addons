@@ -221,6 +221,10 @@ class MrpProduction(models.Model):
         de la planificación de la matriz. Validamos que las cantidades coincidan antes
         de proceder con la planificación estándar.
         """
+        # Si la OP no usa la matriz, ejecutar la lógica estándar directamente.
+        if not self.matrix_attribute_row_id or not self.matrix_attribute_col_id:
+            return super(MrpProduction, self).button_plan()
+
         self.ensure_one()
         if self.matrix_qty_mismatch:
             raise UserError(_(
@@ -274,11 +278,11 @@ class MrpProduction(models.Model):
             raise UserError("La curva de tallas no tiene proporciones definidas. Por favor, configure las proporciones antes de recalcular.")
 
         # Actualizar las líneas de la matriz con las cantidades recalculadas
-        lines_to_update = self.matrix_line_ids.filtered(lambda line: line.value_col_id in selected_col_ids)
+        lines_to_update = self.matrix_line_ids.filtered(lambda line: line.col_value_id in selected_col_ids)
         distributed_sum = 0.0
 
         for line in lines_to_update:
-            proportion = next((c.proportion for c in self.matrix_curve_ids if c.attribute_value_id == line.value_col_id), 0)
+            proportion = next((c.proportion for c in self.matrix_curve_ids if c.attribute_value_id == line.col_value_id), 0)
             qty_to_distribute = math.ceil((proportion / total_proportion) * total_qty)
             line.product_qty = qty_to_distribute
             distributed_sum += qty_to_distribute

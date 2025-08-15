@@ -74,42 +74,50 @@ export class ProductionMatrixWidget extends Component {
     }
 
     calculateTotals() {
-        this.state.rowTotals = {};
-        this.state.colTotals = {};
-        this.state.grandTotal = 0;
+        const totals = {
+            rows: {},
+            cols: {},
+            grand_total: { product_qty: 0, qty_producing: 0 }
+        };
 
-        if (!this.state.axis_y.values || !this.state.axis_x.values) return;
-
+        // Initialize totals
         for (const y_val of this.state.axis_y.values) {
-            this.state.rowTotals[y_val.id] = this.state.axis_x.values.reduce((sum, x_val) =>
-                sum + this.getQuantity(y_val.id, x_val.id, 'product_qty')
-            , 0);
+            totals.rows[y_val.id] = { product_qty: 0, qty_producing: 0 };
         }
         for (const x_val of this.state.axis_x.values) {
-            this.state.colTotals[x_val.id] = this.state.axis_y.values.reduce((sum, y_val) =>
-                sum + this.getQuantity(y_val.id, x_val.id, 'product_qty')
-            , 0);
+            totals.cols[x_val.id] = { product_qty: 0, qty_producing: 0 };
         }
-        // Total basado en product_qty, no en qty_producing para la suma principal
-        this.state.grandTotal = Object.values(this.state.colTotals).reduce((sum, val) => sum + val, 0);
+
+        // Sum quantities
+        for (const y_val of this.state.axis_y.values) {
+            for (const x_val of this.state.axis_x.values) {
+                const key = `${y_val.id}-${x_val.id}`;
+                const cell = this.state.quantities[key] || { product_qty: 0, qty_producing: 0 };
+                
+                totals.rows[y_val.id].product_qty += cell.product_qty;
+                totals.rows[y_val.id].qty_producing += cell.qty_producing;
+                
+                totals.cols[x_val.id].product_qty += cell.product_qty;
+                totals.cols[x_val.id].qty_producing += cell.qty_producing;
+
+                totals.grand_total.product_qty += cell.product_qty;
+                totals.grand_total.qty_producing += cell.qty_producing;
+            }
+        }
+
+        this.state.totals = totals;
     }
 
-    _onQtyProducingChange(ev, yValueId, xValueId) {
+    _onQtyProducingChange = (ev, yValueId, xValueId) => {
         const value = parseFloat(ev.target.value) || 0;
         const key = `${yValueId}-${xValueId}`;
-        this.state.quantities[key] = {
-            ...this.state.quantities[key],
-            qty_producing: value,
-        };
-        // Re-calcular totales si es necesario (generalmente los totales son de product_qty)
-        // this.calculateTotals(); // No es necesario si los totales son de product_qty
-
+        this.state.quantities[key].qty_producing = value;
+        this.calculateTotals();
         this.debouncedSave();
     }
 
     _onProductQtyChange = (ev, yValueId, xValueId) => {
         const value = parseFloat(ev.target.value) || 0;
-        const key = `${yValueId}-${xValueId}`;
         
         if (!this.state.quantities[key]) {
             this.state.quantities[key] = { product_qty: 0, qty_producing: 0 };
@@ -147,6 +155,11 @@ export class ProductionMatrixWidget extends Component {
         return this.state.matrix_state === 'pending';
     }
 }
+
+ProductionMatrixWidget.template = "xtq_mrp_matrix_form.ProductionMatrixWidget";
+ProductionMatrixWidget.props = {
+    ...standardFieldProps,
+};
 
 registry.category("fields").add("production_matrix_xy", {
     component: ProductionMatrixWidget,
