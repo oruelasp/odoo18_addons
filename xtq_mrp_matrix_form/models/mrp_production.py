@@ -187,37 +187,29 @@ class MrpProduction(models.Model):
     @api.onchange('matrix_values_col_ids')
     def _onchange_values_col_ids_sync_curve(self):
         """
-        Sincroniza la curva de tallas con los valores de columna seleccionados.
-        Mantiene las proporciones existentes si es posible.
+        Sincroniza la curva de tallas con los valores de columna seleccionados,
+        reconstruyendo la lista para garantizar coherencia.
         """
-        if not self.matrix_values_col_ids:
+        if not self.matrix_attribute_col_id:
             self.matrix_curve_ids = [(5, 0, 0)]
             return
 
-        # Guardar proporciones existentes en un diccionario
+        # Guardar las proporciones existentes para no perderlas
         existing_proportions = {
             curve.attribute_value_id.id: curve.proportion
             for curve in self.matrix_curve_ids
         }
-
-        commands = []
-        # Eliminar líneas de la curva que ya no están en los valores de columna seleccionados
-        valid_col_ids = self.matrix_values_col_ids._origin.ids
-        for curve_line in self.matrix_curve_ids:
-            if curve_line.attribute_value_id.id not in valid_col_ids:
-                commands.append((2, curve_line.id, 0))
         
-        # Añadir nuevas líneas si es necesario
-        for col_value in self.matrix_values_col_ids:
-            if not any(curve.attribute_value_id.id == col_value._origin.id for curve in self.matrix_curve_ids):
-                proportion = existing_proportions.get(col_value._origin.id, 1) # Usar _origin para IDs estables
-                commands.append((0, 0, {
-                    'attribute_value_id': col_value._origin.id,
-                    'proportion': proportion,
-                }))
-
-        if commands:
-            self.matrix_curve_ids = commands
+        new_curve_lines = []
+        for value in self.matrix_values_col_ids:
+            # Reconstruir la lista de la curva basada en los valores de columna seleccionados
+            new_curve_lines.append((0, 0, {
+                'attribute_value_id': value._origin.id,
+                'proportion': existing_proportions.get(value._origin.id, 1) # Mantiene la proporción si existía, si no, default a 1
+            }))
+            
+        # Reemplazar completamente la curva de tallas con la nueva lista sincronizada
+        self.matrix_curve_ids = [(5, 0, 0)] + new_curve_lines
 
     def get_matrix_data(self):
         self.ensure_one()
