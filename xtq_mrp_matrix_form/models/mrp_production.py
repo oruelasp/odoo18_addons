@@ -235,6 +235,19 @@ class MrpProduction(models.Model):
         self.write({'matrix_state': 'planned'})
         return super(MrpProduction, self).button_plan()
 
+    def action_generate_serial(self):
+        """
+        Heredamos la acción de generar lote/serie para bloquearla si la OP
+        está configurada para usar la matriz de producción.
+        """
+        self.ensure_one()
+        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
+            raise UserError(_(
+                "No se puede generar un número de lote manualmente para esta orden de producción. "
+                "Los lotes se crearán automáticamente desde la matriz al finalizar el proceso."
+            ))
+        return super(MrpProduction, self).action_generate_serial()
+
     def button_unplan(self):
         """
         Heredamos el botón 'Anular planeación' para revertir el estado de la matriz.
@@ -351,10 +364,15 @@ class MrpProduction(models.Model):
     def button_mark_done(self):
         """
         Heredamos el botón estándar 'Realizado' de Odoo.
-        Si la OP usa la matriz, ejecutamos nuestra lógica de producción por lotes.
+        Si la OP usa la matriz, validamos que el estado de la matriz sea 'progress'
+        y luego ejecutamos nuestra lógica de producción por lotes.
         De lo contrario, se ejecuta el comportamiento estándar.
         """
         if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
+            if self.matrix_state != 'progress':
+                raise UserError(_(
+                    "Debe 'Confirmar Ejecución' para pasar la matriz al estado 'En Progreso' antes de poder producir."
+                ))
             return self._action_produce_matrix_lots()
         else:
             return super(MrpProduction, self).button_mark_done()
@@ -382,8 +400,8 @@ class MrpProduction(models.Model):
                 'company_id': self.company_id.id,
             })
             self.env['stock.lot.attribute.line'].create([
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'attribute_value_id': line.row_value_id.id},
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'attribute_value_id': line.col_value_id.id}
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'value_id': line.row_value_id.id},
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': line.col_value_id.id}
             ])
 
             # Usar el asistente de producción
