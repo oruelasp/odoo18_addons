@@ -403,7 +403,7 @@ class MrpProduction(models.Model):
         for production, matrix_line in zip(new_productions, matrix_data_ordered):
             lot_name = self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote')
             lot = self.env['stock.lot'].create({
-                'name': lot_name,
+                'name': lot_name, 
                 'product_id': production.product_id.id,
                 'company_id': production.company_id.id,
             })
@@ -429,7 +429,7 @@ class MrpProduction(models.Model):
             'type': 'ir.actions.act_window',
             'name': _('Órdenes de Producción Divididas'),
             'res_model': 'mrp.production',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'target': 'current',
             'domain': [('id', 'in', new_productions.ids)],
         }
