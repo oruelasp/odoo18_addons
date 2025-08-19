@@ -362,24 +362,36 @@ class MrpProduction(models.Model):
         return True
 
     def button_mark_done(self):
-        self.ensure_one()
-        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
-            if self.matrix_state != 'progress':
-                raise UserError(_("Debe confirmar la ejecución de la matriz antes de marcar la orden como hecha."))
+        # Separar las OPs que usan nuestra matriz de las que no.
+        matrix_productions = self.filtered(lambda p: p.matrix_attribute_row_id and p.matrix_attribute_col_id)
+        standard_productions = self - matrix_productions
+
+        productions_to_process = self.env['mrp.production']
+
+        # Procesar cada OP con matriz individualmente para dividirla.
+        for production in matrix_productions:
+            if production.matrix_state != 'progress':
+                raise UserError(_("Debe confirmar la ejecución de la matriz para la orden %s antes de marcarla como hecha.", production.name))
             
-            # La lógica de la matriz ahora devuelve las órdenes de producción finales
-            # sobre las cuales se debe ejecutar el resto del proceso.
-            productions_to_mark_done = self._action_produce_matrix_lots()
-            return productions_to_mark_done.button_mark_done()
+            # Esta función divide 'production' y devuelve todas las OPs resultantes.
+            split_productions = production._action_produce_matrix_lots()
+            productions_to_process |= split_productions
+
+        # Añadir las OPs estándar a la lista final.
+        productions_to_process |= standard_productions
+
+        if productions_to_process:
+            # Llamar al método original de Odoo sobre el conjunto final de OPs.
+            return super(MrpProduction, productions_to_process).button_mark_done()
         
-        return super(MrpProduction, self).button_mark_done()
+        return True
 
     def _action_produce_matrix_lots(self):
         """
         Replica el flujo estándar de Odoo 18 para la producción en lote:
         1. Divide la OP principal en OPs más pequeñas (backorders), una por cada celda de la matriz.
         2. Crea y asigna los lotes con sus atributos a cada nueva OP.
-        3. Devuelve el recordset de las nuevas OPs para que sean finalizadas.
+        3. Devuelve el recordset de las nuevas OPs para que sean finalizadas por el proceso estándar.
         """
         self.ensure_one()
         
@@ -387,22 +399,18 @@ class MrpProduction(models.Model):
         if not lines_to_produce:
             raise UserError(_("No ha registrado ninguna cantidad a producir en la matriz."))
 
-        # 1. Preparar las cantidades y los datos de la matriz para el split.
+        # 1. Preparar cantidades y datos de la matriz en orden.
         amounts_for_split = [line.qty_producing for line in lines_to_produce]
-        matrix_data_by_qty = {line.qty_producing: line for line in lines_to_produce}
+        matrix_data_ordered = list(lines_to_produce)
 
-        # 2. Dividir la OP principal en OPs más pequeñas.
-        # El _split_productions devuelve la OP original (modificada) y las nuevas backorders.
+        # 2. Dividir la OP principal. Devuelve la OP original modificada + las nuevas backorders.
         all_productions = self._split_productions({self: amounts_for_split})
 
-        # 3. Iterar sobre las OPs resultantes para crear y asignar lotes.
-        for production in all_productions:
-            # Encuentra la línea de la matriz que corresponde a la cantidad de esta OP
-            matrix_line = matrix_data_by_qty.get(production.product_qty)
-            if not matrix_line:
-                continue
+        # Nos aseguramos de procesar solo las OPs que corresponden a nuestra matriz, en orden.
+        productions_to_process = all_productions[:len(matrix_data_ordered)]
 
-            # Crea el lote con sus atributos.
+        # 3. Iterar sobre las OPs y los datos de la matriz para crear y asignar lotes.
+        for production, matrix_line in zip(productions_to_process, matrix_data_ordered):
             lot_name = self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote')
             lot = self.env['stock.lot'].create({
                 'name': lot_name,
@@ -414,21 +422,17 @@ class MrpProduction(models.Model):
                 {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': matrix_line.col_value_id.id}
             ])
 
-            # Asigna el lote a la OP y se asegura de que la cantidad a producir sea correcta.
+            # Asignar lote y establecer la cantidad a producir en la nueva OP.
             production.write({
                 'lot_producing_id': lot.id,
                 'qty_producing': production.product_qty,
             })
             production.set_qty_producing()
 
-        # Limpia la OP original, que ahora es solo un contenedor residual.
-        self.write({
-            'matrix_state': 'done',
-            'qty_producing': 0,
-        })
+        # Limpiar las cantidades a producir de la matriz original para evitar confusiones.
         self.matrix_line_ids.write({'qty_producing': 0})
         
-        # 4. Devuelve todas las OPs que realmente contienen la producción.
+        # 4. Devolver todas las OPs resultantes del split. El método 'super' se encargará de ellas.
         return all_productions
 
     @api.depends("total_matrix_quantity", "product_qty")
