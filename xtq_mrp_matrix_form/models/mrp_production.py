@@ -362,75 +362,74 @@ class MrpProduction(models.Model):
         return True
 
     def button_mark_done(self):
-        """
-        Heredamos el botón estándar 'Realizado' de Odoo.
-        Si la OP usa la matriz, validamos que el estado de la matriz sea 'progress'
-        y luego ejecutamos nuestra lógica de producción por lotes.
-        De lo contrario, se ejecuta el comportamiento estándar.
-        """
+        self.ensure_one()
         if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
             if self.matrix_state != 'progress':
-                raise UserError(_(
-                    "Debe 'Confirmar Ejecución' para pasar la matriz al estado 'En Progreso' antes de poder producir."
-                ))
-            return self._action_produce_matrix_lots()
-        else:
-            return super(MrpProduction, self).button_mark_done()
+                raise UserError(_("Debe confirmar la ejecución de la matriz antes de marcar la orden como hecha."))
+            
+            # La lógica de la matriz ahora devuelve las órdenes de producción finales
+            # sobre las cuales se debe ejecutar el resto del proceso.
+            productions_to_mark_done = self._action_produce_matrix_lots()
+            return productions_to_mark_done.button_mark_done()
+        
+        return super(MrpProduction, self).button_mark_done()
 
     def _action_produce_matrix_lots(self):
         """
-        Lógica de 'Explotar Matriz' movida desde el antiguo 'action_produce_lots'.
+        Replica el flujo estándar de Odoo 18 para la producción en lote:
+        1. Divide la OP principal en OPs más pequeñas (backorders), una por cada celda de la matriz.
+        2. Crea y asigna los lotes con sus atributos a cada nueva OP.
+        3. Devuelve el recordset de las nuevas OPs para que sean finalizadas.
         """
         self.ensure_one()
         
-        # 1. Validar que hay algo que producir
         lines_to_produce = self.matrix_line_ids.filtered(lambda l: l.qty_producing > 0)
         if not lines_to_produce:
-            raise UserError("No se ha introducido ninguna cantidad a producir en la matriz.")
+            raise UserError(_("No ha registrado ninguna cantidad a producir en la matriz."))
 
-        # Guardar los IDs de las MOs existentes antes de producir
-        existing_mos = self.env['mrp.production'].search([('origin', '=', self.name)])
+        # 1. Preparar las cantidades y los datos de la matriz para el split.
+        amounts_for_split = [line.qty_producing for line in lines_to_produce]
+        matrix_data_by_qty = {line.qty_producing: line for line in lines_to_produce}
 
-        # 2. Iterar y producir usando el asistente
-        for line in lines_to_produce:
-            # Crear el lote con sus atributos
+        # 2. Dividir la OP principal en OPs más pequeñas.
+        # El _split_productions devuelve la OP original (modificada) y las nuevas backorders.
+        all_productions = self._split_productions({self: amounts_for_split})
+
+        # 3. Iterar sobre las OPs resultantes para crear y asignar lotes.
+        for production in all_productions:
+            # Encuentra la línea de la matriz que corresponde a la cantidad de esta OP
+            matrix_line = matrix_data_by_qty.get(production.product_qty)
+            if not matrix_line:
+                continue
+
+            # Crea el lote con sus atributos.
+            lot_name = self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote')
             lot = self.env['stock.lot'].create({
-                'name': self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote'),
-                'product_id': self.product_id.id,
-                'company_id': self.company_id.id,
+                'name': lot_name,
+                'product_id': production.product_id.id,
+                'company_id': production.company_id.id,
             })
             self.env['stock.lot.attribute.line'].create([
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'value_id': line.row_value_id.id},
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': line.col_value_id.id}
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'value_id': matrix_line.row_value_id.id},
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': matrix_line.col_value_id.id}
             ])
 
-            # Usar el asistente de producción
-            produce_wizard = self.env['mrp.produce'].with_context(active_id=self.id).create({
-                'production_id': self.id,
-                'qty_producing': line.qty_producing,
-                'finished_lot_id': lot.id,
-                'consumption': 'strict',
+            # Asigna el lote a la OP y se asegura de que la cantidad a producir sea correcta.
+            production.write({
+                'lot_producing_id': lot.id,
+                'qty_producing': production.product_qty,
             })
-            produce_wizard.do_produce()
+            production.set_qty_producing()
 
-            # Reiniciar la cantidad a producir para esta celda después de la explosión
-            line.write({'qty_producing': 0})
-
-        # 3. Actualizar el estado de la matriz
-        self.write({'matrix_state': 'done'})
-
-        # 4. Encontrar las nuevas MOs y redirigir
-        new_mos = self.env['mrp.production'].search([('origin', '=', self.name)]) - existing_mos
-        if new_mos:
-            return {
-                'name': _('Órdenes de Producción Generadas'),
-                'type': 'ir.actions.act_window',
-                'res_model': 'mrp.production',
-                'view_mode': 'tree,form',
-                'domain': [('id', 'in', new_mos.ids)],
-            }
+        # Limpia la OP original, que ahora es solo un contenedor residual.
+        self.write({
+            'matrix_state': 'done',
+            'qty_producing': 0,
+        })
+        self.matrix_line_ids.write({'qty_producing': 0})
         
-        return True
+        # 4. Devuelve todas las OPs que realmente contienen la producción.
+        return all_productions
 
     @api.depends("total_matrix_quantity", "product_qty")
     def _compute_matrix_qty_mismatch(self):

@@ -5,7 +5,11 @@
     'summary': 'Widget de matriz X,Y para entrada rápida  en Órdenes de Producción.',
     'author': 'xtqgroup',
     'website': 'https://www.xtqgroup.com', # Puedes poner tu sitio web aquí
-    'depends': ['mrp', 'xtq_lot_attributes'],
+    'depends': [
+        "mrp",
+        "stock",
+        "xtq_lot_attributes",
+    ],
     'data': [
         'security/ir.model.access.csv',
         'views/mrp_production_views.xml',
