@@ -1,0 +1,32 @@
+# Nombre del Workflow
+name: Deploy Odoo Addons to DigitalOcean
+
+# Evento que dispara el workflow
+on:
+  push:
+    branches:
+      - main  # Cambia 'main' si tu rama principal es 'master' u otra
+
+# Trabajos a ejecutar
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Usar una acción pre-hecha para ejecutar comandos vía SSH
+      - name: SSH into server and deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo ">>> Conectado al servidor. Desplegando..."
+            cd /opt/custom/odoo18_addons
+            echo ">>> Actualizando repositorio con git pull..."
+            sudo /usr/bin/git pull
+            echo ">>> Reiniciando servicio de Odoo..."
+            sudo /usr/sbin/service odoo restart
+            echo ">>> ¡Despliegue completado!"
