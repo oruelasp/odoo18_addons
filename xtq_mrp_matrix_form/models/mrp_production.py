@@ -244,7 +244,7 @@ class MrpProduction(models.Model):
         if not self.matrix_attribute_row_id or not self.matrix_attribute_col_id:
             return super(MrpProduction, self).button_unplan()
 
-        if any(production.matrix_state != 'planned' for production in self):
+        if any(production.matrix_state not in ['planned', 'pending'] for production in self):
             raise UserError(_(
                 "La anulación de la planificación de la matriz solo es posible si el estado es 'Planificado'. "
                 "No se puede anular si está pendiente, en progreso o finalizado."
@@ -343,89 +343,61 @@ class MrpProduction(models.Model):
         return True
 
     def action_produce_lots(self):
+        """
+        Implementa la lógica de 'Explotar Matriz' de HU-MRP-003.
+        - Utiliza el asistente estándar mrp.produce para registrar la producción.
+        - Crea lotes con sus atributos correspondientes.
+        - Gestiona la creación de OPs residuales (backorders).
+        - Cambia el estado de la matriz a 'done'.
+        - Redirige a la vista de las nuevas OPs creadas.
+        """
         self.ensure_one()
-        if self.matrix_state not in ['planned', 'progress']:
-            raise UserError("La matriz debe estar en estado 'Programada' o 'Ejecutado' para producir lotes.")
+        
+        # 1. Validar que hay algo que producir
+        lines_to_produce = self.matrix_line_ids.filtered(lambda l: l.qty_producing > 0)
+        if not lines_to_produce:
+            raise UserError("No se ha introducido ninguna cantidad a producir en la matriz.")
 
-        if not self.matrix_line_ids or all(float_is_zero(line.qty_producing, precision_rounding=self.product_uom_id.rounding) for line in self.matrix_line_ids):
-            raise UserError("No hay cantidades a producir en la matriz.")
+        # Guardar los IDs de las MOs existentes antes de producir
+        existing_mos = self.env['mrp.production'].search([('origin', '=', self.name)])
 
-        # Obtener los movimientos de producto terminado
-        finished_move = self.move_finished_ids.filtered(lambda m: m.product_id == self.product_id)
-
-        if not finished_move:
-            raise UserError("No se encontró el movimiento de producto terminado para esta Orden de Producción.")
-
-        # Limpiar las líneas de movimiento existentes si es necesario para recrearlas con los lotes
-        finished_move.move_line_ids.unlink()
-
-        total_produced_from_matrix = 0
-        produced_lots = self.env['stock.lot']
-        for line in self.matrix_line_ids.filtered(lambda l: l.qty_producing > 0):
-            total_produced_from_matrix += line.qty_producing
-
-            # Generar nombre del lote
-            lot_name = f"{self.product_id.default_code or self.product_id.name}-{line.row_value_id.name}-{line.col_value_id.name}-{self.name}"
-
-            # Crear stock.lot
+        # 2. Iterar y producir usando el asistente
+        for line in lines_to_produce:
+            # Crear el lote con sus atributos
             lot = self.env['stock.lot'].create({
-                'name': lot_name,
+                'name': self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote'),
                 'product_id': self.product_id.id,
                 'company_id': self.company_id.id,
             })
-            produced_lots += lot
+            self.env['stock.lot.attribute.line'].create([
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'attribute_value_id': line.row_value_id.id},
+                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'attribute_value_id': line.col_value_id.id}
+            ])
 
-            # Asignar atributos de Tono y Talla usando xtq_lot_attributes
-            self.env['stock.lot.attribute.line'].create({
-                'lot_id': lot.id,
-                'attribute_id': line.row_value_id.attribute_id.id,
-                'attribute_value_id': line.row_value_id.id,
+            # Usar el asistente de producción
+            produce_wizard = self.env['mrp.produce'].with_context(active_id=self.id).create({
+                'production_id': self.id,
+                'qty_producing': line.qty_producing,
+                'finished_lot_id': lot.id,
+                'consumption': 'strict',
             })
-            self.env['stock.lot.attribute.line'].create({
-                'lot_id': lot.id,
-                'attribute_id': line.col_value_id.attribute_id.id,
-                'attribute_value_id': line.col_value_id.id,
-            })
+            produce_wizard.do_produce()
 
-            # Crear stock.move.line para este lote
-            self.env['stock.move.line'].create({
-                'move_id': finished_move.id,
-                'product_id': self.product_id.id,
-                'product_uom_id': self.product_uom_id.id,
-                'qty_done': line.qty_producing,
-                'lot_id': lot.id,
-                'location_id': finished_move.location_id.id,
-                'location_dest_id': finished_move.location_dest_id.id,
-                'company_id': self.company_id.id,
-            })
-            # Resetear la cantidad a producir para esta celda después de la explosión
-            line.qty_producing = 0
+        # 3. Actualizar el estado de la matriz
+        self.write({'matrix_state': 'done'})
 
-        # Validar y marcar como hecho la MO, gestionando parciales
-        if total_produced_from_matrix > 0:
-            self.product_qty = total_produced_from_matrix
-            self.move_finished_ids.quantity_done = total_produced_from_matrix
-
-            res = self.button_mark_done()
-            if self.state == 'done':
-                self.matrix_state = 'done'
-            else:
-                self.matrix_state = 'progress'
-
-            if res and isinstance(res, dict) and res.get('type') == 'ir.actions.act_window':
-                return res
-            else:
-                new_mo_domain = [('origin', '=', self.name)]
-                return {
-                    'name': 'Órdenes de Producción Parciales',
-                    'type': 'ir.actions.act_window',
-                    'res_model': 'mrp.production',
-                    'view_mode': 'tree,form',
-                    'domain': new_mo_domain,
-                    'target': 'current',
-                }
-        else:
-            raise UserError("No se produjo ninguna cantidad en la matriz. Asegúrese de ingresar cantidades a producir.")
+        # 4. Encontrar las nuevas MOs y redirigir
+        new_mos = self.env['mrp.production'].search([('origin', '=', self.name)]) - existing_mos
+        if new_mos:
+            return {
+                'name': _('Órdenes de Producción Generadas'),
+                'type': 'ir.actions.act_window',
+                'res_model': 'mrp.production',
+                'view_mode': 'tree,form',
+                'domain': [('id', 'in', new_mos.ids)],
+            }
+        
+        return True
 
     @api.depends("total_matrix_quantity", "product_qty")
     def _compute_matrix_qty_mismatch(self):
