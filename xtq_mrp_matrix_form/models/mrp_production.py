@@ -236,11 +236,12 @@ class MrpProduction(models.Model):
         return super(MrpProduction, self).button_plan()
 
     def action_generate_serial(self):
-        """
-        Heredamos la acción de generar lote/serie para bloquearla si la OP
-        está configurada para usar la matriz de producción.
-        """
-        self.ensure_one()
+        # Si la llamada viene de nuestro flujo automatizado, permitimos que el sistema
+        # genere lotes para las OPs residuales si es necesario.
+        if self.env.context.get('from_matrix_flow'):
+            return super(MrpProduction, self).action_generate_serial()
+        
+        # Si no, mantenemos nuestro control para evitar la generación manual por parte del usuario.
         if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
             raise UserError(_(
                 "No se puede generar un número de lote manualmente para esta orden de producción. "
@@ -381,8 +382,9 @@ class MrpProduction(models.Model):
         productions_to_process |= standard_productions
 
         if productions_to_process:
-            # Llamar al método original de Odoo sobre el conjunto final de OPs.
-            return super(MrpProduction, productions_to_process).button_mark_done()
+            # Llamar al método original de Odoo sobre el conjunto final de OPs,
+            # añadiendo un contexto para evitar el bloqueo en 'action_generate_serial'.
+            return super(MrpProduction, productions_to_process.with_context(from_matrix_flow=True)).button_mark_done()
         
         return True
 
