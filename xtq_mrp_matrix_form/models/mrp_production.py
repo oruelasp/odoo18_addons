@@ -383,6 +383,9 @@ class MrpProduction(models.Model):
             })
             produce_wizard.do_produce()
 
+            # Reiniciar la cantidad a producir para esta celda después de la explosión
+            line.write({'qty_producing': 0})
+
         # 3. Actualizar el estado de la matriz
         self.write({'matrix_state': 'done'})
 

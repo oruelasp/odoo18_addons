@@ -30,7 +30,7 @@
                         invisible="matrix_state != 'planned'"/>
                 <button name="action_revert_matrix_to_planned" string="Volver a Programado" type="object"
                         class="oe_highlight"
-                        invisible="matrix_state != 'progress'"/>
+                        invisible="matrix_state not in ['progress', 'done']"/>
                 <button name="action_produce_lots" string="Producir Lotes" type="object"
                         class="oe_highlight"
                         invisible="matrix_state not in ['planned', 'progress']" />
