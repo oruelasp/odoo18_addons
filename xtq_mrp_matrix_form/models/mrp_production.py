@@ -256,9 +256,15 @@ class MrpProduction(models.Model):
 
     def action_start_matrix_progress(self):
         """
-        Pasa el estado de la matriz a 'En Progreso'.
+        Pasa el estado de la matriz a 'En Progreso' y sincroniza la cantidad
+        total a producir de la matriz con el campo principal de la OP.
         """
-        self.write({'matrix_state': 'progress'})
+        for production in self:
+            total_qty_producing = sum(production.matrix_line_ids.mapped('qty_producing'))
+            production.write({
+                'qty_producing': total_qty_producing,
+                'matrix_state': 'progress'
+            })
         return True
 
     def action_revert_matrix_to_planned(self):
@@ -342,14 +348,20 @@ class MrpProduction(models.Model):
         self.matrix_line_ids = [(5, 0, 0)] + new_lines_cmds
         return True
 
-    def action_produce_lots(self):
+    def button_mark_done(self):
         """
-        Implementa la lógica de 'Explotar Matriz' de HU-MRP-003.
-        - Utiliza el asistente estándar mrp.produce para registrar la producción.
-        - Crea lotes con sus atributos correspondientes.
-        - Gestiona la creación de OPs residuales (backorders).
-        - Cambia el estado de la matriz a 'done'.
-        - Redirige a la vista de las nuevas OPs creadas.
+        Heredamos el botón estándar 'Realizado' de Odoo.
+        Si la OP usa la matriz, ejecutamos nuestra lógica de producción por lotes.
+        De lo contrario, se ejecuta el comportamiento estándar.
+        """
+        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
+            return self._action_produce_matrix_lots()
+        else:
+            return super(MrpProduction, self).button_mark_done()
+
+    def _action_produce_matrix_lots(self):
+        """
+        Lógica de 'Explotar Matriz' movida desde el antiguo 'action_produce_lots'.
         """
         self.ensure_one()
         
