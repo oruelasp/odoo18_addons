@@ -379,11 +379,11 @@ class MrpProduction(models.Model):
     def action_split_by_matrix(self):
         """
         Acción principal para dividir una OP según la matriz de producción.
-        1. Divide la OP principal en OPs más pequeñas.
-        2. Crea y asigna lotes con atributos a cada nueva OP.
-        3. Limpia la configuración de la matriz de las nuevas OPs.
-        4. Cancela la OP original.
-        5. Devuelve una vista de lista con las nuevas OPs.
+        1. La OP original se actualiza con la cantidad residual.
+        2. Se crean nuevas OPs (backorders) para cada celda de la matriz.
+        3. Se crean y asignan lotes con atributos a cada nueva OP.
+        4. Se limpia la matriz de la OP original.
+        5. Se devuelve una vista de lista con las nuevas OPs.
         """
         self.ensure_one()
         
@@ -391,19 +391,34 @@ class MrpProduction(models.Model):
         if not lines_to_produce:
             raise UserError(_("No ha registrado ninguna cantidad a producir en la matriz."))
 
-        amounts_for_split = [line.qty_producing for line in lines_to_produce]
+        total_matrix_qty = sum(lines_to_produce.mapped('qty_producing'))
+        
+        if self.env['decimal_precision'].precision_get('Product Unit of Measure') and \
+           float_compare(total_matrix_qty, self.product_qty, precision_rounding=self.product_uom_id.rounding) > 0:
+            raise UserError(_(
+                "La cantidad total de la matriz (%.2f) no puede ser mayor que la cantidad a producir de la orden (%.2f).",
+                total_matrix_qty, self.product_qty
+            ))
+
+        residual_qty = self.product_qty - total_matrix_qty
         matrix_data_ordered = list(lines_to_produce)
 
+        # La primera cantidad es la que se quedará en la OP original.
+        amounts_for_split = [residual_qty] + [line.qty_producing for line in matrix_data_ordered]
+        
+        # Dividir la OP. `_split_productions` devuelve todas las OPs involucradas.
         all_productions = self._split_productions({self: amounts_for_split})
         
-        # Ignoramos la OP original (la primera) y solo procesamos las backorders
-        # que corresponden a las celdas de nuestra matriz.
-        new_productions = all_productions[1:] 
+        # Las nuevas OPs son todas excepto la original (self).
+        new_productions = all_productions.filtered(lambda p: p != self)
+
+        if len(new_productions) != len(matrix_data_ordered):
+            raise UserError(_("La división de la orden de producción falló. Se generó un número inesperado de órdenes."))
 
         for production, matrix_line in zip(new_productions, matrix_data_ordered):
             lot_name = self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote')
             lot = self.env['stock.lot'].create({
-                'name': lot_name, 
+                'name': lot_name,
                 'product_id': production.product_id.id,
                 'company_id': production.company_id.id,
             })
@@ -412,7 +427,7 @@ class MrpProduction(models.Model):
                 {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': matrix_line.col_value_id.id}
             ])
 
-            # Asignar lote, limpiar la configuración de la matriz y confirmar la orden.
+            # Asignar lote y limpiar la configuración de la matriz en la nueva OP.
             production.write({
                 'lot_producing_id': lot.id,
                 'matrix_attribute_row_id': False,
@@ -421,8 +436,12 @@ class MrpProduction(models.Model):
             if production.state == 'draft':
                 production.action_confirm()
         
-        # Cancelar la OP original, que ya ha sido reemplazada.
-        self.action_cancel()
+        # Limpiar la matriz de la OP original y actualizar su estado.
+        self.write({
+            'matrix_state': 'done',
+            'qty_producing': 0,
+        })
+        self.matrix_line_ids.write({'qty_producing': 0})
 
         # Devolver una acción para mostrar las nuevas OPs en una vista de lista.
         return {
