@@ -1,22 +1,53 @@
-# HU-003: Finalizar Producción y "Explotar" Matriz
-**Rol:** Jefe de Producción / Líder de Taller (Responsable de Cierre)
+# HU-MRP-003: Finalizar Producción desde Matriz
 
-## 1. Historia de Usuario
-**Como** Jefe de Producción o Líder de Taller,
-**Quiero** hacer clic en un botón "Producir Lotes" en la Orden de Producción para que el sistema tome las cantidades registradas en "Cantidad a Producir" de la matriz,
-**Para que** pueda ejecutar la producción masiva de todas las variantes de Tono y Talla de una sola vez, creando automáticamente los lotes con sus atributos correctos y, al finalizar, ver una lista de todas las órdenes de producción parciales que se generaron.
+## 1. Rol e Interés
 
-## 2. Flujo de Trabajo (Paso a Paso)
-1. Abre una OP cuyo estado de matriz sea "En Ejecución" o `progress`.
-2. Verifica que las cantidades en "Cantidad a Producir" de la matriz sean correctas.
-3. Hace clic en el botón **"Producir Lotes"**.
-4. El sistema ejecuta el proceso de "explosión" en segundo plano.
-5. **Al finalizar la acción, el sistema redirige al usuario a la vista de lista de Órdenes de Producción, pre-filtrada para mostrar únicamente las nuevas MOs parciales que se acaban de crear como resultado de la producción.**
-6. La matriz de la OP original se actualiza para reflejar las nuevas cantidades producidas.
+| Rol | Interés |
+| :--- | :--- |
+| Jefe de producción / Líder de taller | Necesita finalizar la producción registrada, asegurando que se generen los lotes correctos con sus atributos de Tono y Talla, y que el inventario se actualice de manera precisa. |
 
-## 3. Criterios de Aceptación
-- **Dado** que tengo una OP con cantidades > 0 en las celdas de "Cantidad a Producir", **cuando** hago clic en "Producir Lotes", **entonces** el sistema debe crear un nuevo registro de Lote (`stock.lot`) por cada celda que se está produciendo.
-- **Y** a cada lote nuevo se le deben asignar los atributos de Tono y Talla correspondientes (invocando a `xtq_attribute_lot`).
-- **Y** el sistema debe registrar una producción (parcial o total), detallando la cantidad producida para cada lote específico.
-- **Y** si la producción fue parcial, la OP principal debe permanecer abierta y crearse una OP residual.
-- **Y** después de una ejecución exitosa, el sistema DEBE redirigir al usuario a una vista de lista que muestre las MOs parciales generadas.
+## 2. Historia de Usuario
+
+**Como** planificador de producción,
+**quiero** poder finalizar el registro de las cantidades producidas en la matriz,
+**para** que el sistema divida la orden de producción principal, genere lotes con atributos específicos para cada nueva orden, y prepare todo para el registro final de consumo e inventario.
+
+## 3. Flujo de Trabajo (Proceso Actualizado)
+
+El proceso de finalización ahora se realiza en dos etapas claras:
+
+### Etapa 1: División de la Orden de Producción
+
+1.  El usuario abre una Orden de Producción (OP) que ya ha sido planificada y se encuentra en estado de matriz `En Progreso`.
+2.  El usuario ha registrado las cantidades realmente producidas en el campo `Cantidad a Producir` de cada celda de la matriz.
+3.  El usuario hace clic en el botón **"Dividir por Matriz"**.
+4.  **El sistema realiza las siguientes acciones:**
+    *   Valida que la suma de las cantidades en la matriz no supere la cantidad total de la OP.
+    *   Calcula la cantidad "residual" (diferencia entre el total de la OP y el total de la matriz).
+    *   La **OP original** se actualiza y su cantidad a producir se reduce a la cantidad residual. **No se cancela**. Su matriz se limpia y su estado de matriz pasa a `Realizado`.
+    *   Por cada celda con cantidad en la matriz, se crea una **nueva Orden de Producción (backorder)** con esa cantidad específica.
+    *   A cada nueva OP se le crea y asigna un único **Lote/Número de Serie** para el producto terminado.
+    *   A cada Lote se le asignan los **atributos de Tono y Talla** correspondientes a su celda de origen en la matriz.
+    *   Las nuevas OPs se confirman y se dejan en estado "Confirmado" o "En Progreso", listas para la producción.
+5.  **Resultado:** El sistema redirige al usuario a una vista de lista que muestra todas las nuevas OPs que se han creado. La OP original ahora solo representa el saldo pendiente de producir.
+
+### Etapa 2: Finalización de las Órdenes Individuales
+
+1.  Desde la vista de lista, el usuario ahora puede gestionar cada nueva OP de forma independiente.
+2.  El usuario abre una de las nuevas OPs.
+3.  El sistema, a través de la lógica estándar de Odoo, requerirá que el usuario especifique los lotes de los componentes (ej. el lote de la tela) que se consumieron para producir este lote específico de producto terminado.
+4.  Una vez registrado el consumo, el usuario hace clic en el botón estándar **"Realizado"**.
+5.  **El sistema finaliza la OP**, mueve el lote del producto terminado al inventario y cierra el proceso para esa orden específica.
+6.  Este proceso se repite para cada una de las OPs divididas.
+
+## 4. Criterios de Aceptación
+
+*   **[CA-FIN-001]** El botón "Dividir por Matriz" solo debe ser visible cuando el estado de la matriz sea `En Progreso`.
+*   **[CA-FIN-002]** El sistema debe impedir la división si la suma de las cantidades de la matriz es mayor que la cantidad a producir de la OP original.
+*   **[CA-FIN-003]** La OP original debe permanecer activa y su cantidad debe ser igual a la diferencia entre su cantidad original y el total de la matriz.
+*   **[CA-FIN-004]** Se debe crear una nueva OP por cada celda de la matriz con una cantidad mayor a cero.
+*   **[CA-FIN-005]** Cada nueva OP debe tener un lote de producto terminado único.
+*   **[CA-FIN-006]** Cada lote generado debe tener los atributos de Tono (fila) y Talla (columna) correctos, heredados de la matriz.
+*   **[CA-FIN-007]** Después de la división, el usuario debe ser redirigido a una vista de lista que muestre solo las nuevas OPs creadas.
+*   **[CA-FIN-008]** Las nuevas OPs no deben tener ninguna configuración de matriz, comportándose como OPs estándar.
+*   **[CA-FIN-009]** Al intentar finalizar una de las nuevas OPs, el sistema debe solicitar (si aplica) el consumo de componentes con seguimiento por lote/serie.
