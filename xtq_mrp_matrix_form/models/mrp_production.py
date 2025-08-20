@@ -132,10 +132,10 @@ class MrpProduction(models.Model):
             matrix_x_attr = product_tmpl.matrix_attribute_x_id
             matrix_y_attr = product_tmpl.matrix_attribute_y_id
 
-            if matrix_x_attr:
-                self.matrix_attribute_col_id = matrix_x_attr.id
             if matrix_y_attr:
-                self.matrix_attribute_row_id = matrix_y_attr.id
+                self.matrix_attribute_col_id = matrix_y_attr.id
+            if matrix_x_attr:
+                self.matrix_attribute_row_id = matrix_x_attr.id
 
             attribute_ids = self.product_id.attribute_line_ids.attribute_id.ids
             domain = [('id', 'in', attribute_ids)]

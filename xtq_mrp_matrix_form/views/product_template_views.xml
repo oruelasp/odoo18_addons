@@ -9,8 +9,8 @@
                 <page string="Manufactura" name="manufacturing_matrix">
                     <group>
                         <group string="Configuración de Matriz de Producción">
-                            <field name="matrix_attribute_x_id" string="Atributo Matriz (Eje X, Columnas)"/>
-                            <field name="matrix_attribute_y_id" string="Atributo Matriz (Eje Y, Filas)"/>
+                            <field name="matrix_attribute_x_id" string="Atributo Matriz (Eje X, Filas)"/>
+                            <field name="matrix_attribute_y_id" string="Atributo Matriz (Eje Y, Columnas)"/>
                         </group>
                     </group>
                 </page>
