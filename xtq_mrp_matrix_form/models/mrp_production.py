@@ -393,8 +393,7 @@ class MrpProduction(models.Model):
 
         total_matrix_qty = sum(lines_to_produce.mapped('qty_producing'))
         
-        if self.env['decimal_precision'].precision_get('Product Unit of Measure') and \
-           float_compare(total_matrix_qty, self.product_qty, precision_rounding=self.product_uom_id.rounding) > 0:
+        if float_compare(total_matrix_qty, self.product_qty, precision_rounding=self.product_uom_id.rounding) > 0:
             raise UserError(_(
                 "La cantidad total de la matriz (%.2f) no puede ser mayor que la cantidad a producir de la orden (%.2f).",
                 total_matrix_qty, self.product_qty
