@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 class ImportFromOpWizard(models.TransientModel):
     _name = 'import.from.op.wizard'
@@ -65,6 +68,12 @@ class ImportFromOpWizard(models.TransientModel):
             raise UserError(_("No se pudo encontrar la transferencia de inventario activa."))
 
         lines_to_import = self.line_ids.filtered('selected')
+        
+        _logger.info(
+            "Asistente: Importando %s líneas desde OP %s para el picking %s",
+            len(lines_to_import), self.production_id.name, picking.name
+        )
+
         if not lines_to_import:
             raise UserError(_("No ha seleccionado ninguna línea para importar."))
 
