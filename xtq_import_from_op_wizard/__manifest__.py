@@ -10,9 +10,9 @@
         'mrp',
     ],
     'data': [
-        'security/ir.model.access.csv',
-        'views/stock_picking_views.xml',
         'wizards/import_from_op_wizard_views.xml',
+        'views/stock_picking_views.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
     'application': False,
