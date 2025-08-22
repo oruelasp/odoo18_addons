@@ -45,7 +45,14 @@ class ImportFromOpWizard(models.TransientModel):
                 'product_uom_id': move.product_uom.id,
             }))
         self.line_ids = commands
-        return False
+        # Mantener el modal abierto recargando el mismo registro
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'import.from.op.wizard',
+            'res_id': self.id,
+            'view_mode': 'form',
+            'target': 'new',
+        }
 
     @api.onchange('production_id')
     def _onchange_production_workorder(self):
