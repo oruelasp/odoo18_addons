@@ -20,10 +20,6 @@
             </field>
 
             <xpath expr="//header" position="inside">
-                <!--
-                    *** CORRECCIÓN DE SINTAXIS ODOO 18 ***
-                    Se reemplaza 'attrs' por el atributo directo 'invisible' con una expresión booleana.
-                -->
                 <button name="action_recalculate_matrix" string="Recalcular Matriz" type="object"
                         class="oe_highlight"
                         invisible="matrix_state != 'pending'" />
