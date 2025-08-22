@@ -74,19 +74,20 @@ class ImportFromOpWizard(models.TransientModel):
         if not lines_to_import:
             raise UserError(_("No hay líneas válidas para importar. Verifique selección y cantidades."))
 
-        move_vals = []
+        # Usar comandos One2many para insertar las líneas directamente en el picking
+        commands = []
         for line in lines_to_import:
-            move_vals.append({
+            commands.append((0, 0, {
                 'name': line.product_id.display_name,
-                'picking_id': picking.id,
                 'product_id': line.product_id.id,
                 'product_uom': line.product_uom_id.id,
                 'product_uom_qty': line.quantity_to_move,
                 'location_id': picking.location_id.id,
                 'location_dest_id': picking.location_dest_id.id,
-            })
-        moves = self.env['stock.move'].create(move_vals)
-        _logger.info("Creados %s movimientos para picking %s", len(moves), picking.name)
+                'company_id': picking.company_id.id,
+            }))
+        picking.write({'move_ids': commands})
+        _logger.info("Insertadas %s líneas en picking %s mediante move_ids write", len(commands), picking.name)
 
         def _concat_unique(existing, new):
             tokens = [t.strip() for t in (existing or '').split(',') if t.strip()]
