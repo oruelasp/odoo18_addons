@@ -49,10 +49,8 @@ class ImportFromOpWizard(models.TransientModel):
 
     @api.onchange('production_id')
     def _onchange_production_workorder(self):
-        # Auto-cargar solo al elegir OP y si aún no hay líneas
-        for wizard in self:
-            if wizard.production_id and not wizard.line_ids:
-                wizard.action_load_components()
+        # No recargar automáticamente; el usuario usará el botón "Cargar Componentes"
+        return
 
     def action_import_lines(self):
         """
