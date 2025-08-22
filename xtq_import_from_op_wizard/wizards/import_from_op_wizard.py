@@ -26,36 +26,33 @@ class ImportFromOpWizard(models.TransientModel):
         string='Componentes a Importar'
     )
 
-    @api.onchange('production_id', 'workorder_id')
-    def _onchange_production_workorder(self):
-        """
-        Al cambiar la Orden de Producción o la Orden de Trabajo, se pueblan
-        las líneas de componentes correspondientes.
-        """
-        self.line_ids = [(5, 0, 0)]  # Limpiar líneas existentes
-        
+    def _get_moves_source(self):
+        self.ensure_one()
+        # La OT es referencial: no filtra ni modifica los componentes cargados
+        return self.production_id.move_raw_ids
+
+    def action_load_components(self):
+        self.ensure_one()
         if not self.production_id:
-            return
-
-        moves = self.production_id.move_raw_ids
-        if self.workorder_id:
-            # Intentar limitar por la operación asociada a la OT si existe en los movimientos
-            operation = getattr(self.workorder_id, 'operation_id', False)
-            if operation and 'operation_id' in moves._fields:
-                filtered = moves.filtered(lambda m: m.operation_id == operation)
-                if filtered:
-                    moves = filtered
-
-        lines_to_create = []
+            raise UserError(_("Seleccione primero una Orden de Producción."))
+        moves = self._get_moves_source()
+        commands = [(5, 0, 0)]
         for move in moves:
-            lines_to_create.append((0, 0, {
+            commands.append((0, 0, {
                 'product_id': move.product_id.id,
                 'planned_qty': move.product_uom_qty,
                 'quantity_to_move': move.product_uom_qty,
                 'product_uom_id': move.product_uom.id,
             }))
-        
-        self.line_ids = lines_to_create
+        self.line_ids = commands
+        return False
+
+    @api.onchange('production_id')
+    def _onchange_production_workorder(self):
+        # Auto-cargar solo al elegir OP y si aún no hay líneas
+        for wizard in self:
+            if wizard.production_id and not wizard.line_ids:
+                wizard.action_load_components()
 
     def action_import_lines(self):
         """
@@ -66,6 +63,10 @@ class ImportFromOpWizard(models.TransientModel):
         picking = self.env['stock.picking'].browse(self.env.context.get('active_id'))
         if not picking:
             raise UserError(_("No se pudo encontrar la transferencia de inventario activa."))
+
+        if not self.line_ids:
+            # Cargar si aún no se ha hecho
+            self.action_load_components()
 
         # Filtrar solo líneas válidas: seleccionadas, con producto/UdM y cantidad > 0
         lines_to_import = self.line_ids.filtered(
@@ -103,7 +104,7 @@ class ImportFromOpWizard(models.TransientModel):
 
         picking.origin = _concat_unique(picking.origin, self.production_id.name)
 
-        # 3. Concatenar origen de OT (si aplica)
+        # 3. Concatenar origen de OT (si aplica). Es referencial, no afecta componentes
         if self.workorder_id:
             picking.workorder_origin = _concat_unique(getattr(picking, 'workorder_origin', False), self.workorder_id.name)
 
