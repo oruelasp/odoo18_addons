@@ -67,7 +67,10 @@ class ImportFromOpWizard(models.TransientModel):
         if not picking:
             raise UserError(_("No se pudo encontrar la transferencia de inventario activa."))
 
-        lines_to_import = self.line_ids.filtered('selected')
+        # Filtrar solo líneas válidas: seleccionadas, con producto/UdM y cantidad > 0
+        lines_to_import = self.line_ids.filtered(
+            lambda l: l.selected and l.product_id and l.product_uom_id and l.quantity_to_move > 0
+        )
         
         _logger.info(
             "Asistente: Importando %s líneas desde OP %s para el picking %s",
@@ -75,11 +78,12 @@ class ImportFromOpWizard(models.TransientModel):
         )
 
         if not lines_to_import:
-            raise UserError(_("No ha seleccionado ninguna línea para importar."))
+            raise UserError(_("No hay líneas válidas para importar. Verifique selección y cantidades."))
 
-        # 1. Crear movimientos de stock
+        # 1. Crear movimientos de stock únicamente con datos completos
+        move_vals = []
         for line in lines_to_import:
-            self.env['stock.move'].create({
+            move_vals.append({
                 'picking_id': picking.id,
                 'product_id': line.product_id.id,
                 'product_uom_qty': line.quantity_to_move,
@@ -88,6 +92,7 @@ class ImportFromOpWizard(models.TransientModel):
                 'location_id': picking.location_id.id,
                 'location_dest_id': picking.location_dest_id.id,
             })
+        self.env['stock.move'].create(move_vals)
         
         # 2. Concatenar origen de OP evitando duplicados y normalizando espacios
         def _concat_unique(existing, new):
