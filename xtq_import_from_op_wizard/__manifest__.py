@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-{
+﻿{
     'name': 'XTQ | Asistente para Importar desde OP',
     'summary': 'Permite a los usuarios crear transferencias de inventario importando componentes desde Órdenes de Producción.',
     'version': '18.0.1.0.1',
