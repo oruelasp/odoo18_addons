@@ -6,9 +6,9 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="%(xtq_import_from_op_wizard.action_import_from_op_wizard)d"
+                <button name="action_open_import_from_op_wizard"
                         string="Importar desde OP"
-                        type="action"
+                        type="object"
                         class="oe_highlight"
                         invisible="state != 'draft'"/>
             </xpath>
