@@ -9,6 +9,7 @@ class ImportFromOpWizard(models.TransientModel):
     _name = 'import.from.op.wizard'
     _description = 'Asistente para Importar Componentes desde OP'
 
+    picking_id = fields.Many2one('stock.picking', string='Transferencia', readonly=True)
     production_id = fields.Many2one(
         'mrp.production',
         string='Orden de Producción',
@@ -25,6 +26,14 @@ class ImportFromOpWizard(models.TransientModel):
         'wizard_id',
         string='Componentes a Importar'
     )
+
+    @api.model
+    def default_get(self, fields_list):
+        vals = super().default_get(fields_list)
+        active_id = self.env.context.get('active_id')
+        if active_id and 'picking_id' in self._fields:
+            vals.setdefault('picking_id', active_id)
+        return vals
 
     def _get_moves_source(self):
         self.ensure_one()
@@ -44,12 +53,17 @@ class ImportFromOpWizard(models.TransientModel):
                 'product_uom_id': move.product_uom.id,
             }))
         self.line_ids = commands
+        # Mantener el modal abierto y conservar active_id del picking
+        ctx = dict(self.env.context)
+        if self.picking_id:
+            ctx.update({'active_id': self.picking_id.id, 'active_model': 'stock.picking'})
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'import.from.op.wizard',
             'res_id': self.id,
             'view_mode': 'form',
             'target': 'new',
+            'context': ctx,
         }
 
     @api.onchange('production_id')
@@ -58,9 +72,7 @@ class ImportFromOpWizard(models.TransientModel):
 
     def action_import_lines(self):
         self.ensure_one()
-        ctx = dict(self.env.context)
-        picking_id = ctx.get('active_id')
-        picking = self.env['stock.picking'].browse(picking_id)
+        picking = self.picking_id or self.env['stock.picking'].browse(self.env.context.get('active_id'))
         if not picking:
             raise UserError(_("No se pudo encontrar la transferencia de inventario activa."))
 
@@ -74,7 +86,6 @@ class ImportFromOpWizard(models.TransientModel):
         if not lines_to_import:
             raise UserError(_("No hay líneas válidas para importar. Verifique selección y cantidades."))
 
-        # Usar comandos One2many para insertar las líneas directamente en el picking
         commands = []
         for line in lines_to_import:
             commands.append((0, 0, {
