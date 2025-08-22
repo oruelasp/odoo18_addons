@@ -32,10 +32,6 @@
     </record>
 
     <!--
-        VISTA 2: ELIMINADA. Su lógica se ha fusionado con la VISTA 3 para evitar errores de dependencia.
-    -->
-
-    <!--
         VISTA 3 (AHORA VISTA 2): Añade AMBAS pestañas ("Atributos" y "Matriz") en un solo paso.
     -->
     <record id="mrp_production_view_form_add_page" model="ir.ui.view">
