@@ -464,9 +464,11 @@ class MrpProduction(models.Model):
         AC5 de HU-MRP-004.
         """
         moves = super()._get_moves_raw_values()
+        bom_line_model = self.env['mrp.bom.line']
         for move in moves:
-            bom_line = move.get('bom_line_id')
-            if bom_line:
+            bom_line_id = move.get('bom_line_id')
+            if bom_line_id:
+                bom_line = bom_line_model.browse(bom_line_id)
                 move['matrix_row_value_ids'] = [(6, 0, bom_line.matrix_row_value_ids.ids)]
                 move['matrix_col_value_ids'] = [(6, 0, bom_line.matrix_col_value_ids.ids)]
         return moves
