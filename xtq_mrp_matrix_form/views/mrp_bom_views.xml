@@ -21,7 +21,7 @@
             </xpath>
 
             <!-- 2. Añadir las columnas de aplicabilidad en las líneas de componentes -->
-            <xpath expr="//field[@name='bom_line_ids']/tree/field[@name='product_qty']" position="after">
+            <xpath expr="//field[@name='bom_line_ids']/list/field[@name='product_qty']" position="after">
                 <field name="matrix_row_value_ids"
                        widget="many2many_tags"
                        options="{'no_create': True}"
