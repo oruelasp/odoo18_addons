@@ -456,7 +456,7 @@ class MrpProduction(models.Model):
             qty_comparison = float_compare(production.total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
             production.matrix_qty_mismatch = qty_comparison != 0
 
-    def _get_move_raw_values(self, bom_line, line_data):
+    def _get_move_raw_values(self, bom_line, product, product_uom_qty, operation, bom):
         """
         Sobrescribe el método original para añadir los valores de atributos de
         la matriz desde la línea de la LdM al diccionario de valores del
@@ -464,7 +464,7 @@ class MrpProduction(models.Model):
         Este es el punto de herencia correcto que funciona tanto en onchange como al guardar.
         AC5 de HU-MRP-004.
         """
-        res = super()._get_move_raw_values(bom_line, line_data)
+        res = super()._get_move_raw_values(bom_line, product, product_uom_qty, operation, bom)
         if bom_line:
             res['matrix_row_value_ids'] = [(6, 0, bom_line.matrix_row_value_ids.ids)]
             res['matrix_col_value_ids'] = [(6, 0, bom_line.matrix_col_value_ids.ids)]
