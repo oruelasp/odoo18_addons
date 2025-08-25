@@ -117,32 +117,25 @@ class MrpProduction(models.Model):
         #return moves_values
 
     # ... (El resto de los onchange y get_matrix_data se mantienen igual) ...
-    @api.onchange('product_id')
+    @api.onchange('product_id', 'bom_id')
     def _onchange_product_id_set_attribute_domain(self):
-        # Limpiar campos de matriz si cambia el producto
-        self.matrix_attribute_row_id = False
-        self.matrix_values_row_ids = False
-        self.matrix_attribute_col_id = False
-        self.matrix_values_col_ids = False
-        self.matrix_curve_ids = [(5,0,0)] # Limpiar la curva también
-
-        if self.product_id:
-            # Obtener atributos configurados en la plantilla del producto
-            product_tmpl = self.product_id.product_tmpl_id
-            matrix_x_attr = product_tmpl.matrix_attribute_x_id
-            matrix_y_attr = product_tmpl.matrix_attribute_y_id
-
-            if matrix_y_attr:
-                self.matrix_attribute_col_id = matrix_y_attr.id
-            if matrix_x_attr:
-                self.matrix_attribute_row_id = matrix_x_attr.id
-
-            attribute_ids = self.product_id.attribute_line_ids.attribute_id.ids
-            domain = [('id', 'in', attribute_ids)]
-            return {'domain': {'matrix_attribute_row_id': domain, 'matrix_attribute_col_id': domain}}
+        """
+        Al cambiar el producto o la LdM, hereda los atributos de la matriz.
+        Prioridad: LdM > Plantilla de Producto.
+        AC4 de HU-MRP-004.
+        """
+        if self.bom_id and self.bom_id.matrix_attribute_row_id and self.bom_id.matrix_attribute_col_id:
+            # Heredar desde la LdM (HU-MRP-004)
+            self.matrix_attribute_row_id = self.bom_id.matrix_attribute_row_id.id
+            self.matrix_attribute_col_id = self.bom_id.matrix_attribute_col_id.id
+        elif self.product_id:
+            # Mantener el comportamiento anterior como fallback
+            self.matrix_attribute_row_id = self.product_id.product_tmpl_id.matrix_attribute_x_id.id
+            self.matrix_attribute_col_id = self.product_id.product_tmpl_id.matrix_attribute_y_id.id
         else:
-            domain = [('id', 'in', [])]
-            return {'domain': {'matrix_attribute_row_id': domain, 'matrix_attribute_col_id': domain}}
+            self.matrix_attribute_row_id = False
+            self.matrix_attribute_col_id = False
+
 
     @api.onchange('matrix_attribute_row_id')
     def _onchange_attribute_row_set_values_domain(self):
@@ -462,3 +455,18 @@ class MrpProduction(models.Model):
             precision_digits = self.env['decimal.precision'].precision_get('Product Unit of Measure')
             qty_comparison = float_compare(production.total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
             production.matrix_qty_mismatch = qty_comparison != 0
+
+    def _get_moves_raw_values(self):
+        """
+        Sobrescribe el método original para añadir los valores de atributos de
+        la matriz desde la línea de la LdM al diccionario de valores del
+        movimiento de stock.
+        AC5 de HU-MRP-004.
+        """
+        moves = super()._get_moves_raw_values()
+        for move in moves:
+            bom_line = move.get('bom_line_id')
+            if bom_line:
+                move['matrix_row_value_ids'] = [(6, 0, bom_line.matrix_row_value_ids.ids)]
+                move['matrix_col_value_ids'] = [(6, 0, bom_line.matrix_col_value_ids.ids)]
+        return moves

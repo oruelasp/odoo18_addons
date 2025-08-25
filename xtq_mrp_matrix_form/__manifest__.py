@@ -14,6 +14,7 @@
         'security/ir.model.access.csv',
         'views/mrp_production_views.xml',
         'views/product_template_views.xml',
+        'views/mrp_bom_views.xml',
     ],
     'assets': {
         'web.assets_backend': [

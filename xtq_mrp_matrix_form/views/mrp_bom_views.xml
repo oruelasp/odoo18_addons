@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mrp_bom_form_inherit_matrix" model="ir.ui.view">
+        <field name="name">mrp.bom.form.inherit.matrix</field>
+        <field name="model">mrp.bom</field>
+        <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
+        <field name="arch" type="xml">
+            <!-- 1. Añadir la pestaña de configuración de la matriz -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Atributos" name="matrix_configuration">
+                    <group>
+                        <group>
+                            <field name="matrix_attribute_row_id"/>
+                        </group>
+                        <group>
+                            <field name="matrix_attribute_col_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+            <!-- 2. Añadir las columnas de aplicabilidad en las líneas de componentes -->
+            <xpath expr="//field[@name='bom_line_ids']/tree/field[@name='product_qty']" position="after">
+                <field name="matrix_row_value_ids"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       domain="[('attribute_id', '=', parent.matrix_attribute_row_id)]"
+                       column_invisible="parent.matrix_attribute_row_id == False"/>
+                <field name="matrix_col_value_ids"
+                       widget="many2many_tags"
+                       options="{'no_create': True}"
+                       domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]"
+                       column_invisible="parent.matrix_attribute_col_id == False"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
