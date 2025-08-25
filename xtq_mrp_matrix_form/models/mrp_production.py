@@ -461,13 +461,18 @@ class MrpProduction(models.Model):
         Sobrescribe el método original para añadir los valores de atributos de
         la matriz desde la línea de la LdM al diccionario de valores del
         movimiento de stock.
-        Se comprueba el _name del modelo para asegurar que bom_line es del tipo correcto.
+        Esta versión recarga la bom_line desde su ID para asegurar que todos
+        los campos estén disponibles, incluso durante flujos de onchange complejos.
         AC5 de HU-MRP-004.
         """
         res = super()._get_move_raw_values(bom_line, product, product_uom_qty, operation, bom)
-        # La forma más robusta de verificar es usando _name, ya que isinstance
-        # puede fallar con los objetos proxy del ORM durante un onchange.
-        if bom_line and bom_line._name == 'mrp.bom.line':
-            res['matrix_row_value_ids'] = [(6, 0, bom_line.matrix_row_value_ids.ids)]
-            res['matrix_col_value_ids'] = [(6, 0, bom_line.matrix_col_value_ids.ids)]
+        
+        # Durante el onchange, bom_line puede ser un objeto en caché sin todos los
+        # campos. La forma más segura es usar su ID (si existe) para
+        # obtener el registro completo desde la base de datos.
+        if bom_line and getattr(bom_line, 'id', None):
+            bom_line_record = self.env['mrp.bom.line'].browse(bom_line.id)
+            if bom_line_record:
+                res['matrix_row_value_ids'] = [(6, 0, bom_line_record.matrix_row_value_ids.ids)]
+                res['matrix_col_value_ids'] = [(6, 0, bom_line_record.matrix_col_value_ids.ids)]
         return res
