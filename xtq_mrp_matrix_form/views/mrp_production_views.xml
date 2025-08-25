@@ -116,4 +116,26 @@
         </field>
     </record>
 
+    <!-- Añadir columnas de atributos a la lista de componentes -->
+    <record id="mrp_production_view_form_add_matrix_row_col_values" model="ir.ui.view">
+        <field name="name">xtq.mrp.production.form.add.matrix.row.col.values</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="priority">20</field> <!-- Prioridad intermedia -->
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_raw_ids']/list/field[@name='product_uom']" position="after">
+                <field name="matrix_row_value_ids"
+                       widget="many2many_tags"
+                       readonly="1"
+                       optional="show"
+                       column_invisible="parent.matrix_attribute_row_id == False"/>
+                <field name="matrix_col_value_ids"
+                       widget="many2many_tags"
+                       readonly="1"
+                       optional="show"
+                       column_invisible="parent.matrix_attribute_col_id == False"/>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>
