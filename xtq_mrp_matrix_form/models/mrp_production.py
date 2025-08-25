@@ -461,11 +461,14 @@ class MrpProduction(models.Model):
         Sobrescribe el método original para añadir los valores de atributos de
         la matriz desde la línea de la LdM al diccionario de valores del
         movimiento de stock.
-        Este es el punto de herencia correcto que funciona tanto en onchange como al guardar.
+        Se añade una verificación para asegurar que 'bom_line' es del tipo correcto
+        antes de intentar acceder a los campos de la matriz.
         AC5 de HU-MRP-004.
         """
         res = super()._get_move_raw_values(bom_line, product, product_uom_qty, operation, bom)
-        if bom_line:
+        # Asegurarse de que bom_line es una instancia de mrp.bom.line
+        # En algunos flujos, Odoo puede pasar un product.product aquí.
+        if isinstance(bom_line, self.env['mrp.bom.line'].__class__):
             res['matrix_row_value_ids'] = [(6, 0, bom_line.matrix_row_value_ids.ids)]
             res['matrix_col_value_ids'] = [(6, 0, bom_line.matrix_col_value_ids.ids)]
         return res
