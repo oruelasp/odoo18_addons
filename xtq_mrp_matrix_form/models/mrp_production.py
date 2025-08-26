@@ -456,23 +456,24 @@ class MrpProduction(models.Model):
             qty_comparison = float_compare(production.total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
             production.matrix_qty_mismatch = qty_comparison != 0
 
-    def _get_move_raw_values(self, bom_line, product, product_uom_qty, operation, bom):
+    def _get_moves_raw_values(self):
         """
-        Sobrescribe el método original para añadir los valores de atributos de
-        la matriz desde la línea de la LdM al diccionario de valores del
-        movimiento de stock.
-        Esta versión recarga la bom_line desde su ID para asegurar que todos
-        los campos estén disponibles, incluso durante flujos de onchange complejos.
+        Sobrescribe el método que genera la lista de diccionarios de valores
+        para los movimientos de materia prima.
+        Este es un punto de herencia más estable para añadir los datos de la matriz.
         AC5 de HU-MRP-004.
         """
-        res = super()._get_move_raw_values(bom_line, product, product_uom_qty, operation, bom)
+        moves_raw_values = super()._get_moves_raw_values()
         
-        # Durante el onchange, bom_line puede ser un objeto en caché sin todos los
-        # campos. La forma más segura es usar su ID (si existe) para
-        # obtener el registro completo desde la base de datos.
-        if bom_line and getattr(bom_line, 'id', None):
-            bom_line_record = self.env['mrp.bom.line'].browse(bom_line.id)
-            if bom_line_record:
-                res['matrix_row_value_ids'] = [(6, 0, bom_line_record.matrix_row_value_ids.ids)]
-                res['matrix_col_value_ids'] = [(6, 0, bom_line_record.matrix_col_value_ids.ids)]
-        return res
+        bom_line_model = self.env['mrp.bom.line']
+        
+        for values in moves_raw_values:
+            bom_line_id = values.get('bom_line_id')
+            if bom_line_id:
+                # Obtenemos el registro completo para asegurar el acceso a los campos personalizados
+                bom_line_record = bom_line_model.browse(bom_line_id)
+                if bom_line_record:
+                    values['matrix_row_value_ids'] = [(6, 0, bom_line_record.matrix_row_value_ids.ids)]
+                    values['matrix_col_value_ids'] = [(6, 0, bom_line_record.matrix_col_value_ids.ids)]
+                    
+        return moves_raw_values
