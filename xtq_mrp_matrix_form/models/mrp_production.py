@@ -42,21 +42,9 @@ class MrpProduction(models.Model):
         for mo in self: mo.total_matrix_quantity = sum(line.product_qty for line in mo.matrix_line_ids)
 
     # --- La lógica de sincronización JSON se mantiene ---
-    @api.model_create_multi
-    def create(self, vals_list):
-        productions = super().create(vals_list)
-        for production, vals in zip(productions, vals_list):
-            if vals.get('matrix_data_json'):
-                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
-        return productions
-
-    def write(self, vals):
-        res = super().write(vals)
-        if 'matrix_data_json' in vals:
-            for production in self:
-                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
-        return res
-
+    # Se eliminan los métodos create y write duplicados. La lógica se ha unificado en las
+    # definiciones al final del archivo para mantener la consistencia.
+    
     def _sync_matrix_lines_from_json(self, json_data):
         self.ensure_one()
         try:
@@ -355,15 +343,6 @@ class MrpProduction(models.Model):
         self.matrix_line_ids = [(5, 0, 0)] + new_lines_cmds
         return True
 
-    def action_generate_serial(self):
-        # Restaurado al comportamiento original del addon, ya que el flujo ha cambiado.
-        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
-            raise UserError(_(
-                "No se puede generar un número de lote manualmente para esta orden de producción. "
-                "Los lotes se crearán automáticamente desde la matriz al finalizar el proceso."
-            ))
-        return super(MrpProduction, self).action_generate_serial()
-
     def _compute_matrix_qty_mismatch(self):
         precision_digits = self.env['decimal.precision'].precision_get('Product Unit of Measure')
         for production in self:
@@ -424,7 +403,11 @@ class MrpProduction(models.Model):
         Sobrescribe el create para asegurar la persistencia de los atributos
         de la matriz en los movimientos de stock.
         """
+        # Unificando la lógica del primer método create
         production = super().create(vals)
+        if vals.get('matrix_data_json'):
+            production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
+
         bom_line_model = self.env['mrp.bom.line']
         for move in production.move_raw_ids:
             if move.bom_line_id:
@@ -442,6 +425,12 @@ class MrpProduction(models.Model):
         los atributos de la matriz se vuelvan a aplicar.
         """
         res = super().write(vals)
+        
+        # Unificando la lógica del primer método write
+        if 'matrix_data_json' in vals:
+            for production in self:
+                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
+
         if 'bom_id' in vals or 'product_id' in vals:
             bom_line_model = self.env['mrp.bom.line']
             for production in self:
