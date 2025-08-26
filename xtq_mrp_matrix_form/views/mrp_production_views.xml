@@ -21,9 +21,6 @@
                 <button name="action_start_matrix_progress" string="Confirmar Ejecución" type="object"
                         class="oe_highlight"
                         invisible="matrix_state != 'planned'"/>
-                <button name="action_split_by_matrix" string="Dividir por Matriz" type="object"
-                        class="oe_highlight" invisible="1"/>
-                        <!-- invisible="matrix_state != 'progress'"/>-->
                 <button name="action_revert_matrix_to_planned" string="Volver a Programado" type="object"
                         class="oe_highlight"
                         invisible="matrix_state not in ['progress', 'done']"/>

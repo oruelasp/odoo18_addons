@@ -355,11 +355,6 @@ class MrpProduction(models.Model):
         self.matrix_line_ids = [(5, 0, 0)] + new_lines_cmds
         return True
 
-    def button_mark_done(self):
-        # Restaurado al comportamiento estándar de Odoo.
-        # El usuario llamará a este método en las OPs individuales generadas por la matriz.
-        return super(MrpProduction, self).button_mark_done()
-
     def action_generate_serial(self):
         # Restaurado al comportamiento original del addon, ya que el flujo ha cambiado.
         if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
@@ -369,91 +364,14 @@ class MrpProduction(models.Model):
             ))
         return super(MrpProduction, self).action_generate_serial()
 
-    def action_split_by_matrix(self):
-        """
-        Acción principal para dividir una OP según la matriz de producción.
-        1. La OP original se actualiza con la cantidad residual.
-        2. Se crean nuevas OPs (backorders) para cada celda de la matriz.
-        3. Se crean y asignan lotes con atributos a cada nueva OP.
-        4. Se limpia la matriz de la OP original.
-        5. Se devuelve una vista de lista con las nuevas OPs.
-        """
-        self.ensure_one()
-        
-        lines_to_produce = self.matrix_line_ids.filtered(lambda l: l.qty_producing > 0)
-        if not lines_to_produce:
-            raise UserError(_("No ha registrado ninguna cantidad a producir en la matriz."))
-
-        total_matrix_qty = sum(lines_to_produce.mapped('qty_producing'))
-        
-        if float_compare(total_matrix_qty, self.product_qty, precision_rounding=self.product_uom_id.rounding) > 0:
-            raise UserError(_(
-                "La cantidad total de la matriz (%.2f) no puede ser mayor que la cantidad a producir de la orden (%.2f).",
-                total_matrix_qty, self.product_qty
-            ))
-
-        residual_qty = self.product_qty - total_matrix_qty
-        matrix_data_ordered = list(lines_to_produce)
-
-        # La primera cantidad es la que se quedará en la OP original.
-        amounts_for_split = [residual_qty] + [line.qty_producing for line in matrix_data_ordered]
-        
-        # Dividir la OP. `_split_productions` devuelve todas las OPs involucradas.
-        all_productions = self._split_productions({self: amounts_for_split})
-        
-        # Las nuevas OPs son todas excepto la original (self).
-        new_productions = all_productions.filtered(lambda p: p != self)
-
-        if len(new_productions) != len(matrix_data_ordered):
-            raise UserError(_("La división de la orden de producción falló. Se generó un número inesperado de órdenes."))
-
-        for production, matrix_line in zip(new_productions, matrix_data_ordered):
-            lot_name = self.env['ir.sequence'].next_by_code('stock.lot.serial') or _('Nuevo Lote')
-            lot = self.env['stock.lot'].create({
-                'name': lot_name, 
-                'product_id': production.product_id.id,
-                'company_id': production.company_id.id,
-            })
-            self.env['stock.lot.attribute.line'].create([
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_row_id.id, 'value_id': matrix_line.row_value_id.id},
-                {'lot_id': lot.id, 'attribute_id': self.matrix_attribute_col_id.id, 'value_id': matrix_line.col_value_id.id}
-            ])
-
-            # Asignar lote y limpiar la configuración de la matriz en la nueva OP.
-            production.write({
-                'lot_producing_id': lot.id,
-                'matrix_attribute_row_id': False,
-                'matrix_attribute_col_id': False,
-            })
-            if production.state == 'draft':
-                production.action_confirm()
-        
-        # Limpiar la matriz de la OP original y actualizar su estado.
-        self.write({
-            'matrix_state': 'done',
-            'qty_producing': 0,
-        })
-        self.matrix_line_ids.write({'qty_producing': 0})
-
-        # Devolver una acción para mostrar las nuevas OPs en una vista de lista.
-        return {
-            'type': 'ir.actions.act_window',
-            'name': _('Órdenes de Producción Divididas'),
-            'res_model': 'mrp.production',
-            'view_mode': 'list,form',
-            'target': 'current',
-            'domain': [('id', 'in', new_productions.ids)],
-        }
-
-    @api.depends("total_matrix_quantity", "product_qty")
     def _compute_matrix_qty_mismatch(self):
-        """
-        Compara el total de la matriz con la cantidad a producir de la OP.
-        Usa float_compare para manejar imprecisiones con decimales.
-        """
+        precision_digits = self.env['decimal.precision'].precision_get('Product Unit of Measure')
         for production in self:
-            precision_digits = self.env['decimal.precision'].precision_get('Product Unit of Measure')
-            qty_comparison = float_compare(production.total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
+            if not production.matrix_line_ids:
+                production.matrix_qty_mismatch = False
+                continue
+            total_matrix_quantity = sum(production.matrix_line_ids.mapped('product_qty'))
+            qty_comparison = float_compare(total_matrix_quantity, production.product_qty, precision_digits=precision_digits)
             production.matrix_qty_mismatch = qty_comparison != 0
 
     def _get_moves_raw_values(self):
@@ -477,6 +395,28 @@ class MrpProduction(models.Model):
                     values['matrix_col_value_ids'] = [(6, 0, bom_line_record.matrix_col_value_ids.ids)]
                     
         return moves_raw_values
+
+    def action_generate_serial(self):
+        self.ensure_one()
+        # Si es una producción con matriz, creamos un lote estándar pero
+        # le asignamos el nombre de la OP para una mejor trazabilidad.
+        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
+            lot = self.env['stock.lot'].create({
+                'name': self.name,
+                'product_id': self.product_id.id, 
+                'company_id': self.company_id.id,
+            })
+            self.lot_producing_id = lot
+            return {
+                'type': 'ir.actions.act_window',
+                'res_model': 'mrp.production',
+                'view_mode': 'form',
+                'res_id': self.id,
+                'target': 'main',
+            }
+        
+        # Si no, ejecutar la lógica estándar de Odoo.
+        return super().action_generate_serial()
 
     @api.model
     def create(self, vals):

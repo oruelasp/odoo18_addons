@@ -1,53 +1,28 @@
-# HU-MRP-003: Finalizar Producción desde Matriz
+# HU-003: Finalizar Producción y Crear Lote Único
 
-## 1. Rol e Interés
+**Rol:** Jefe de Producción / Responsable de Calidad
 
-| Rol | Interés |
-| :--- | :--- |
-| Jefe de producción / Líder de taller | Necesita finalizar la producción registrada, asegurando que se generen los lotes correctos con sus atributos de Tono y Talla, y que el inventario se actualice de manera precisa. |
+## 1. Historia de Usuario
 
-## 2. Historia de Usuario
+**Como** Responsable de Calidad o Jefe de Producción,
+**Quiero** que al "Marcar como Hecho" una Orden de Producción con matriz, el sistema genere **un único Lote/Número de Serie** estándar,
+**Para que** la trazabilidad se mantenga simple y directa, sabiendo que toda la información detallada de la producción (el desglose de la matriz) reside en la Orden de Producción de origen.
 
-**Como** planificador de producción,
-**quiero** poder finalizar el registro de las cantidades producidas en la matriz,
-**para** que el sistema divida la orden de producción principal, genere lotes con atributos específicos para cada nueva orden, y prepare todo para el registro final de consumo e inventario.
+## 2. Flujo de Trabajo (Paso a Paso)
 
-## 3. Flujo de Trabajo (Proceso Actualizado)
+1.  Abre una OP cuyo estado de matriz sea "En Ejecución".
+2.  Hace clic en el botón estándar **"Marcar como Hecho"**.
+3.  Si el producto requiere seguimiento, Odoo invoca la creación del lote a través de `action_generate_serial`.
+4.  Nuestra lógica intercepta este momento y crea **un único** `stock.lot` estándar, sin añadirle información adicional.
+5.  La OP se asocia a este único lote.
+6.  El flujo estándar de Odoo finaliza, la OP se marca como "Hecha" y el lote es registrado en el inventario.
+7.  Posteriormente, si un usuario necesita conocer el desglose de la producción de ese lote, puede navegar desde el lote a su Orden de Producción de origen y consultar la pestaña "Matriz X,Y", que contiene toda la información detallada.
 
-El proceso de finalización ahora se realiza en dos etapas claras:
+## 3. Criterios de Aceptación
 
-### Etapa 1: División de la Orden de Producción
-
-1.  El usuario abre una Orden de Producción (OP) que ya ha sido planificada y se encuentra en estado de matriz `En Progreso`.
-2.  El usuario ha registrado las cantidades realmente producidas en el campo `Cantidad a Producir` de cada celda de la matriz.
-3.  El usuario hace clic en el botón **"Dividir por Matriz"**.
-4.  **El sistema realiza las siguientes acciones:**
-    *   Valida que la suma de las cantidades en la matriz no supere la cantidad total de la OP.
-    *   Calcula la cantidad "residual" (diferencia entre el total de la OP y el total de la matriz).
-    *   La **OP original** se actualiza y su cantidad a producir se reduce a la cantidad residual. **No se cancela**. Su matriz se limpia y su estado de matriz pasa a `Realizado`.
-    *   Por cada celda con cantidad en la matriz, se crea una **nueva Orden de Producción (backorder)** con esa cantidad específica.
-    *   A cada nueva OP se le crea y asigna un único **Lote/Número de Serie** para el producto terminado.
-    *   A cada Lote se le asignan los **atributos de Tono y Talla** correspondientes a su celda de origen en la matriz.
-    *   Las nuevas OPs se confirman y se dejan en estado "Confirmado" o "En Progreso", listas para la producción.
-5.  **Resultado:** El sistema redirige al usuario a una vista de lista que muestra todas las nuevas OPs que se han creado. La OP original ahora solo representa el saldo pendiente de producir.
-
-### Etapa 2: Finalización de las Órdenes Individuales
-
-1.  Desde la vista de lista, el usuario ahora puede gestionar cada nueva OP de forma independiente.
-2.  El usuario abre una de las nuevas OPs.
-3.  El sistema, a través de la lógica estándar de Odoo, requerirá que el usuario especifique los lotes de los componentes (ej. el lote de la tela) que se consumieron para producir este lote específico de producto terminado.
-4.  Una vez registrado el consumo, el usuario hace clic en el botón estándar **"Realizado"**.
-5.  **El sistema finaliza la OP**, mueve el lote del producto terminado al inventario y cierra el proceso para esa orden específica.
-6.  Este proceso se repite para cada una de las OPs divididas.
-
-## 4. Criterios de Aceptación
-
-*   **[CA-FIN-001]** El botón "Dividir por Matriz" solo debe ser visible cuando el estado de la matriz sea `En Progreso`.
-*   **[CA-FIN-002]** El sistema debe impedir la división si la suma de las cantidades de la matriz es mayor que la cantidad a producir de la OP original.
-*   **[CA-FIN-003]** La OP original debe permanecer activa y su cantidad debe ser igual a la diferencia entre su cantidad original y el total de la matriz.
-*   **[CA-FIN-004]** Se debe crear una nueva OP por cada celda de la matriz con una cantidad mayor a cero.
-*   **[CA-FIN-005]** Cada nueva OP debe tener un lote de producto terminado único.
-*   **[CA-FIN-006]** Cada lote generado debe tener los atributos de Tono (fila) y Talla (columna) correctos, heredados de la matriz.
-*   **[CA-FIN-007]** Después de la división, el usuario debe ser redirigido a una vista de lista que muestre solo las nuevas OPs creadas.
-*   **[CA-FIN-008]** Las nuevas OPs no deben tener ninguna configuración de matriz, comportándose como OPs estándar.
-*   **[CA-FIN-009]** Al intentar finalizar una de las nuevas OPs, el sistema debe solicitar (si aplica) el consumo de componentes con seguimiento por lote/serie.
+-   **Dado** que tengo una OP con una matriz, **cuando** hago clic en "Marcar como Hecho", **entonces** el sistema debe crear **exactamente un** `stock.lot` estándar.
+-   **Y** el `name` del `stock.lot` creado debe ser idéntico al `name` de la Orden de Producción de origen para facilitar la trazabilidad.
+-   **Y** el `stock.lot` creado NO debe contener campos o tablas adicionales con el detalle de la matriz.
+-   **Y** la trazabilidad hacia el detalle de la matriz se logra a través de la relación Lote -> Orden de Producción Origen.
+-   **Y** la lógica para la creación del lote simple debe residir en la sobrescritura del método `action_generate_serial` de `mrp.production`.
+-   **Y** el sistema NO debe crear Órdenes de Producción parciales.
