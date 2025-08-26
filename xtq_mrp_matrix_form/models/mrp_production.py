@@ -477,3 +477,40 @@ class MrpProduction(models.Model):
                     values['matrix_col_value_ids'] = [(6, 0, bom_line_record.matrix_col_value_ids.ids)]
                     
         return moves_raw_values
+
+    @api.model
+    def create(self, vals):
+        """
+        Sobrescribe el create para asegurar la persistencia de los atributos
+        de la matriz en los movimientos de stock.
+        """
+        production = super().create(vals)
+        bom_line_model = self.env['mrp.bom.line']
+        for move in production.move_raw_ids:
+            if move.bom_line_id:
+                # El bom_line_id ya es un recordset aquí
+                bom_line_record = move.bom_line_id
+                move.write({
+                    'matrix_row_value_ids': [(6, 0, bom_line_record.matrix_row_value_ids.ids)],
+                    'matrix_col_value_ids': [(6, 0, bom_line_record.matrix_col_value_ids.ids)],
+                })
+        return production
+
+    def write(self, vals):
+        """
+        Sobrescribe el write para asegurar que si los componentes se regeneran,
+        los atributos de la matriz se vuelvan a aplicar.
+        """
+        res = super().write(vals)
+        if 'bom_id' in vals or 'product_id' in vals:
+            bom_line_model = self.env['mrp.bom.line']
+            for production in self:
+                for move in production.move_raw_ids:
+                    # Aplicar solo si los valores no están ya seteados
+                    if move.bom_line_id and not move.matrix_row_value_ids and not move.matrix_col_value_ids:
+                        bom_line_record = move.bom_line_id
+                        move.write({
+                            'matrix_row_value_ids': [(6, 0, bom_line_record.matrix_row_value_ids.ids)],
+                            'matrix_col_value_ids': [(6, 0, bom_line_record.matrix_col_value_ids.ids)],
+                        })
+        return res
