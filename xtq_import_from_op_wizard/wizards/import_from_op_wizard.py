@@ -19,7 +19,7 @@ class ImportFromOpWizard(models.TransientModel):
     workorder_id = fields.Many2one(
         'mrp.workorder',
         string='Orden de Trabajo',
-        domain="[('production_id', '=', production_id)]"
+        domain="[('production_id', '=', production_id), ('state', 'not in', ('done', 'cancel'))]"
     )
     line_ids = fields.One2many(
         'import.from.op.wizard.line',
@@ -100,15 +100,16 @@ class ImportFromOpWizard(models.TransientModel):
         picking.write({'move_ids': commands})
         _logger.info("Insertadas %s líneas en picking %s mediante move_ids write", len(commands), picking.name)
 
-        def _concat_unique(existing, new):
-            tokens = [t.strip() for t in (existing or '').split(',') if t.strip()]
-            if new not in tokens:
-                tokens.append(new)
-            return ', '.join(tokens)
+        # 2. Asignar origen de OP (sobrescribiendo)
+        picking.origin = self.production_id.name
 
-        picking.origin = _concat_unique(picking.origin, self.production_id.name)
+        # 3. Asignar Orden de Trabajo (sobrescribiendo)
         if self.workorder_id:
-            picking.workorder_origin = _concat_unique(getattr(picking, 'workorder_origin', False), self.workorder_id.name)
+            picking.workorder_id = self.workorder_id.id
+        else:
+            picking.workorder_id = False
+
+        # 4. Propagar proyecto (solo si está vacío)
         if 'project_id' in picking._fields and self.production_id.project_id and not picking.project_id:
             picking.project_id = self.production_id.project_id.id
 

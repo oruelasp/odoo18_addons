@@ -3,16 +3,18 @@ from odoo import fields, models, _
 
 class StockPicking(models.Model):
     """
-    Extiende el modelo stock.picking para añadir campos de trazabilidad
-    relacionados con la importación desde Órdenes de Producción.
+    Extiende el modelo stock.picking para añadir una relación directa con la
+    Orden de Trabajo de la cual se importaron los componentes.
     """
     _inherit = 'stock.picking'
 
-    workorder_origin = fields.Text(
-        string='Origen de OT',
+    workorder_id = fields.Many2one(
+        'mrp.workorder',
+        string='Orden de Trabajo',
         copy=False,
         readonly=True,
-        help="Órdenes de Trabajo de las cuales se importaron componentes."
+        tracking=True,
+        help="Orden de Trabajo de la cual se importaron los componentes."
     )
 
     def action_open_import_from_op_wizard(self):

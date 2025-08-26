@@ -6,14 +6,14 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="action_open_import_from_op_wizard"
+                <button name="%(xtq_import_from_op_wizard.action_import_from_op_wizard)d"
                         string="Importar desde OP"
-                        type="object"
+                        type="action"
                         class="oe_highlight"
                         invisible="state != 'draft'"/>
             </xpath>
             <xpath expr="//field[@name='origin']" position="after">
-                <field name="workorder_origin" readonly="1"/>
+                <field name="workorder_id" readonly="1" optional="show"/>
             </xpath>
         </field>
     </record>
