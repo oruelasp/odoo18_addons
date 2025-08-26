@@ -8,7 +8,7 @@
         <field name="arch" type="xml">
             <!-- 1. Añadir la pestaña de configuración de la matriz -->
             <xpath expr="//notebook" position="inside">
-                <page string="Configuración de Matriz" name="matrix_configuration">
+                <page string="Atributos" name="matrix_configuration">
                     <group>
                         <group>
                             <field name="matrix_attribute_row_id" options="{'no_create': True, 'no_open': True}"/>

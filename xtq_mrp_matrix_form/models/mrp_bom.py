@@ -42,13 +42,13 @@ class MrpBomLine(models.Model):
         'product.attribute.value',
         'mrp_bom_line_row_attr_val_rel',
         'bom_line_id', 'attribute_value_id',
-        string='AtributosFila Aplicables',
+        string='Atributos Fila',
         help="Especifica para qué valores del atributo de Fila aplica este componente. Si está vacío, aplica a todos."
     )
     matrix_col_value_ids = fields.Many2many(
         'product.attribute.value',
         'mrp_bom_line_col_attr_val_rel',
         'bom_line_id', 'attribute_value_id',
-        string='Atributos Columna Aplicables',
+        string='Atributos Columna',
         help="Especifica para qué valores del atributo de Columna aplica este componente. Si está vacío, aplica a todos."
     )
