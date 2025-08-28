@@ -9,9 +9,15 @@ class MrpWorkorder(models.Model):
 
     purchase_order_id = fields.Many2one(
         "purchase.order",
-        string="Purchase Order",
+        string="Orden de Servicio",
         readonly=True,
         copy=False,
+    )
+    is_subcontract = fields.Boolean(
+        related='workcenter_id.is_subcontract',
+        string="¿Es subcontratado?",
+        readonly=True,
+        store=True,
     )
 
     def _calc_operation_cost(self, opt):

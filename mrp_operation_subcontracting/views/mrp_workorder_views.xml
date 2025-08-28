@@ -6,7 +6,8 @@
         <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='state']" position="after">
-                <field name="purchase_order_id"/>
+                <field name="purchase_order_id" optional="hide"/>
+                <field name="is_subcontract" optional="hide"/>
             </xpath>
         </field>
     </record>
@@ -21,6 +22,9 @@
                         class="oe_highlight"
                         invisible="workcenter_id.is_subcontract == False or purchase_order_id != False"/>
             </xpath>
+            <xpath expr="//field[@name='workcenter_id']" position="after">
+                <field name="is_subcontract"/>
+            </xpath>
             <xpath expr="//field[@name='production_id']" position="after">
                 <field name="purchase_order_id" invisible="purchase_order_id == False"/>
             </xpath>
@@ -33,7 +37,8 @@
         <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_editable_view_mo_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='state']" position="after">
-                <field name="purchase_order_id"/>
+                <field name="purchase_order_id" optional="hide"/>
+                <field name="is_subcontract" optional="hide"/>
             </xpath>
         </field>
     </record>

@@ -6,13 +6,13 @@ from odoo import api, exceptions, fields, models, _
 class MrpWorkcenter(models.Model):
     _inherit = 'mrp.workcenter'
 
-    is_subcontract = fields.Boolean("Is Subcontract?")
+    is_subcontract = fields.Boolean("¿Es subcontratado?")
     partner_id = fields.Many2one('res.partner', 
-        string='Vendor', #states=READONLY_STATES, 
+        string='Proveedor', #states=READONLY_STATES, 
         change_default=True, tracking=True, 
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", 
-        help="You can find a vendor by its Name, TIN, Email or Internal Reference.")
+        help="Puede encontrar un proveedor por su Nombre, TIN, Email o Referencia Interna.")
     product_id = fields.Many2one('product.product',
-        string="Subcontract Product",
+        string="Producto de Subcontratación",
         domain="[('type', '=', 'service')]",
-        help="The service product that will be used in the purchase order for this subcontracting operation.")
+        help="El producto de servicio que se usará en la orden de compra para esta operación de subcontratación.")
