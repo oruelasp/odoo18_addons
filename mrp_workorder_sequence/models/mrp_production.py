@@ -9,20 +9,15 @@ class MrpProduction(models.Model):
 
     def _reset_work_order_sequence(self):
         for rec in self:
-            # Add the context flag to prevent the write method in mrp.workorder
-            # from triggering this logic again in an infinite loop.
-            workorders_with_context = rec.workorder_ids.with_context(
-                bypass_sequence_write=True
-            )
-            for current_seq, work in enumerate(workorders_with_context, 1):
+            for current_seq, work in enumerate(rec.workorder_ids, 1):
                 work.sequence = current_seq
 
-    def _link_bom(self, bom):
+    def _create_workorder(self):
         # Bypass sequence assignation on create and make sure there is no gap
         # using _reset_work_order_sequence
         res = super(
             MrpProduction,
             self.with_context(_bypass_sequence_assignation_on_create=True),
-        )._link_bom(bom)
+        )._create_workorder()
         self._reset_work_order_sequence()
         return res
