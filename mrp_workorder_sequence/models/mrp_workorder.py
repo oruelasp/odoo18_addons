@@ -42,14 +42,50 @@ class MrpWorkOrder(models.Model):
         return super().create(values_list)
 
     def write(self, vals):
-        res = super().write(vals)
-        # Check for sequence change AND absence of the bypass flag.
+        # This block handles the drag-and-drop reordering.
+        # It triggers ONLY when 'sequence' is being written and it's not an internal update.
         if 'sequence' in vals and not self.env.context.get('bypass_sequence_write'):
-            # After a sequence change, reset the sequence for all workorders
-            # in the same production order to ensure consistency.
-            for wo in self:
-                if wo.production_id:
-                    # This call is now safe because the writes inside
-                    # _reset_work_order_sequence will have the bypass flag.
-                    wo.production_id._reset_work_order_sequence()
-        return res
+            # Handle each record one by one, which is how the UI sends them.
+            for workorder in self:
+                if not workorder.production_id:
+                    # If there's no production order, there are no siblings to reorder.
+                    continue
+
+                # Get all siblings, sorted by their current sequence.
+                siblings = self.search(
+                    [('production_id', '=', workorder.production_id.id)],
+                    order='sequence asc'
+                )
+
+                # Create a mutable list of records for reordering.
+                sibling_list = list(siblings)
+                if workorder in sibling_list:
+                    sibling_list.remove(workorder)
+
+                # The 'sequence' value from the UI is the new 0-based index for the record.
+                new_index = vals['sequence']
+                # Clamp the index to a valid range to prevent errors.
+                new_index = max(0, min(new_index, len(sibling_list)))
+
+                # Insert the moved record at its new position in the list.
+                sibling_list.insert(new_index, workorder)
+
+                # Re-write the sequence for the entire list with a bypass flag.
+                # This ensures this reordering logic doesn't run in an infinite loop.
+                for i, rec in enumerate(sibling_list):
+                    # We use i + 1 because sequences are typically 1-based for users.
+                    rec.with_context(bypass_sequence_write=True).write({'sequence': i + 1})
+            
+            # After handling the sequence, if there are other values being written
+            # at the same time, let the original method handle them.
+            other_vals = vals.copy()
+            other_vals.pop('sequence')
+            if other_vals:
+                super(MrpWorkOrder, self).write(other_vals)
+            
+            # Return True to signify that we have handled the write operation.
+            return True
+
+        # For all other write operations (e.g., changing state), run the standard Odoo method.
+        # This also handles our own internal calls that have the 'bypass_sequence_write' flag.
+        return super().write(vals)
