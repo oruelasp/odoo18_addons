@@ -14,7 +14,7 @@
     <record id="mrp_workorder_view_form_inherit_subcontract" model="ir.ui.view">
         <field name="name">mrp.workorder.form.inherit.subcontract</field>
         <field name="model">mrp.workorder</field>
-        <field name="inherit_id" ref="mrp.mrp_workorder_view_form"/>
+        <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <button name="action_create_subcontract_po" string="Create Subcontract PO" type="object"
