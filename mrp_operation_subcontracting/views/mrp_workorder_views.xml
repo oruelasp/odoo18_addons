@@ -17,9 +17,9 @@
         <field name="inherit_id" ref="mrp.mrp_production_workorder_form_view_inherit"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
-                <button name="action_create_subcontract_po" string="Create Subcontract PO" type="object"
+                <button name="action_create_subcontract_po" string="Crear Orden de Servicio" type="object"
                         class="oe_highlight"
-                        invisible="not workcenter_id.is_subcontract or purchase_order_id != False"/>
+                        invisible="not workcenter_id.is_subcontract or purchase_order_id"/>
             </xpath>
         </field>
     </record>

@@ -28,7 +28,7 @@ class MrpWorkorder(models.Model):
                     'name': name,
                     'sale_ok': False,
                     'purchase_ok': True,
-                    'detailed_type': "service"
+                    'type': "service"
                 })
 
             cost = self._calc_operation_cost(workorder)
