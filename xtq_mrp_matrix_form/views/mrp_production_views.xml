@@ -23,7 +23,7 @@
                         invisible="matrix_state != 'planned'"/>
                 <button name="action_revert_matrix_to_planned" string="Volver a Programado" type="object"
                         class="oe_highlight"
-                        invisible="matrix_state not in ['progress', 'done']"/>
+                        invisible="(matrix_state not in ['progress', 'done']) or (state in ['done', 'cancel'])"/>
             </xpath>
         </field>
     </record>
@@ -42,18 +42,18 @@
                 <page name="matrix_attributes" string="Atributos">
                     <group>
                         <group>
-                            <field name="matrix_attribute_row_id"/>
-                            <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                            <field name="matrix_attribute_row_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                         <group>
-                            <field name="matrix_attribute_col_id"/>
-                            <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create_edit': True}"/>
+                            <field name="matrix_attribute_col_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
                         </group>
                     </group>
                     <group>
                         <field name="matrix_curve_ids">
                             <list editable="bottom">
-                                <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]"/>
+                                <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]" options="{'no_create': True, 'no_open': True}"/>
                                 <field name="proportion"/>
                             </list>
                         </field>

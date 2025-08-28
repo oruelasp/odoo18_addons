@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_move_line_view_tree_inherit_xtq" model="ir.ui.view">
+        <field name="name">stock.move.line.tree.inherit.xtq</field>
+        <field name="model">stock.move.line</field>
+        <field name="inherit_id" ref="stock.view_move_line_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='picking_id']" position="after">
+                <field name="picking_id.workorder_id" string="Orden de Trabajo" optional="hide"/>
+                <field name="picking_id.project_id" string="Proyecto" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -46,10 +46,19 @@ class ImportFromOpWizard(models.TransientModel):
         moves = self._get_moves_source()
         commands = [(5, 0, 0)]
         for move in moves:
+            # Lógica de prioridad para la cantidad a mover
+            qty_to_move = 0.0
+            if move.quantity > 0:
+                qty_to_move = move.quantity
+            elif move.should_consume_qty > 0:
+                qty_to_move = move.should_consume_qty
+            else:
+                qty_to_move = move.product_uom_qty
+
             commands.append((0, 0, {
                 'product_id': move.product_id.id,
                 'planned_qty': move.product_uom_qty,
-                'quantity_to_move': move.product_uom_qty,
+                'quantity_to_move': qty_to_move,
                 'product_uom_id': move.product_uom.id,
             }))
         self.line_ids = commands

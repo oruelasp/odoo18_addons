@@ -44,7 +44,7 @@ class MrpProduction(models.Model):
     # --- La lógica de sincronización JSON se mantiene ---
     # Se eliminan los métodos create y write duplicados. La lógica se ha unificado en las
     # definiciones al final del archivo para mantener la consistencia.
-    
+
     def _sync_matrix_lines_from_json(self, json_data):
         self.ensure_one()
         try:
@@ -376,26 +376,26 @@ class MrpProduction(models.Model):
         return moves_raw_values
 
     def action_generate_serial(self):
-        self.ensure_one()
-        # Si es una producción con matriz, creamos un lote estándar pero
-        # le asignamos el nombre de la OP para una mejor trazabilidad.
-        if self.matrix_attribute_row_id and self.matrix_attribute_col_id:
-            lot = self.env['stock.lot'].create({
-                'name': self.name,
-                'product_id': self.product_id.id, 
-                'company_id': self.company_id.id,
-            })
-            self.lot_producing_id = lot
-            return {
-                'type': 'ir.actions.act_window',
-                'res_model': 'mrp.production',
-                'view_mode': 'form',
-                'res_id': self.id,
-                'target': 'main',
-            }
-        
-        # Si no, ejecutar la lógica estándar de Odoo.
-        return super().action_generate_serial()
+        # Se elimina la primera implementación duplicada.
+        # La lógica se consolida aquí.
+        for production in self:
+            if production.matrix_attribute_row_id and production.matrix_attribute_col_id:
+                # Si es una producción con matriz, creamos un lote estándar pero
+                # le asignamos el nombre de la OP para una mejor trazabilidad.
+                # Si ya tiene un lote, no hacemos nada para evitar duplicados.
+                if production.lot_producing_id:
+                    continue
+                lot = self.env['stock.lot'].create({
+                    'name': production.name,
+                    'product_id': production.product_id.id,
+                    'company_id': production.company_id.id,
+                })
+                production.lot_producing_id = lot
+                # NO devolvemos una acción para evitar la recarga de la vista.
+            else:
+                # Si no es una OP de matriz, ejecutamos la lógica estándar de Odoo.
+                super(MrpProduction, production).action_generate_serial()
+        return True
 
     @api.model
     def create(self, vals):
@@ -403,6 +403,15 @@ class MrpProduction(models.Model):
         Sobrescribe el create para asegurar la persistencia de los atributos
         de la matriz en los movimientos de stock.
         """
+        # Punto 1: Asignar atributos de matriz a OPs secundarias desde la LdM.
+        # Si la OP se está creando automáticamente (sin intervención de la UI),
+        # los onchanges no se disparan. Forzamos la herencia aquí.
+        if 'bom_id' in vals and 'matrix_attribute_row_id' not in vals and 'matrix_attribute_col_id' not in vals:
+            bom = self.env['mrp.bom'].browse(vals['bom_id'])
+            if bom and bom.matrix_attribute_row_id and bom.matrix_attribute_col_id:
+                vals['matrix_attribute_row_id'] = bom.matrix_attribute_row_id.id
+                vals['matrix_attribute_col_id'] = bom.matrix_attribute_col_id.id
+
         # Unificando la lógica del primer método create
         production = super().create(vals)
         if vals.get('matrix_data_json'):
