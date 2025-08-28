@@ -10,7 +10,7 @@ class MrpProduction(models.Model):
     def _reset_work_order_sequence(self):
         for rec in self:
             for current_seq, work in enumerate(rec.workorder_ids, 1):
-                work.sequence_no = current_seq
+                work.sequence = current_seq
 
     def _link_bom(self, bom):
         # Bypass sequence assignation on create and make sure there is no gap

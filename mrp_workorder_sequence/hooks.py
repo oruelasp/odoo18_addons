@@ -6,11 +6,11 @@ def post_init_hook(env):
     env.cr.execute(
         """
             UPDATE mrp_workorder
-            SET sequence_no = n.sequence_no
+            SET sequence = n.sequence
             FROM (
                 SELECT
                     id,
-                    ROW_NUMBER() OVER (PARTITION BY production_id) AS sequence_no
+                    ROW_NUMBER() OVER (PARTITION BY production_id) AS sequence
                 FROM mrp_workorder
                 ORDER BY production_id, id
             ) AS n
