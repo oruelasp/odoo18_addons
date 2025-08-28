@@ -38,13 +38,14 @@ class MrpWorkorder(models.Model):
         workcenter = self.workcenter_id
         product = self.workcenter_id.product_id
 
+        quantity_to_purchase = self.production_id.qty_producing if self.production_id.qty_producing > 0 else self.production_id.product_qty
         cost = self._calc_operation_cost(self)
         po_vals = {
             'partner_id': workcenter.partner_id.id,
             'origin': f"{self.production_id.name} - {self.name}",
             'order_line': [Command.create({
                 'product_id': product.id,
-                'product_qty': self.production_id.product_qty,
+                'product_qty': quantity_to_purchase,
                 'price_unit': cost,
             })],
         }
