@@ -42,7 +42,7 @@ class MrpWorkOrder(models.Model):
         return super().create(values_list)
 
     def write(self, vals):
-        if 'sequence' in vals:
+        if 'sequence' in vals and not self.env.context.get('bypass_sequence_write'):
             # Handle drag-and-drop reordering to avoid cyclic dependency errors.
             # We handle records one by one, which is fine for drag-and-drop.
             for line in self:
@@ -68,7 +68,7 @@ class MrpWorkOrder(models.Model):
 
                 # Re-assign the sequence to all siblings
                 for i, rec in enumerate(line_list):
-                    rec.with_context(bypass_sequence_write=True).write({'sequence': i + 1})
+                    rec.with_context(bypass_sequence_write=True).write({'sequence': i})
             
             # If there are other values to write, write them now on the original recordset
             other_vals = vals.copy()
