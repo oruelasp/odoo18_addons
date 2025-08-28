@@ -42,40 +42,11 @@ class MrpWorkOrder(models.Model):
         return super().create(values_list)
 
     def write(self, vals):
-        if 'sequence' in vals and not self.env.context.get('bypass_sequence_write'):
-            # Handle drag-and-drop reordering to avoid cyclic dependency errors.
-            # We handle records one by one, which is fine for drag-and-drop.
-            for line in self:
-                # Get all siblings, including self, sorted by current sequence
-                lines = self.search(
-                    [('production_id', '=', line.production_id.id)],
-                    order='sequence asc'
-                )
-                # If the line is not in the list, it's a new line, so we can skip
-                if line not in lines:
-                    continue
-
-                # Create a mutable list of records
-                line_list = list(lines)
-                line_list.remove(line)
-
-                # The sequence from the UI is the new index.
-                # Ensure it's within the valid range.
-                new_index = vals['sequence']
-                new_index = max(0, min(new_index, len(line_list)))
-
-                line_list.insert(new_index, line)
-
-                # Re-assign the sequence to all siblings
-                for i, rec in enumerate(line_list):
-                    rec.with_context(bypass_sequence_write=True).write({'sequence': i})
-            
-            # If there are other values to write, write them now on the original recordset
-            other_vals = vals.copy()
-            other_vals.pop('sequence')
-            if other_vals:
-                return super(MrpWorkOrder, self).write(other_vals)
-
-            return True
-
-        return super(MrpWorkOrder, self).write(vals)
+        res = super().write(vals)
+        if 'sequence' in vals:
+            # After a sequence change, reset the sequence for all workorders
+            # in the same production order to ensure consistency.
+            for wo in self:
+                if wo.production_id:
+                    wo.production_id._reset_work_order_sequence()
+        return res
