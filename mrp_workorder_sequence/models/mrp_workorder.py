@@ -43,10 +43,13 @@ class MrpWorkOrder(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        if 'sequence' in vals:
+        # Check for sequence change AND absence of the bypass flag.
+        if 'sequence' in vals and not self.env.context.get('bypass_sequence_write'):
             # After a sequence change, reset the sequence for all workorders
             # in the same production order to ensure consistency.
             for wo in self:
                 if wo.production_id:
+                    # This call is now safe because the writes inside
+                    # _reset_work_order_sequence will have the bypass flag.
                     wo.production_id._reset_work_order_sequence()
         return res
