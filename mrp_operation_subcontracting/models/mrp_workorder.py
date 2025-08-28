@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields, models, api, Command
+from odoo import api, fields, models, _, Command
+from odoo.exceptions import UserError
 
 class MrpWorkorder(models.Model):
     _inherit = 'mrp.workorder'
@@ -18,29 +19,38 @@ class MrpWorkorder(models.Model):
         return (duration_expected / 60) * opt.workcenter_id.costs_hour
 
     def action_create_subcontract_po(self):
-        for workorder in self.filtered(lambda wo: wo.workcenter_id.is_subcontract and not wo.purchase_order_id):
-            workcenter = workorder.workcenter_id
-            name = f"{workorder.id}_{workorder.name}@{workorder.production_id.name}"
-            # create service product
-            product = self.env['product.product'].search([('name', '=', name)], limit=1)
-            if not product:
-                product = self.env['product.product'].create({
-                    'name': name,
-                    'sale_ok': False,
-                    'purchase_ok': True,
-                    'type': "service"
-                })
+        self.ensure_one()
+        if not self.workcenter_id.is_subcontract:
+            raise UserError(_("This work order is not a subcontracting operation."))
+        if self.purchase_order_id:
+            raise UserError(_("A purchase order has already been created for this work order."))
+        if not self.workcenter_id.partner_id:
+            raise UserError(_("You must configure a Vendor on the subcontracting Work Center."))
+        if not self.workcenter_id.product_id:
+            raise UserError(_("You must configure a Subcontract Product on the subcontracting Work Center."))
 
-            cost = self._calc_operation_cost(workorder)
-            po_vals = {
-                'partner_id': workcenter.partner_id.id,
-                'origin': name,
-                'order_line': [Command.create({
-                    'product_id': product.id,
-                    'product_qty': workorder.production_id.product_qty,
-                    'price_unit': cost,
-                })],
-            }
-            purchase_order = self.env['purchase.order'].create(po_vals)
-            workorder.purchase_order_id = purchase_order.id
-        return True                
+        workcenter = self.workcenter_id
+        product = self.workcenter_id.product_id
+
+        cost = self._calc_operation_cost(self)
+        po_vals = {
+            'partner_id': workcenter.partner_id.id,
+            'origin': f"{self.production_id.name} - {self.name}",
+            'order_line': [Command.create({
+                'product_id': product.id,
+                'product_qty': self.production_id.product_qty,
+                'price_unit': cost,
+            })],
+        }
+        purchase_order = self.env['purchase.order'].create(po_vals)
+        self.purchase_order_id = purchase_order.id
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Subcontracting Purchase Order'),
+            'res_model': 'purchase.order',
+            'res_id': purchase_order.id,
+            'view_mode': 'form',
+            'view_id': self.env.ref('purchase.purchase_order_form').id,
+            'target': 'current',
+        }                

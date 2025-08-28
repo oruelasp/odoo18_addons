@@ -12,6 +12,9 @@
                         invisible="is_subcontract == False"
                         required="is_subcontract == True"
                         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]"/>
+                    <field name="product_id"
+                        invisible="is_subcontract == False"
+                        required="is_subcontract == True"/>
                 </xpath>
             </field>
         </record>

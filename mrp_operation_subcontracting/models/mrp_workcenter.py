@@ -12,3 +12,7 @@ class MrpWorkcenter(models.Model):
         change_default=True, tracking=True, 
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", 
         help="You can find a vendor by its Name, TIN, Email or Internal Reference.")
+    product_id = fields.Many2one('product.product',
+        string="Subcontract Product",
+        domain="[('type', '=', 'service')]",
+        help="The service product that will be used in the purchase order for this subcontracting operation.")
