@@ -6,7 +6,9 @@ from odoo.exceptions import UserError
 
 class MrpWorkorder(models.Model):
     _inherit = 'mrp.workorder'
+    _order = 'sequence_ref, sequence, id'
 
+    sequence_ref = fields.Integer(string='Secuencia de Referencia', default=10)
     purchase_order_id = fields.Many2one(
         "purchase.order",
         string="Orden de Servicio",
