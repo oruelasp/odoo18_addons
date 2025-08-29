@@ -9,7 +9,7 @@
         />
         <field name="arch" type="xml">
             <field name="name" position="before">
-                <field name="sequence" />
+                <field name="sequence" widget="handle" />
             </field>
         </field>
     </record>
