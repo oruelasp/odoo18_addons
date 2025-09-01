@@ -146,7 +146,7 @@
                     <notebook>
                         <page string="Ligne d'inventaire">
                             <field name="line_ids">
-                                <tree editable="bottom" decoration-danger="difference_qty != 0">
+                                <list editable="bottom" decoration-danger="difference_qty != 0">
                                     <field name="product_id"/>
                                     <field name="categ_id" optional="hide"/>
                                     <field name="prod_lot_id"/>
@@ -157,7 +157,7 @@
                                     <field name="company_id" optional="hide"/>
                                     <field name="package_id" optional="hide"/>
                                     <field name="state" optional="hide"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                     </notebook>
@@ -175,7 +175,7 @@
         <field name="model">stock.inventory</field>
         <field name="priority">1000</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name" />
                 <field name="product_selection" optional="hide" />
                 <field name="location_ids" widget="many2many_tags" optional="hide" />
@@ -189,7 +189,7 @@
                 />
                 <field name="date" />
                 <field name="company_id" optional="hide" />
-            </tree>
+            </list>
         </field>
     </record>
 
