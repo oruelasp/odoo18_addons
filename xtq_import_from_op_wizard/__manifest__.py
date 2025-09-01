@@ -1,4 +1,5 @@
-﻿{
+﻿# -*- coding: utf-8 -*-
+{
     'name': 'XTQ | Asistente para Importar desde OP',
     'version': '18.0.1.0.1',
     'category': 'Inventory/Inventory',
@@ -18,4 +19,5 @@
     'installable': True,
     'application': False,
     'license': 'LGPL-3',
+    'auto_install': False,
 }
