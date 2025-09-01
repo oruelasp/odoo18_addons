@@ -213,7 +213,7 @@
     <record id="action_view_inventory_group_form" model="ir.actions.act_window">
         <field name="name">Inventory Adjustment Group</field>
         <field name="res_model">stock.inventory</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_inventory_group_tree" />
     </record>
 
