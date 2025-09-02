@@ -17,14 +17,17 @@ class ResUsers(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         users = super().create(vals_list)
+        # Using sudo() to ensure the group modification always has permissions
+        restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').sudo()
         for user in users.filtered('stock_restrictions_active'):
-            self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').users = [(4, user.id)]
+            restricted_group.users = [(4, user.id)]
         return users
 
     def write(self, vals):
         res = super().write(vals)
         if 'stock_restrictions_active' in vals:
-            restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user')
+            # Using sudo() to ensure the group modification always has permissions
+            restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').sudo()
             for user in self:
                 if user.stock_restrictions_active:
                     restricted_group.users = [(4, user.id)]
