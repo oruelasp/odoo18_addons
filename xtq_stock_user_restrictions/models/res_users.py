@@ -33,6 +33,11 @@ class ResUsers(models.Model):
                     restricted_group.users = [(4, user.id)]
                 else:
                     restricted_group.users = [(3, user.id)]
+            
+            # After programmatically changing group memberships, we MUST clear the caches
+            # for the affected users. Otherwise, their permissions might not be updated
+            # in their current session, leading to the exact access errors reported.
+            self.clear_caches()
         return res
 
     def _get_allowed_picking_type_ids(self):
