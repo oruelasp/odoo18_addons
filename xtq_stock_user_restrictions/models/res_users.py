@@ -58,7 +58,9 @@ class ResUsers(models.Model):
                 allowed_picking_type_ids.update(rule.picking_type_ids.ids)
         
         if warehouses_to_fetch_all:
-            all_types_in_warehouses = self.env['stock.picking.type'].search([
+            # Using sudo() to bypass the chicken-and-egg problem where the rule check
+            # would prevent the search for the records needed to evaluate the rule itself.
+            all_types_in_warehouses = self.env['stock.picking.type'].sudo().search([
                 ('warehouse_id', 'in', warehouses_to_fetch_all.ids)
             ])
             allowed_picking_type_ids.update(all_types_in_warehouses.ids)
