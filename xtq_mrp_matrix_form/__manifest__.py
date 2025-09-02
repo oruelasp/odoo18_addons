@@ -18,7 +18,6 @@
     ],
     'assets': {
         'web.assets_backend': [
-            # El orden es importante: primero el JS, luego la plantilla XML
             'xtq_mrp_matrix_form/static/src/components/production_matrix_widget.js',
             'xtq_mrp_matrix_form/static/src/components/production_matrix_widget.xml',
         ],
