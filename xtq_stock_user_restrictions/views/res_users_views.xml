@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_stock_restrictions" model="ir.ui.view">
+        <field name="name">res.users.form.stock.restrictions</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Stock Restrictions" name="stock_restrictions">
+                    <group>
+                        <field name="stock_restrictions_active"/>
+                    </group>
+                    <field name="stock_restriction_rule_ids"
+                           invisible="not stock_restrictions_active">
+                        <list editable="bottom">
+                            <field name="warehouse_id"/>
+                            <field name="picking_type_ids"
+                                   widget="many2many_tags"
+                                   domain="[('warehouse_id', '=', warehouse_id)]"
+                                   options="{'no_create': True}"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
