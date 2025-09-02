@@ -13,11 +13,17 @@
             <field name="comment">This is a technical group assigned automatically to users who have stock restrictions enabled.</field>
         </record>
 
-        <!-- Step 1: Create a new, visible group for global access -->
+        <!-- New, visible category for the global access group, as per user's suggestion -->
+        <record id="stock_restrictions_global_access_category" model="ir.module.category">
+            <field name="name">Custom Inventory Permissions</field>
+            <field name="description">Category for custom inventory permission groups.</field>
+            <field name="sequence">5</field> <!-- Place it near the standard Inventory category -->
+        </record>
+
+        <!-- Assign the global access group to the new visible category -->
         <record id="group_stock_global_manager" model="res.groups">
             <field name="name">Global Inventory Management</field>
-            <!-- Assign to a visible category like Inventory/Manager -->
-            <field name="category_id" ref="stock.module_category_stock_management"/>
+            <field name="category_id" ref="xtq_stock_user_restrictions.stock_restrictions_global_access_category"/>
             <field name="implied_ids" eval="[(4, ref('stock.group_stock_manager'))]"/>
             <field name="comment">Users in this group have unrestricted access to all picking types and stock moves, bypassing the logic of this module.</field>
         </record>

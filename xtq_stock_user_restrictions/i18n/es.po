@@ -86,3 +86,7 @@ msgstr "Gestión Global de Inventario"
 #. module: xtq_stock_user_restrictions
 msgid "Users in this group have unrestricted access to all picking types and stock moves, bypassing the logic of this module."
 msgstr "Los usuarios en este grupo tienen acceso sin restricciones a todos los tipos de operación y movimientos de inventario, ignorando la lógica de este módulo."
+
+#. module: xtq_stock_user_restrictions
+msgid "Custom Inventory Permissions"
+msgstr "Permisos Personalizados de Inventario"
