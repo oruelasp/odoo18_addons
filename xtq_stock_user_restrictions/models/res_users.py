@@ -14,15 +14,41 @@ class ResUsers(models.Model):
         string='Stock Restriction Rules',
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        users = super().create(vals_list)
+        restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user', raise_if_not_found=False)
+        if restricted_group:
+            for user in users.filtered('stock_restrictions_active'):
+                restricted_group.sudo().users = [(4, user.id)]
+        return users
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'stock_restrictions_active' in vals:
+            restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user', raise_if_not_found=False)
+            if restricted_group:
+                for user in self:
+                    if user.stock_restrictions_active:
+                        restricted_group.sudo().users = [(4, user.id)]
+                    else:
+                        restricted_group.sudo().users = [(3, user.id)]
+                self.clear_caches()
+        return res
+
     def _get_allowed_picking_type_ids(self):
         """
         Returns the list of picking type IDs the user has access to based on
         their restriction rules.
         """
         self.ensure_one()
+        
+        # This condition handles point 2 of your request:
+        # If restrictions are active but no rules are defined, the user should see nothing.
+        if not self.stock_restriction_rule_ids:
+            return []
 
         allowed_picking_type_ids = set()
-        # Warehouses for which all picking types should be fetched
         warehouses_to_fetch_all = self.env['stock.warehouse']
 
         for rule in self.stock_restriction_rule_ids:
