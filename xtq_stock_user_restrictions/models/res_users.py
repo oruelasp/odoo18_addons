@@ -43,7 +43,6 @@ class ResUsers(models.Model):
         """
         self.ensure_one()
         
-        # This condition handles point 2 of your request:
         # If restrictions are active but no rules are defined, the user should see nothing.
         if not self.stock_restriction_rule_ids:
             return []
@@ -52,9 +51,16 @@ class ResUsers(models.Model):
         warehouses_to_fetch_all = self.env['stock.warehouse']
 
         for rule in self.stock_restriction_rule_ids:
-            if not rule.picking_type_ids:
-                warehouses_to_fetch_all |= rule.warehouse_id
-            else:
+            if rule.warehouse_id:
+                if not rule.picking_type_ids:
+                    # Case 1: Warehouse is set, but no picking types. Allow all from this warehouse.
+                    warehouses_to_fetch_all |= rule.warehouse_id
+                else:
+                    # Case 2: Warehouse and specific picking types are set. Allow only those.
+                    allowed_picking_type_ids.update(rule.picking_type_ids.ids)
+            elif rule.picking_type_ids:
+                # Case 3: No warehouse, but specific picking types are set. Allow them.
+                # This is for picking types that don't have a warehouse linked.
                 allowed_picking_type_ids.update(rule.picking_type_ids.ids)
         
         if warehouses_to_fetch_all:

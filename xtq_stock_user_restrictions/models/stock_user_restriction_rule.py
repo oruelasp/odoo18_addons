@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 class StockUserRestrictionRule(models.Model):
     _name = 'stock.user.restriction.rule'
@@ -12,13 +13,19 @@ class StockUserRestrictionRule(models.Model):
     )
     warehouse_id = fields.Many2one(
         comodel_name='stock.warehouse',
-        required=True,
+        # This field is no longer required to allow setting rules for picking types without a warehouse.
     )
     picking_type_ids = fields.Many2many(
         comodel_name='stock.picking.type',
         string='Allowed Picking Types',
-        help="If left empty, all picking types for the selected warehouse will be allowed.",
+        help="If a warehouse is selected and this field is left empty, all picking types for that warehouse will be allowed.",
     )
+
+    @api.constrains('warehouse_id', 'picking_type_ids')
+    def _check_warehouse_or_picking_type(self):
+        for rule in self:
+            if not rule.warehouse_id and not rule.picking_type_ids:
+                raise ValidationError("A rule must have either a Warehouse or at least one Allowed Picking Type defined.")
 
     @api.model_create_multi
     def create(self, vals_list):

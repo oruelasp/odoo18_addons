@@ -16,3 +16,15 @@
     *   **Tipos de Operación Permitidos:** "PRODUCCION MN: Salidas Internas"
 *   **Y** guardo los cambios.
 *   **Entonces** el sistema debe almacenar y aplicar estas reglas exclusivamente para el usuario "John K.", sin afectar a otros usuarios.
+
+### Escenario de Aceptación Alternativo: Tipos de Operación sin Almacén
+
+*   **Dado** que existen tipos de operación que no están asociados a ningún almacén (ej. "Control de Calidad Global").
+*   **Y** estoy en la ficha del usuario "John K." con las restricciones activadas.
+*   **Cuando** añado una nueva línea en la tabla de reglas, dejo el campo **"Almacén Permitido" en blanco**.
+*   **Y** en la columna "Tipos de Operación Permitidos", selecciono "Control de Calidad Global".
+*   **Y** guardo los cambios.
+*   **Entonces** el sistema debe permitir a "John K." acceder únicamente a ese tipo de operación, además de las otras reglas que tenga configuradas.
+
+---
+**Nota Importante sobre la Lógica de las Reglas:** Para que una regla sea válida, debe tener o bien un **Almacén Permitido** o al menos un **Tipo de Operación Permitido**. No se pueden crear líneas completamente vacías.
