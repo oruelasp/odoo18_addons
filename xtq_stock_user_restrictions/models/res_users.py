@@ -14,37 +14,10 @@ class ResUsers(models.Model):
         string='Stock Restriction Rules',
     )
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        users = super().create(vals_list)
-        # Using sudo() to ensure the group modification always has permissions
-        restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').sudo()
-        for user in users.filtered('stock_restrictions_active'):
-            restricted_group.users = [(4, user.id)]
-        return users
-
-    def write(self, vals):
-        res = super().write(vals)
-        if 'stock_restrictions_active' in vals:
-            # Using sudo() to ensure the group modification always has permissions
-            restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').sudo()
-            for user in self:
-                if user.stock_restrictions_active:
-                    restricted_group.users = [(4, user.id)]
-                else:
-                    restricted_group.users = [(3, user.id)]
-            
-            # After programmatically changing group memberships, we MUST clear the caches
-            # for the affected users. Otherwise, their permissions might not be updated
-            # in their current session, leading to the exact access errors reported.
-            self.clear_caches()
-        return res
-
     def _get_allowed_picking_type_ids(self):
         """
         Returns the list of picking type IDs the user has access to based on
         their restriction rules.
-        This method is intended to be called only for users with active restrictions.
         """
         self.ensure_one()
 
