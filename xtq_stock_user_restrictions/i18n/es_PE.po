@@ -1,0 +1,80 @@
+# Spanish translation for Odoo module xtq_stock_user_restrictions
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-25 10:00+0000\n"
+"PO-Revision-Date: 2024-07-25 10:00+0000\n"
+"Last-Translator: Gemini Assistant\n"
+"Language-Team: Spanish\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#. module: xtq_stock_user_restrictions
+msgid "Activate Stock Restrictions"
+msgstr "Activar Restricciones de Inventario"
+
+#. module: xtq_stock_user_restrictions
+msgid "Allowed Picking Types"
+msgstr "Tipos de Operación Permitidos"
+
+#. module: xtq_stock_user_restrictions
+msgid "Allows granular access control for users on specific Warehouses\n"
+"        and Picking Types."
+msgstr "Permite un control de acceso granular para los usuarios en Almacenes y Tipos de Operación específicos."
+
+#. module: xtq_stock_user_restrictions
+msgid "If checked, the stock restrictions defined below will be applied to this user."
+msgstr "Si está marcado, las restricciones de inventario definidas a continuación se aplicarán a este usuario."
+
+#. module: xtq_stock_user_restrictions
+msgid "If left empty, all picking types for the selected warehouse will be allowed."
+msgstr "Si se deja vacío, se permitirán todos los tipos de operación para el almacén seleccionado."
+
+#. module: xtq_stock_user_restrictions
+msgid "Inventory/Security"
+msgstr "Inventario/Seguridad"
+
+#. module: xtq_stock_user_restrictions
+msgid "Stock Restriction Rules"
+msgstr "Reglas de Restricción de Inventario"
+
+#. module: xtq_stock_user_restrictions
+msgid "Stock Restrictions"
+msgstr "Restricciones de Inventario"
+
+#. module: xtq_stock_user_restrictions
+msgid "Stock User Restriction Rule"
+msgstr "Regla de Restricción de Inventario para Usuario"
+
+#. module: xtq_stock_user_restrictions
+msgid "Stock User Restrictions"
+msgstr "Restricciones de Usuario para Inventario"
+
+#. module: xtq_stock_user_restrictions
+msgid "This module enhances Odoo's security by allowing administrators to\n"
+"        configure inventory access restrictions directly on the user form.\n"
+"        - Activate restrictions per user.\n"
+"        - Define rules by allowed Warehouse.\n"
+"        - Specify allowed Picking Types for each Warehouse.\n"
+"        - If no Picking Types are specified for a Warehouse, all are allowed.\n"
+"        - Security rules are applied to Picking and Picking Type views.\n"
+"        - Location visibility is not restricted to allow inter-warehouse transfers."
+msgstr "Este módulo mejora la seguridad de Odoo al permitir a los administradores configurar restricciones de acceso al inventario directamente en el formulario del usuario.\n"
+"- Activar restricciones por usuario.\n"
+"- Definir reglas por Almacén permitido.\n"
+"- Especificar Tipos de Operación permitidos para cada Almacén.\n"
+"- Si no se especifican Tipos de Operación para un Almacén, todos están permitidos.\n"
+"- Las reglas de seguridad se aplican a las vistas de Transferencias y Tipos de Operación.\n"
+"- La visibilidad de las Ubicaciones no está restringida para permitir transferencias entre almacenes."
+
+#. module: xtq_stock_user_restrictions
+msgid "User-specific Picking Type Restriction"
+msgstr "Restricción de Tipos de Operación Específica del Usuario"
+
+#. module: xtq_stock_user_restrictions
+msgid "User-specific Stock Picking Restriction"
+msgstr "Restricción de Transferencias de Inventario Específica del Usuario"
