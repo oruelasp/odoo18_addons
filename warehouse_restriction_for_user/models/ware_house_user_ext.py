@@ -14,94 +14,87 @@ class ResUsers(models.Model):
     @api.onchange('restrict_operation', 'restrict_location', 'restrict_ware_house')
     def ware_get(self):
         if not self.restrict_ware_house:
-            self.update({
-                'allowed_ware_house_ids': None
-            })
+            self.allowed_ware_house_ids = [(5, 0, 0)]
         if not self.restrict_operation:
-            self.update({
-                'ware_house_picking_type_ids': None
-            })
+            self.ware_house_picking_type_ids = [(5, 0, 0)]
         if not self.restrict_location:
-            self.update({
-                'allow_location_ids': None
-            })
+            self.allow_location_ids = [(5, 0, 0)]
 
-    def hide_menu_item(self):
+    def _toggle_menus(self):
+        """
+        Show or hide menus based on user restrictions.
+        This is a workaround and might not be fully effective in Odoo 18+ web client.
+        Prefer using security groups on menus directly.
+        """
+        # Deactivate all relevant menus first, then activate the ones that should be visible.
+        menus_to_manage = [
+            'stock.in_picking', 'stock.out_picking', 'stock.int_picking',
+            'mrp.mrp_operation_picking', 'stock_picking_batch.stock_picking_batch_menu',
+            'stock_dropshipping.dropship_picking'
+        ]
+        all_menus = self.env['ir.ui.menu']
+        for menu_xml_id in menus_to_manage:
+            menu = self.env.ref(menu_xml_id, raise_if_not_found=False)
+            if menu:
+                all_menus += menu
+        
+        all_menus.write({'active': True}) # Reset all to active
+
         if self.restrict_operation:
-            menu_id = self.env.ref('stock.in_picking')
-            if menu_id:
-                if 'incoming' not in self.ware_house_picking_type_ids.mapped('code'):
-                    menu_id.active = False
-                else:
-                    menu_id.active = True
-            menu_id = self.env.ref('stock.out_picking')
-            if menu_id:
-                if 'outgoing' not in self.ware_house_picking_type_ids.mapped('code'):
-                    menu_id.active = False
-                else:
-                    menu_id.active = True
-            menu_id = self.env.ref('stock.int_picking')
+            # Map codes to menus
+            code_menu_map = {
+                'incoming': ['stock.in_picking'],
+                'outgoing': ['stock.out_picking'],
+                'internal': ['stock.int_picking'],
+                'mrp_operation': ['mrp.mrp_operation_picking'],
+                'Batch Transfers': ['stock_picking_batch.stock_picking_batch_menu'],
+                'dropship': ['stock_dropshipping.dropship_picking'],
+            }
+            
+            allowed_codes = self.ware_house_picking_type_ids.mapped('code')
+            menus_to_deactivate = self.env['ir.ui.menu']
+            
+            for code, menu_xml_ids in code_menu_map.items():
+                if code not in allowed_codes:
+                    for menu_xml_id in menu_xml_ids:
+                        menu = self.env.ref(menu_xml_id, raise_if_not_found=False)
+                        if menu:
+                            menus_to_deactivate += menu
+            
+            if menus_to_deactivate:
+                menus_to_deactivate.write({'active': False})
 
-            if menu_id:
-                if 'internal' not in self.ware_house_picking_type_ids.mapped('code'):
-                    menu_id.active = False
-                else:
-                    menu_id.active = True
-            mrp_module = self.env['ir.module.module'].search(
-                [('state', '=', 'installed'), ('name', '=', 'mrp')])
-            if mrp_module:
-                menu_id = self.env.ref('mrp.mrp_operation_picking')
-                if menu_id:
-                    if 'mrp_operation' not in self.ware_house_picking_type_ids.mapped('code'):
-                        menu_id.active = False
-                    else:
-                        menu_id.active = True
-            stock_picking_batch_module = self.env['ir.module.module'].search(
-                [('state', '=', 'installed'), ('name', '=', 'stock_picking_batch')])
-            if stock_picking_batch_module:
-                menu_id = self.env.ref('stock_picking_batch.stock_picking_batch_menu')
-                if menu_id:
-                    if 'Batch Transfers' not in self.ware_house_picking_type_ids.mapped('code'):
-                        menu_id.active = False
-                    else:
-                        menu_id.active = True
-            stock_dropshipping_module = self.env['ir.module.module'].search(
-                [('state', '=', 'installed'), ('name', '=', 'stock_dropshipping')])
-            if stock_dropshipping_module:
-                menu_id = self.env.ref('stock_dropshipping.dropship_picking')
-                if menu_id:
-                    if 'dropship' not in self.ware_house_picking_type_ids.mapped('code'):
-                        menu_id.active = False
-                    else:
-                        menu_id.active = True
-        else:
-            in_menu_id = self.env.ref('stock.in_picking')
-            if in_menu_id:
-                in_menu_id.active = True
-            int_menu_id = self.env.ref('stock.int_picking')
-            if int_menu_id:
-                int_menu_id.active = True
-            out_menu_id = self.env.ref('stock.out_picking')
-            if out_menu_id:
-                out_menu_id.active = True
-            stock_dropshipping_module = self.env['ir.module.module'].search(
-                [('state', '=', 'installed'), ('name', '=', 'stock_dropshipping')])
-            if stock_dropshipping_module:
-                drop_menu_id = self.env.ref('stock_dropshipping.dropship_picking')
-                if drop_menu_id:
-                    drop_menu_id.active = True
-            mrp_module = self.env['ir.module.module'].search(
-                [('state', '=', 'installed'), ('name', '=', 'mrp')])
-            if mrp_module:
-                mrp_menu_id = self.env.ref('mrp.mrp_operation_picking')
-                if mrp_menu_id:
-                    mrp_menu_id.active = True
+    def write(self, vals):
+        res = super(ResUsers, self).write(vals)
+        if any(f in vals for f in ['restrict_operation', 'ware_house_picking_type_ids']):
+            self.sudo()._toggle_menus()
+        return res
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        users = super(ResUsers, self).create(vals_list)
+        users.sudo()._toggle_menus()
+        return users
 
     @api.onchange('ware_house_picking_type_ids', 'allow_location_ids', 'allowed_ware_house_ids')
-    def upgrade_module(self):
-        rule = self.env.ref('warehouse_restriction_for_user.restrict_stock_picking')
-        picking_ids = [rec.id.origin for rec in self.ware_house_picking_type_ids]
-        location_ids = [loc.id.origin for loc in self.allow_location_ids]
-        rule.domain_force = ['|', ('picking_type_id', 'in', picking_ids),
-                             ('location_id', 'in', location_ids)]
-        self.hide_menu_item()
+    def _update_record_rule_domain(self):
+        rule = self.env.ref('warehouse_restriction_for_user.restrict_stock_picking', raise_if_not_found=False)
+        if not rule:
+            return
+        
+        domain_parts = []
+        if self.ware_house_picking_type_ids:
+            domain_parts.append(('picking_type_id', 'in', self.ware_house_picking_type_ids.ids))
+        if self.allow_location_ids:
+            domain_parts.append(('location_id', 'in', self.allow_location_ids.ids))
+            domain_parts.append(('location_dest_id', 'in', self.allow_location_ids.ids))
+
+        domain = []
+        if len(domain_parts) > 1:
+            domain = ['|'] * (len(domain_parts) - 1)
+            domain.extend(domain_parts)
+        elif domain_parts:
+            domain = domain_parts[0]
+
+        rule.domain_force = domain if domain else [(1, '=', 1)]
+        self._toggle_menus()
