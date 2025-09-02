@@ -9,7 +9,7 @@
                 <header>
                     <button 
                         name="action_start"
-                        string="Démarer l'inventaire"
+                        string="Iniciar Inventario"
                         type="object"
                         class="oe_highlight"
                         invisible="state not in ('draft')"
@@ -20,27 +20,27 @@
                         name="action_state_to_in_progress"
                         class="oe_highlight"
                         invisible="state in ('draft','in_progress', 'done','cancel')"
-                        string="Begin Adjustments"
+                        string="Iniciar Ajustes"
                     />
                     <button
                         type="object"
                         name="action_state_to_draft"
                         invisible="state in ('draft', 'done') or count_stock_moves != 0"
-                        string="Back to Draft"
+                        string="Volver a Borrador"
                     />
                     <field name="action_state_to_cancel_allowed" invisible="1" />
                     <button
                         type="object"
                         name="action_state_to_cancel"
                         invisible="not action_state_to_cancel_allowed"
-                        string="Cancel"
+                        string="Cancelar"
                     />
                     <button
                         type="object"
                         name="action_state_to_done"
                         class="oe_highlight"
                         invisible="state not in ('in_progress')"
-                        string="Set to Done"
+                        string="Marcar como Hecho"
                     />
                     <field
                         name="state"
@@ -83,7 +83,7 @@
                     <label for="name" class="oe_edit_only" />
                     <h1><field
                                 name="name"
-                                placeholder="e.g. Annual inventory"
+                                placeholder="p.ej. Inventario Anual"
                                 readonly="state != 'draft'"
                             /></h1>
                 </div>
@@ -96,7 +96,7 @@
                             />
                             <field
                                 name="location_ids"
-                                string="Locations"
+                                string="Ubicaciones"
                                 widget="many2many_tags"
                                 required="1"
                                 readonly="state != 'draft'"
@@ -144,7 +144,7 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Ligne d'inventaire">
+                        <page string="Línea de inventario">
                             <field name="line_ids">
                                 <list editable="bottom" decoration-danger="difference_qty != 0">
                                     <field name="product_id"/>
@@ -204,14 +204,14 @@
                 <field name="product_ids" string="Product" />
                 <field
                     name="products_under_review_ids"
-                    string="Products Under Review"
+                    string="Productos en Revisión"
                 />
             </search>
         </field>
     </record>
 
     <record id="action_view_inventory_group_form" model="ir.actions.act_window">
-        <field name="name">Inventory Adjustment Group</field>
+        <field name="name">Grupo de Ajuste de Inventario</field>
         <field name="res_model">stock.inventory</field>
         <field name="view_mode">list,form</field>
         <field name="view_id" ref="view_inventory_group_tree" />
@@ -219,7 +219,7 @@
 
     <menuitem
         id="menu_action_inventory_tree"
-        name="Inventory Adjustments"
+        name="Ajustes de Inventario"
         parent="stock.menu_stock_adjustments"
         sequence="30"
         action="action_view_inventory_group_form"

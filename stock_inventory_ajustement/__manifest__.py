@@ -4,11 +4,11 @@
 # Copyright (c) 2022  - feddad.imad@gmail.com
 
 {
-    "name": "Stock Inventory Adjustment",
+    "name": "Ajuste de Inventario de Stock",
     "version": "18.0.0.0.0",
     "license": "LGPL-3",
     "category": "Inventory/Inventory",
-    "summary": "Allows to do an easier follow up of the Inventory Adjustments",
+    "summary": "Permite hacer un seguimiento más fácil de los Ajustes de Inventario",
     "author": "feddad.imad@gmail.com",
     "website": "",
     "depends": ["stock","base"],
