@@ -24,5 +24,20 @@
             <field name="domain_force">[('picking_type_id', 'in', user._get_allowed_picking_type_ids())]</field>
         </record>
 
+        <!-- Step 2: Create new rules that grant global access to the new group -->
+        <record id="rule_stock_picking_type_global_access" model="ir.rule">
+            <field name="name">Global Access to Picking Types</field>
+            <field name="model_id" ref="stock.model_stock_picking_type"/>
+            <field name="groups" eval="[(4, ref('xtq_stock_user_restrictions.group_stock_global_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <record id="rule_stock_picking_global_access" model="ir.rule">
+            <field name="name">Global Access to Stock Pickings</field>
+            <field name="model_id" ref="stock.model_stock_picking"/>
+            <field name="groups" eval="[(4, ref('xtq_stock_user_restrictions.group_stock_global_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
     </data>
 </odoo>
