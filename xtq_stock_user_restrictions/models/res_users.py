@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models
+from odoo import api, fields, models
 
 class ResUsers(models.Model):
     _inherit = 'res.users'
@@ -14,16 +14,31 @@ class ResUsers(models.Model):
         string='Stock Restriction Rules',
     )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        users = super().create(vals_list)
+        for user in users.filtered('stock_restrictions_active'):
+            self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user').users = [(4, user.id)]
+        return users
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'stock_restrictions_active' in vals:
+            restricted_group = self.env.ref('xtq_stock_user_restrictions.group_stock_restrictions_user')
+            for user in self:
+                if user.stock_restrictions_active:
+                    restricted_group.users = [(4, user.id)]
+                else:
+                    restricted_group.users = [(3, user.id)]
+        return res
+
     def _get_allowed_picking_type_ids(self):
         """
         Returns the list of picking type IDs the user has access to based on
         their restriction rules.
+        This method is intended to be called only for users with active restrictions.
         """
         self.ensure_one()
-        if not self.stock_restrictions_active:
-            # If restrictions are not active, return all picking types.
-            # The empty search domain `[]` means "no condition", so it finds all records.
-            return self.env['stock.picking.type'].search([]).ids
 
         allowed_picking_type_ids = set()
         # Warehouses for which all picking types should be fetched
