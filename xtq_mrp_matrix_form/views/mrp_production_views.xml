@@ -93,15 +93,17 @@
                 </group>
             </xpath>
             
-            <xpath expr="//page[@name='matrix_xy']" position="attributes">
+            <xpath expr="//page[@name='matrix_breakdown_xy']" position="attributes">
                 <attribute name="string">Programación</attribute>
             </xpath>
 
-            <xpath expr="//page[@name='matrix_xy']" position="after">
+            <xpath expr="//page[@name='matrix_breakdown_xy']" position="after">
                 <page string="Distribución" name="distribution_matrix">
                     <field name="distribution_data_json"
                            widget="production_matrix_widget"
                            context="{
+                                'json_field': 'distribution_data_json',
+                                'load_method': 'get_distribution_matrix_data',
                                 'axis_y_field': 'matrix_attribute_row_id',
                                 'axis_y_values_field': 'matrix_values_row_ids',
                                 'axis_x_field': 'distribution_attribute_id',
@@ -163,6 +165,16 @@
                        readonly="1"
                        optional="show"
                        column_invisible="parent.matrix_attribute_col_id == False"/>
+            </xpath>
+            <xpath expr="//field[@name='matrix_line_ids']" position="attributes">
+                <attribute name="context">
+                    {
+                        'json_field': 'matrix_data_json',
+                        'load_method': 'get_matrix_data',
+                        'cell_template': 'default',
+                        'matrix_type': 'programming'
+                    }
+                </attribute>
             </xpath>
         </field>
     </record>
