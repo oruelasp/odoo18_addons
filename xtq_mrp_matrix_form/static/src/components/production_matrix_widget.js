@@ -13,12 +13,6 @@ export class ProductionMatrixWidget extends Component {
 
     setup() {
         this.orm = useService("orm");
-        // Configuración dinámica basada en el contexto
-        this.context = this.props.context || {}; // CORRECCIÓN: Usar this.props.context
-        this.jsonField = this.context.json_field || 'matrix_data_json';
-        this.loadMethod = this.context.load_method || 'get_matrix_data';
-        this.cellTemplate = this.context.cell_template || 'default'; // 'default' o 'single_qty'
-        this.matrixType = this.context.matrix_type || 'programming'; // Para diferenciar la lógica de guardado
         
         this.state = useState({
             axis_x: { name: "X", values: [] },
@@ -45,10 +39,16 @@ export class ProductionMatrixWidget extends Component {
     }
 
     async loadMatrixData(props = this.props) {
+        // CORRECCIÓN CLAVE: Re-evaluar la configuración en cada carga/actualización
+        // para asegurar que cada matriz use su propio contexto.
+        const context = props.context || {};
+        this.jsonField = context.json_field || 'matrix_data_json';
+        this.matrixType = context.matrix_type || 'programming';
+        this.cellTemplate = context.cell_template || 'default';
+
         const record = props.record;
 
-        // CORRECCIÓN 1: Forzar el reseteo del estado antes de cada carga de datos.
-        // Esto previene que los datos de una matriz "se filtren" visualmente en la otra.
+        // Forzar el reseteo del estado antes de cada carga de datos.
         this.state.axis_x = { name: "X", values: [] };
         this.state.axis_y = { name: "Y", values: [] };
         this.state.quantities = {};
@@ -59,7 +59,7 @@ export class ProductionMatrixWidget extends Component {
             return;
         }
         try {
-            // CORRECCIÓN 3: Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
+            // Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
             const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId], {
                 matrix_type: this.matrixType 
             });
