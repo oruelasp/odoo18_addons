@@ -23,7 +23,6 @@ export class ProductionMatrixWidget extends Component {
             grandTotal: 0,
             error: null,
             matrix_state: 'pending',
-            cellTemplate: 'default', // plantilla reactiva
         });
         
         onWillStart(() => this.loadMatrixData());
@@ -40,15 +39,17 @@ export class ProductionMatrixWidget extends Component {
     }
 
     async loadMatrixData(props = this.props) {
-        // Configuración basada en el nombre del campo
+        // CORRECCIÓN DEFINITIVA: Configuración basada en el nombre del campo, no en el contexto.
+        // Esto es más robusto y evita problemas de ciclo de vida del componente.
         if (props.name === 'distribution_line_ids') {
             this.jsonField = 'distribution_data_json';
             this.matrixType = 'distribution';
-            this.state.cellTemplate = 'single_qty';
+            this.cellTemplate = 'single_qty';
         } else {
+            // Configuración por defecto para 'matrix_line_ids' (Programación)
             this.jsonField = 'matrix_data_json';
             this.matrixType = 'programming';
-            this.state.cellTemplate = 'default';
+            this.cellTemplate = 'default';
         }
 
         const record = props.record;
@@ -64,6 +65,7 @@ export class ProductionMatrixWidget extends Component {
             return;
         }
         try {
+            // Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
             const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId], {
                 matrix_type: this.matrixType 
             });
