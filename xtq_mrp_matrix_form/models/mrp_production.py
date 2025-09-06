@@ -468,36 +468,37 @@ class MrpProduction(models.Model):
                 super(MrpProduction, production).action_generate_serial()
         return True
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """
         Sobrescribe el create para asegurar la persistencia de los atributos
-        de la matriz en los movimientos de stock.
+        de la matriz en los movimientos de stock, adaptado para creación en lote.
         """
-        # Punto 1: Asignar atributos de matriz a OPs secundarias desde la LdM.
-        # Si la OP se está creando automáticamente (sin intervención de la UI),
-        # los onchanges no se disparan. Forzamos la herencia aquí.
-        if 'bom_id' in vals and 'matrix_attribute_row_id' not in vals and 'matrix_attribute_col_id' not in vals:
-            bom = self.env['mrp.bom'].browse(vals['bom_id'])
-            if bom and bom.matrix_attribute_row_id and bom.matrix_attribute_col_id:
-                vals['matrix_attribute_row_id'] = bom.matrix_attribute_row_id.id
-                vals['matrix_attribute_col_id'] = bom.matrix_attribute_col_id.id
+        # Punto 1: Pre-procesar la lista de valores para asignar atributos de matriz
+        # a OPs secundarias desde la LdM.
+        for vals in vals_list:
+            if 'bom_id' in vals and 'matrix_attribute_row_id' not in vals and 'matrix_attribute_col_id' not in vals:
+                bom = self.env['mrp.bom'].browse(vals['bom_id'])
+                if bom and bom.matrix_attribute_row_id and bom.matrix_attribute_col_id:
+                    vals['matrix_attribute_row_id'] = bom.matrix_attribute_row_id.id
+                    vals['matrix_attribute_col_id'] = bom.matrix_attribute_col_id.id
 
-        # Unificando la lógica del primer método create
-        production = super().create(vals)
-        if vals.get('matrix_data_json'):
-            production._sync_matrix_lines_from_json(vals.get('matrix_data_json'), 'programming')
+        productions = super().create(vals_list)
 
-        bom_line_model = self.env['mrp.bom.line']
-        for move in production.move_raw_ids:
-            if move.bom_line_id:
-                # El bom_line_id ya es un recordset aquí
-                bom_line_record = move.bom_line_id
-                move.write({
-                    'matrix_row_value_ids': [(6, 0, bom_line_record.matrix_row_value_ids.ids)],
-                    'matrix_col_value_ids': [(6, 0, bom_line_record.matrix_col_value_ids.ids)],
-                })
-        return production
+        # Post-procesamiento después de la creación en lote
+        for production, vals in zip(productions, vals_list):
+            if vals.get('matrix_data_json'):
+                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'), 'programming')
+
+            bom_line_model = self.env['mrp.bom.line']
+            for move in production.move_raw_ids:
+                if move.bom_line_id:
+                    bom_line_record = move.bom_line_id
+                    move.write({
+                        'matrix_row_value_ids': [(6, 0, bom_line_record.matrix_row_value_ids.ids)],
+                        'matrix_col_value_ids': [(6, 0, bom_line_record.matrix_col_value_ids.ids)],
+                    })
+        return productions
 
     def write(self, vals):
         """
