@@ -213,57 +213,60 @@ class MrpProduction(models.Model):
             domain = [('id', 'in', [])]
         return {'domain': {'matrix_values_col_ids': domain}}
 
-    def get_matrix_data(self):
+    def get_matrix_data(self, matrix_type='programming'):
         self.ensure_one()
-        if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
-                    self.matrix_attribute_row_id, self.matrix_values_row_ids]):
-            return {'error': 'Configure Fila y Columna con sus respectivos Valores para la Programación.'}
-
-        quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
-            'product_qty': line.product_qty,
-            'qty_producing': line.qty_producing,
-        } for line in self.matrix_line_ids}
-
-        curve_proportions = {curve.attribute_value_id.id: curve.proportion for curve in self.matrix_curve_ids}
-
-        return {
-            'axis_y': {
-                'name': self.matrix_attribute_row_id.name,
-                'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
-            },
-            'axis_x': {
-                'name': self.matrix_attribute_col_id.name,
-                'values': [{'id': v.id, 'name': v.name, 'proportion': curve_proportions.get(v.id, 0)} for v in self.matrix_values_col_ids]
-            },
-            'quantities': quantities,
-            'matrix_state': self.matrix_state,
-        }
         
-    def get_distribution_matrix_data(self):
-        self.ensure_one()
-        # Eje Y (Fila) es compartido, Eje X (Columna) es de distribución
-        if not all([self.distribution_attribute_id, self.distribution_values_ids,
-                    self.matrix_attribute_row_id, self.matrix_values_row_ids]):
-            return {'error': 'Configure los atributos de Fila (Programación) y Eje X (Distribución) con sus valores.'}
+        if matrix_type == 'programming':
+            if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
+                        self.matrix_attribute_row_id, self.matrix_values_row_ids]):
+                return {'error': 'Configure Fila y Columna con sus respectivos Valores para la Programación.'}
 
-        # Usamos distribution_line_ids para obtener las cantidades
-        quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
-            'product_qty': line.product_qty,
-            'qty_producing': 0, # No aplica para distribución
-        } for line in self.distribution_line_ids}
+            quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
+                'product_qty': line.product_qty,
+                'qty_producing': line.qty_producing,
+            } for line in self.matrix_line_ids}
 
-        return {
-            'axis_y': {
-                'name': self.matrix_attribute_row_id.name,
-                'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
-            },
-            'axis_x': {
-                'name': self.distribution_attribute_id.name,
-                'values': [{'id': v.id, 'name': v.name} for v in self.distribution_values_ids]
-            },
-            'quantities': quantities,
-            'matrix_state': self.matrix_state, # El estado es compartido
-        }
+            curve_proportions = {curve.attribute_value_id.id: curve.proportion for curve in self.matrix_curve_ids}
+
+            return {
+                'axis_y': {
+                    'name': self.matrix_attribute_row_id.name,
+                    'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
+                },
+                'axis_x': {
+                    'name': self.matrix_attribute_col_id.name,
+                    'values': [{'id': v.id, 'name': v.name, 'proportion': curve_proportions.get(v.id, 0)} for v in self.matrix_values_col_ids]
+                },
+                'quantities': quantities,
+                'matrix_state': self.matrix_state,
+            }
+        
+        elif matrix_type == 'distribution':
+            # Eje Y (Fila) es compartido, Eje X (Columna) es de distribución
+            if not all([self.distribution_attribute_id, self.distribution_values_ids,
+                        self.matrix_attribute_row_id, self.matrix_values_row_ids]):
+                return {'error': 'Configure los atributos de Fila (Programación) y Eje X (Distribución) con sus valores.'}
+
+            # Usamos distribution_line_ids para obtener las cantidades
+            quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
+                'product_qty': line.product_qty,
+                'qty_producing': 0, # No aplica para distribución
+            } for line in self.distribution_line_ids}
+
+            return {
+                'axis_y': {
+                    'name': self.matrix_attribute_row_id.name,
+                    'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
+                },
+                'axis_x': {
+                    'name': self.distribution_attribute_id.name,
+                    'values': [{'id': v.id, 'name': v.name} for v in self.distribution_values_ids]
+                },
+                'quantities': quantities,
+                'matrix_state': self.matrix_state, # El estado es compartido
+            }
+        
+        return {} # Fallback por si se pasa un tipo de matriz desconocido
 
     def button_plan(self):
         """

@@ -59,7 +59,10 @@ export class ProductionMatrixWidget extends Component {
             return;
         }
         try {
-            const data = await this.orm.call(record.resModel, this.loadMethod, [record.resId]);
+            // CORRECCIÓN 3: Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
+            const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId], {
+                matrix_type: this.matrixType 
+            });
             if (!data || data.error) {
                 this.resetStateOnError(data ? data.error : "No se recibieron datos del servidor.");
             } else {

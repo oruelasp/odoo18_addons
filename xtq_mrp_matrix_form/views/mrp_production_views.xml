@@ -74,7 +74,6 @@
                     <field name="matrix_line_ids" nolabel="1" widget="production_matrix_widget"
                            context="{
                                 'json_field': 'matrix_data_json',
-                                'load_method': 'get_matrix_data',
                                 'cell_template': 'default',
                                 'matrix_type': 'programming',
                                 'matrix_state': matrix_state
@@ -102,7 +101,6 @@
                     <field name="distribution_line_ids" nolabel="1" widget="production_matrix_widget"
                            context="{
                                 'json_field': 'distribution_data_json',
-                                'load_method': 'get_distribution_matrix_data',
                                 'cell_template': 'single_qty',
                                 'matrix_type': 'distribution'
                            }"
