@@ -31,7 +31,8 @@
                                 <td t-esc="y_val.name"/>
                                 <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                     <td>
-                                        <div class="d-flex align-items-center">
+                                        <!-- Celda por defecto para Programación -->
+                                        <div t-if="cellTemplate === 'default'" class="d-flex align-items-center">
                                             <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
                                                 t-att-value="getQuantity(y_val.id, x_val.id, 'qty_producing')"
                                                 t-on-change="(ev) => _onQtyProducingChange(ev, y_val.id, x_val.id)"
@@ -42,11 +43,17 @@
                                                 t-on-change="(ev) => _onProductQtyChange(ev, y_val.id, x_val.id)"
                                                 t-att-readonly="!isProductQtyEditable() || null"/>
                                         </div>
+                                        <!-- Celda simple para Distribución -->
+                                        <div t-if="cellTemplate === 'single_qty'" class="d-flex align-items-center">
+                                            <input type="number" class="o_input text-center flex-grow-1" min="0" step="1"
+                                                t-att-value="getQuantity(y_val.id, x_val.id, 'product_qty')"
+                                                t-on-change="(ev) => _onQtyChange(ev, y_val.id, x_val.id)"/>
+                                        </div>
                                     </td>
                                 </t>
                                 <td class="text-center table-secondary">
                                     <strong>
-                                        <t t-esc="state.totals.rows[y_val.id].qty_producing"/> / <t t-esc="state.totals.rows[y_val.id].product_qty"/>
+                                        <t t-if="cellTemplate === 'default'"><t t-esc="state.totals.rows[y_val.id].qty_producing"/> / </t><t t-esc="state.totals.rows[y_val.id].product_qty"/>
                                     </strong>
                                 </td>
                             </tr>
@@ -58,13 +65,13 @@
                             <t t-foreach="state.axis_x.values" t-as="x_val" t-key="x_val.id">
                                 <td class="text-center">
                                     <strong>
-                                        <t t-esc="state.totals.cols[x_val.id].qty_producing"/> / <t t-esc="state.totals.cols[x_val.id].product_qty"/>
+                                        <t t-if="cellTemplate === 'default'"><t t-esc="state.totals.cols[x_val.id].qty_producing"/> / </t><t t-esc="state.totals.cols[x_val.id].product_qty"/>
                                     </strong>
                                 </td>
                             </t>
                             <td class="text-center table-primary">
                                 <strong>
-                                    <t t-esc="state.totals.grand_total.qty_producing"/> / <t t-esc="state.totals.grand_total.product_qty"/>
+                                    <t t-if="cellTemplate === 'default'"><t t-esc="state.totals.grand_total.qty_producing"/> / </t><t t-esc="state.totals.grand_total.product_qty"/>
                                 </strong>
                             </td>
                         </tr>

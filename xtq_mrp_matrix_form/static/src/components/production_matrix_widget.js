@@ -13,16 +13,24 @@ export class ProductionMatrixWidget extends Component {
 
     setup() {
         this.orm = useService("orm");
+        // Configuración dinámica basada en el contexto
+        this.context = this.props.record.context;
+        this.jsonField = this.context.json_field || 'matrix_data_json';
+        this.loadMethod = this.context.load_method || 'get_matrix_data';
+        this.cellTemplate = this.context.cell_template || 'default'; // 'default' o 'single_qty'
+        this.matrixType = this.context.matrix_type || 'programming'; // Para diferenciar la lógica de guardado
+        
         this.state = useState({
             axis_x: { name: "X", values: [] },
             axis_y: { name: "Y", values: [] },
-            quantities: {}, // Almacenará {y_id-x_id: {product_qty: X, qty_producing: Y}}
+            quantities: {}, 
             rowTotals: {},
             colTotals: {},
             grandTotal: 0,
             error: null,
-            matrix_state: 'pending', // Añadir estado de la matriz
+            matrix_state: 'pending',
         });
+        
         onWillStart(() => this.loadMatrixData());
         onWillUpdateProps((nextProps) => this.loadMatrixData(nextProps));
         this.debouncedSave = debounce(this.saveMatrixState, 400);
@@ -38,23 +46,22 @@ export class ProductionMatrixWidget extends Component {
 
     async loadMatrixData(props = this.props) {
         const record = props.record;
-        this.state.matrix_state = record.data.matrix_state || 'pending'; // Actualizar el estado desde el record
+        this.state.matrix_state = record.data.matrix_state || 'pending';
 
         if (record.isNew) {
             this.resetStateOnError(null);
             return;
         }
         try {
-            // Asegúrate que el backend envíe 'matrix_state' y las proporciones
-            const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId]);
+            const data = await this.orm.call(record.resModel, this.loadMethod, [record.resId]);
             if (!data || data.error) {
                 this.resetStateOnError(data ? data.error : "No se recibieron datos del servidor.");
             } else {
                 this.state.axis_x = data.axis_x;
                 this.state.axis_y = data.axis_y;
-                this.state.quantities = data.quantities; // {y_id-x_id: {product_qty: X, qty_producing: Y}}
+                this.state.quantities = data.quantities;
                 this.state.error = null;
-                this.state.matrix_state = data.matrix_state; // Confirmar el estado desde el backend
+                this.state.matrix_state = data.matrix_state;
                 this.calculateTotals();
             }
         } catch (e) {
@@ -70,7 +77,7 @@ export class ProductionMatrixWidget extends Component {
         if (!cellData) {
             return 0;
         }
-        return type === 'product_qty' ? cellData.product_qty : cellData.qty_producing;
+        return type === 'product_qty' ? cellData.product_qty : (cellData.qty_producing || 0);
     }
 
     calculateTotals() {
@@ -80,7 +87,6 @@ export class ProductionMatrixWidget extends Component {
             grand_total: { product_qty: 0, qty_producing: 0 }
         };
 
-        // Initialize totals
         for (const y_val of this.state.axis_y.values) {
             totals.rows[y_val.id] = { product_qty: 0, qty_producing: 0 };
         }
@@ -88,24 +94,38 @@ export class ProductionMatrixWidget extends Component {
             totals.cols[x_val.id] = { product_qty: 0, qty_producing: 0 };
         }
 
-        // Sum quantities
         for (const y_val of this.state.axis_y.values) {
             for (const x_val of this.state.axis_x.values) {
                 const key = `${y_val.id}-${x_val.id}`;
                 const cell = this.state.quantities[key] || { product_qty: 0, qty_producing: 0 };
                 
                 totals.rows[y_val.id].product_qty += cell.product_qty;
-                totals.rows[y_val.id].qty_producing += cell.qty_producing;
+                totals.rows[y_val.id].qty_producing += cell.qty_producing || 0;
                 
                 totals.cols[x_val.id].product_qty += cell.product_qty;
-                totals.cols[x_val.id].qty_producing += cell.qty_producing;
+                totals.cols[x_val.id].qty_producing += cell.qty_producing || 0;
 
                 totals.grand_total.product_qty += cell.product_qty;
-                totals.grand_total.qty_producing += cell.qty_producing;
+                totals.grand_total.qty_producing += cell.qty_producing || 0;
             }
         }
 
         this.state.totals = totals;
+    }
+
+    _onQtyChange = (ev, yValueId, xValueId) => {
+        // Método unificado para la matriz de distribución
+        const value = parseFloat(ev.target.value) || 0;
+        const key = `${yValueId}-${xValueId}`;
+        
+        if (!this.state.quantities[key]) {
+            this.state.quantities[key] = { product_qty: 0, qty_producing: 0 };
+        }
+        // Para la matriz de distribución, asumimos que se modifica product_qty
+        this.state.quantities[key].product_qty = value;
+        
+        this.calculateTotals();
+        this.debouncedSave();
     }
 
     _onQtyProducingChange = (ev, yValueId, xValueId) => {
@@ -137,13 +157,14 @@ export class ProductionMatrixWidget extends Component {
             lines.push({
                 yValueId: yValueId,
                 xValueId: xValueId,
-                product_qty: cellData.product_qty, // Asegurarse de enviar product_qty
+                product_qty: cellData.product_qty,
                 qty_producing: cellData.qty_producing,
             });
         }
         const jsonData = JSON.stringify(lines);
 
-        await this.props.record.update({ matrix_data_json: jsonData });
+        // Usar el campo JSON dinámico
+        await this.props.record.update({ [this.jsonField]: jsonData });
     }
 
     // Método para determinar si qty_producing es editable
@@ -162,6 +183,6 @@ ProductionMatrixWidget.props = {
     ...standardFieldProps,
 };
 
-registry.category("fields").add("production_matrix_xy", {
+registry.category("fields").add("production_matrix_widget", {
     component: ProductionMatrixWidget,
 });

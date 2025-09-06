@@ -12,8 +12,34 @@ class MrpProduction(models.Model):
     matrix_values_row_ids = fields.Many2many('product.attribute.value', 'mrp_production_matrix_row_rel', string='Valores (Fila)', domain="[('attribute_id', '=', matrix_attribute_row_id)]")
     matrix_attribute_col_id = fields.Many2one('product.attribute', string='Atributo Columna')
     matrix_values_col_ids = fields.Many2many('product.attribute.value', 'mrp_production_matrix_col_rel', string='Valores (Columna)', domain="[('attribute_id', '=', matrix_attribute_col_id)]")
-    matrix_line_ids = fields.One2many('mrp.production.matrix.line', 'production_id', string='Desglose Matriz')
+    matrix_line_ids = fields.One2many('mrp.production.matrix.line', 'production_id', string='Desglose Matriz', domain=[('matrix_type', '=', 'programming')])
     matrix_data_json = fields.Text(string="Matrix Data JSON", copy=False)
+    
+    # --- Campos para la Matriz de Distribución ---
+    distribution_attribute_id = fields.Many2one(
+        'product.attribute', 
+        string='Atributo Eje X (Distribución)',
+        help="Atributo para el eje X de la matriz de distribución."
+    )
+    distribution_values_ids = fields.Many2many(
+        'product.attribute.value', 
+        'mrp_production_distribution_val_rel', 
+        string='Valores Eje X (Distribución)', 
+        domain="[('attribute_id', '=', distribution_attribute_id)]",
+        help="Valores del atributo para el eje X de la matriz de distribución."
+    )
+    distribution_line_ids = fields.One2many(
+        'mrp.production.matrix.line', 
+        'production_id', 
+        string='Desglose Matriz Distribución',
+        domain=[('matrix_type', '=', 'distribution')]
+    )
+    distribution_data_json = fields.Text(
+        string="Distribution Matrix Data JSON", 
+        copy=False
+    )
+    # --- Fin Campos Matriz Distribución ---
+    
     total_matrix_quantity = fields.Float(string="Cantidad Total en Matriz", compute='_compute_total_matrix_quantity', store=True)
     matrix_qty_mismatch = fields.Boolean(
         string="Desfase de Cantidad en Matriz",
@@ -45,22 +71,29 @@ class MrpProduction(models.Model):
     # Se eliminan los métodos create y write duplicados. La lógica se ha unificado en las
     # definiciones al final del archivo para mantener la consistencia.
 
-    def _sync_matrix_lines_from_json(self, json_data):
+    def _sync_matrix_lines_from_json(self, json_data, matrix_type='programming'):
         self.ensure_one()
         try:
             data = json.loads(json_data or '[]')
         except (json.JSONDecodeError, TypeError):
             data = []
+
+        # Determinar el campo de líneas correcto
+        lines_field = 'matrix_line_ids'
+        if matrix_type == 'distribution':
+            lines_field = 'distribution_line_ids'
+
         commands = [(5, 0, 0)] 
         for item in data:
             commands.append((0, 0, {
                 'row_value_id': item.get('yValueId'),
                 'col_value_id': item.get('xValueId'),
-                'product_qty': item.get('product_qty'), # Usar product_qty
-                'qty_producing': item.get('qty_producing', 0.0), # Añadir qty_producing
+                'product_qty': item.get('product_qty'),
+                'qty_producing': item.get('qty_producing', 0.0),
+                'matrix_type': matrix_type, # Asegurar el tipo correcto
             }))
         
-        self.with_context(tracking_disable=True).write({'matrix_line_ids': commands})
+        self.with_context(tracking_disable=True).write({lines_field: commands})
   
     # @api.constrains('product_qty', 'total_matrix_quantity')
     #def _check_quantity_match(self):
@@ -174,7 +207,7 @@ class MrpProduction(models.Model):
         self.ensure_one()
         if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
                     self.matrix_attribute_row_id, self.matrix_values_row_ids]):
-            return {'error': 'Configure Fila y Columna con sus respectivos Valores.'}
+            return {'error': 'Configure Fila y Columna con sus respectivos Valores para la Programación.'}
 
         quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
             'product_qty': line.product_qty,
@@ -194,6 +227,32 @@ class MrpProduction(models.Model):
             },
             'quantities': quantities,
             'matrix_state': self.matrix_state,
+        }
+        
+    def get_distribution_matrix_data(self):
+        self.ensure_one()
+        # Eje Y (Fila) es compartido, Eje X (Columna) es de distribución
+        if not all([self.distribution_attribute_id, self.distribution_values_ids,
+                    self.matrix_attribute_row_id, self.matrix_values_row_ids]):
+            return {'error': 'Configure los atributos de Fila (Programación) y Eje X (Distribución) con sus valores.'}
+
+        # Usamos distribution_line_ids para obtener las cantidades
+        quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
+            'product_qty': line.product_qty,
+            'qty_producing': 0, # No aplica para distribución
+        } for line in self.distribution_line_ids}
+
+        return {
+            'axis_y': {
+                'name': self.matrix_attribute_row_id.name,
+                'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
+            },
+            'axis_x': {
+                'name': self.distribution_attribute_id.name,
+                'values': [{'id': v.id, 'name': v.name} for v in self.distribution_values_ids]
+            },
+            'quantities': quantities,
+            'matrix_state': self.matrix_state, # El estado es compartido
         }
 
     def button_plan(self):
@@ -415,7 +474,7 @@ class MrpProduction(models.Model):
         # Unificando la lógica del primer método create
         production = super().create(vals)
         if vals.get('matrix_data_json'):
-            production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
+            production._sync_matrix_lines_from_json(vals.get('matrix_data_json'), 'programming')
 
         bom_line_model = self.env['mrp.bom.line']
         for move in production.move_raw_ids:
@@ -438,7 +497,11 @@ class MrpProduction(models.Model):
         # Unificando la lógica del primer método write
         if 'matrix_data_json' in vals:
             for production in self:
-                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
+                production._sync_matrix_lines_from_json(vals.get('matrix_data_json'), 'programming')
+        
+        if 'distribution_data_json' in vals:
+            for production in self:
+                production._sync_matrix_lines_from_json(vals.get('distribution_data_json'), 'distribution')
 
         if 'bom_id' in vals or 'product_id' in vals:
             bom_line_model = self.env['mrp.bom.line']
