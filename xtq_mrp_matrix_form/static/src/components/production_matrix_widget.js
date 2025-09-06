@@ -39,12 +39,18 @@ export class ProductionMatrixWidget extends Component {
     }
 
     async loadMatrixData(props = this.props) {
-        // CORRECCIÓN CLAVE: Re-evaluar la configuración en cada carga/actualización
-        // para asegurar que cada matriz use su propio contexto.
-        const context = props.context || {};
-        this.jsonField = context.json_field || 'matrix_data_json';
-        this.matrixType = context.matrix_type || 'programming';
-        this.cellTemplate = context.cell_template || 'default';
+        // CORRECCIÓN DEFINITIVA: Configuración basada en el nombre del campo, no en el contexto.
+        // Esto es más robusto y evita problemas de ciclo de vida del componente.
+        if (props.name === 'distribution_line_ids') {
+            this.jsonField = 'distribution_data_json';
+            this.matrixType = 'distribution';
+            this.cellTemplate = 'single_qty';
+        } else {
+            // Configuración por defecto para 'matrix_line_ids' (Programación)
+            this.jsonField = 'matrix_data_json';
+            this.matrixType = 'programming';
+            this.cellTemplate = 'default';
+        }
 
         const record = props.record;
 
