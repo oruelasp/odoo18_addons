@@ -23,6 +23,7 @@ export class ProductionMatrixWidget extends Component {
             grandTotal: 0,
             error: null,
             matrix_state: 'pending',
+            cellTemplate: 'default', // plantilla reactiva
         });
         
         onWillStart(() => this.loadMatrixData());
@@ -39,17 +40,15 @@ export class ProductionMatrixWidget extends Component {
     }
 
     async loadMatrixData(props = this.props) {
-        // CORRECCIÓN DEFINITIVA: Configuración basada en el nombre del campo, no en el contexto.
-        // Esto es más robusto y evita problemas de ciclo de vida del componente.
+        // Configuración basada en el nombre del campo
         if (props.name === 'distribution_line_ids') {
             this.jsonField = 'distribution_data_json';
             this.matrixType = 'distribution';
-            this.cellTemplate = 'single_qty';
+            this.state.cellTemplate = 'single_qty';
         } else {
-            // Configuración por defecto para 'matrix_line_ids' (Programación)
             this.jsonField = 'matrix_data_json';
             this.matrixType = 'programming';
-            this.cellTemplate = 'default';
+            this.state.cellTemplate = 'default';
         }
 
         const record = props.record;
@@ -65,7 +64,6 @@ export class ProductionMatrixWidget extends Component {
             return;
         }
         try {
-            // Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
             const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId], {
                 matrix_type: this.matrixType 
             });
@@ -204,12 +202,6 @@ ProductionMatrixWidget.props = {
     ...standardFieldProps,
 };
 
-// REGISTRO DUAL: Registramos el mismo componente con dos nombres diferentes.
-// Esto ayuda a Odoo a tratarlos como instancias separadas y evitar conflictos de estado.
-registry.category("fields").add("production_matrix_programming", {
-    component: ProductionMatrixWidget,
-});
-
-registry.category("fields").add("production_matrix_distribution", {
+registry.category("fields").add("production_matrix_widget", {
     component: ProductionMatrixWidget,
 });
