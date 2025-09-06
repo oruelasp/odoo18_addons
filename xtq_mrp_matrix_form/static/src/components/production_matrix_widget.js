@@ -14,7 +14,7 @@ export class ProductionMatrixWidget extends Component {
     setup() {
         this.orm = useService("orm");
         // Configuración dinámica basada en el contexto
-        this.context = this.props.record.context;
+        this.context = this.props.context || {}; // CORRECCIÓN: Usar this.props.context
         this.jsonField = this.context.json_field || 'matrix_data_json';
         this.loadMethod = this.context.load_method || 'get_matrix_data';
         this.cellTemplate = this.context.cell_template || 'default'; // 'default' o 'single_qty'
