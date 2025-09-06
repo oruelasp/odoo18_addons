@@ -38,19 +38,22 @@
         <field name="priority">30</field> <!-- Prioridad restaurada -->
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                 <!-- Pestaña de Atributos (lógica movida aquí) -->
+                 <!-- Pestaña de Atributos (RESTAURADA Y EXTENDIDA) -->
                 <page name="matrix_attributes" string="Atributos">
                     <group>
-                        <group>
+                        <group string="Ejes Matriz de Programación">
                             <field name="matrix_attribute_row_id" options="{'no_create': True, 'no_open': True}"/>
                             <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
-                        </group>
-                        <group>
                             <field name="matrix_attribute_col_id" options="{'no_create': True, 'no_open': True}"/>
                             <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
                         </group>
+                        <group string="Eje Matriz de Distribución">
+                            <field name="distribution_attribute_id" options="{'no_create': True, 'no_open': True}"/>
+                            <field name="distribution_values_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
+                        </group>
                     </group>
                     <group>
+                        <label for="matrix_curve_ids"/>
                         <field name="matrix_curve_ids">
                             <list editable="bottom">
                                 <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]" options="{'no_create': True, 'no_open': True}"/>
@@ -59,16 +62,22 @@
                         </field>
                     </group>
                 </page>
-                <!-- Pestaña de Matriz X,Y -->
-                <page name="matrix_breakdown_xy" string="Matriz X,Y">
+                <!-- Pestaña de Programación (nombre corregido) -->
+                <page name="matrix_breakdown_xy" string="Programación">
                     <div class="oe_button_box" name="button_box">
                          <field name="matrix_state" widget="badge" decoration-success="matrix_state == 'done'" decoration-info="matrix_state in ['planned', 'progress']" decoration-warning="matrix_state == 'pending'"/>
                     </div>
                     <div class="alert alert-info text-center" role="alert" invisible="matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids">
                         Configure Fila, Columna y sus respectivos Valores para ver la matriz.
                     </div>
-                    <field name="matrix_line_ids" nolabel="1" widget="production_matrix_xy"
-                           context="{'matrix_state': matrix_state}"
+                    <field name="matrix_line_ids" nolabel="1" widget="production_matrix_widget"
+                           context="{
+                                'json_field': 'matrix_data_json',
+                                'load_method': 'get_matrix_data',
+                                'cell_template': 'default',
+                                'matrix_type': 'programming',
+                                'matrix_state': matrix_state
+                           }"
                            invisible="not (matrix_attribute_row_id and matrix_attribute_col_id and matrix_values_row_ids and matrix_values_col_ids)"/>
                     <group class="oe_subtotal_footer oe_right" invisible="total_matrix_quantity == 0">
                         <field name="matrix_qty_mismatch" invisible="1"/>
@@ -81,48 +90,17 @@
                         </div>
                     </group>
                 </page>
-            </xpath>
-            <xpath expr="//page[@name='miscellaneous']/group" position="inside">
-                <group string="Atributos de Matriz">
-                    <field name="matrix_attribute_row_id"/>
-                    <field name="matrix_values_row_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                    <field name="matrix_attribute_col_id"/>
-                    <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                    <field name="distribution_attribute_id"/>
-                    <field name="distribution_values_ids" widget="many2many_tags" options="{'no_create': True}"/>
-                </group>
-            </xpath>
-            
-            <xpath expr="//page[@name='matrix_breakdown_xy']" position="attributes">
-                <attribute name="string">Programación</attribute>
-            </xpath>
-
-            <xpath expr="//page[@name='matrix_breakdown_xy']" position="after">
+                <!-- Pestaña de Distribución -->
                 <page string="Distribución" name="distribution_matrix">
                     <field name="distribution_data_json"
                            widget="production_matrix_widget"
                            context="{
                                 'json_field': 'distribution_data_json',
                                 'load_method': 'get_distribution_matrix_data',
-                                'axis_y_field': 'matrix_attribute_row_id',
-                                'axis_y_values_field': 'matrix_values_row_ids',
-                                'axis_x_field': 'distribution_attribute_id',
-                                'axis_x_values_field': 'distribution_values_ids',
-                                'lines_field': 'distribution_line_ids',
-                                'matrix_type': 'distribution',
-                                'cell_template': 'single_qty'
+                                'cell_template': 'single_qty',
+                                'matrix_type': 'distribution'
                            }"/>
                 </page>
-            </xpath>
-            <xpath expr="//field[@name='matrix_line_ids']" position="attributes">
-                <attribute name="context">
-                    {
-                        'json_field': 'matrix_data_json',
-                        'load_method': 'get_matrix_data',
-                        'cell_template': 'default',
-                        'matrix_type': 'programming'
-                    }
-                </attribute>
             </xpath>
         </field>
     </record>
