@@ -204,6 +204,12 @@ ProductionMatrixWidget.props = {
     ...standardFieldProps,
 };
 
-registry.category("fields").add("production_matrix_widget", {
+// REGISTRO DUAL: Registramos el mismo componente con dos nombres diferentes.
+// Esto ayuda a Odoo a tratarlos como instancias separadas y evitar conflictos de estado.
+registry.category("fields").add("production_matrix_programming", {
+    component: ProductionMatrixWidget,
+});
+
+registry.category("fields").add("production_matrix_distribution", {
     component: ProductionMatrixWidget,
 });
