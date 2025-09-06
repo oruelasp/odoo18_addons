@@ -36,6 +36,9 @@
         <field name="model">mrp.workorder</field>
         <field name="inherit_id" ref="mrp.mrp_production_workorder_tree_editable_view_mo_form"/>
         <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="default_order">sequence_ref asc</attribute>
+            </xpath>
             <xpath expr="//field[@name='name']" position="before">
                 <field name="sequence_ref"/>
             </xpath>
