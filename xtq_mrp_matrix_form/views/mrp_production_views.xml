@@ -114,6 +114,16 @@
                            }"/>
                 </page>
             </xpath>
+            <xpath expr="//field[@name='matrix_line_ids']" position="attributes">
+                <attribute name="context">
+                    {
+                        'json_field': 'matrix_data_json',
+                        'load_method': 'get_matrix_data',
+                        'cell_template': 'default',
+                        'matrix_type': 'programming'
+                    }
+                </attribute>
+            </xpath>
         </field>
     </record>
 
@@ -165,16 +175,6 @@
                        readonly="1"
                        optional="show"
                        column_invisible="parent.matrix_attribute_col_id == False"/>
-            </xpath>
-            <xpath expr="//field[@name='matrix_line_ids']" position="attributes">
-                <attribute name="context">
-                    {
-                        'json_field': 'matrix_data_json',
-                        'load_method': 'get_matrix_data',
-                        'cell_template': 'default',
-                        'matrix_type': 'programming'
-                    }
-                </attribute>
             </xpath>
         </field>
     </record>
