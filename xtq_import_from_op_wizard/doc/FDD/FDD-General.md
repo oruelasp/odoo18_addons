@@ -8,7 +8,7 @@
 
 ## 1. Propósito y Alcance
 
-El propósito de esta funcionalidad es **optimizar drásticamente** el proceso de creación de transferencias manuales (ej. Guías de Salida a servicios externos) que están vinculadas a Órdenes de Producción. Se busca eliminar la digitación manual de productos y cantidades, reducir errores y asegurar una trazabilidad completa entre la logística y la producción.
+El propósito de esta funcionalidad es **optimizar drásticamente** el proceso de creación de transferencias manuales (ej. Entradas de Inventario desde producción) que están vinculadas a Órdenes de Producción. Se busca eliminar la digitación manual del producto terminado y sus cantidades, reducir errores y asegurar una trazabilidad completa entre la logística y la producción.
 
 ---
 
@@ -20,15 +20,15 @@ Este wizard permitirá al usuario:
 
 - **Seleccionar** una única Orden de Producción (OP) de una lista filtrada por estados relevantes (confirmado, en progreso, etc.).
 - **Seleccionar** opcionalmente una Orden de Trabajo específica de esa OP.
-- **Visualizar** una lista de los componentes requeridos, donde podrá seleccionar/deseleccionar ítems y ajustar las cantidades a mover.
-- **Poblar o añadir** líneas a la transferencia con los datos seleccionados. El wizard podrá usarse repetidamente, concatenando la información de origen en la transferencia.
+- **Visualizar** el producto terminado de la OP, su cantidad programada (informativa) y ajustar la cantidad ejecutada (lo que realmente se produjo).
+- **Poblar o añadir** una línea a la transferencia con el producto y cantidad seleccionados.
 - **Propagar** datos de trazabilidad clave como el Documento Origen, el origen de la Orden de Trabajo y el Proyecto.
 
 ---
 
 ## 3. Brechas Técnicas y Desarrollos
 
-- **Desarrollo Menor:** Se creará un `TransientModel` (wizard) y la lógica asociada para cumplir con los requerimientos detallados en la Historia de Usuario `HU-INV-001`.
+- **Desarrollo Menor:** Se modificará el `TransientModel` (wizard) existente y la lógica asociada para cumplir con los requerimientos detallados en la Historia de Usuario `HU-INV-001`.
 
 ---
 

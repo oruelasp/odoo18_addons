@@ -7,7 +7,7 @@ _logger = logging.getLogger(__name__)
 
 class ImportFromOpWizard(models.TransientModel):
     _name = 'import.from.op.wizard'
-    _description = 'Asistente para Importar Componentes desde OP'
+    _description = 'Asistente para Importar Producto Terminado desde OP'
 
     picking_id = fields.Many2one('stock.picking', string='Transferencia', readonly=True)
     production_id = fields.Many2one(
@@ -24,7 +24,7 @@ class ImportFromOpWizard(models.TransientModel):
     line_ids = fields.One2many(
         'import.from.op.wizard.line',
         'wizard_id',
-        string='Componentes a Importar'
+        string='Producto a Importar'
     )
 
     @api.model
@@ -35,33 +35,23 @@ class ImportFromOpWizard(models.TransientModel):
             vals.setdefault('picking_id', active_id)
         return vals
 
-    def _get_moves_source(self):
-        self.ensure_one()
-        return self.production_id.move_raw_ids
-
-    def action_load_components(self):
+    def action_load_product(self):
         self.ensure_one()
         if not self.production_id:
             raise UserError(_("Seleccione primero una Orden de Producción."))
-        moves = self._get_moves_source()
-        commands = [(5, 0, 0)]
-        for move in moves:
-            # Lógica de prioridad para la cantidad a mover
-            qty_to_move = 0.0
-            if move.quantity > 0:
-                qty_to_move = move.quantity
-            elif move.should_consume_qty > 0:
-                qty_to_move = move.should_consume_qty
-            else:
-                qty_to_move = move.product_uom_qty
-
-            commands.append((0, 0, {
-                'product_id': move.product_id.id,
-                'planned_qty': move.product_uom_qty,
-                'quantity_to_move': qty_to_move,
-                'product_uom_id': move.product_uom.id,
-            }))
+        
+        commands = [(5, 0, 0)]  # Limpiar líneas existentes
+        
+        production = self.production_id
+        commands.append((0, 0, {
+            'product_id': production.product_id.id,
+            'planned_qty': production.product_qty,
+            'quantity_to_move': production.qty_producing,
+            'product_uom_id': production.product_uom_id.id,
+        }))
+        
         self.line_ids = commands
+        
         # Mantener el modal abierto y conservar active_id del picking
         ctx = dict(self.env.context)
         if self.picking_id:
@@ -86,7 +76,7 @@ class ImportFromOpWizard(models.TransientModel):
             raise UserError(_("No se pudo encontrar la transferencia de inventario activa."))
 
         if not self.line_ids:
-            self.action_load_components()
+            self.action_load_product()
 
         lines_to_import = self.line_ids.filtered(
             lambda l: l.selected and l.product_id and l.product_uom_id and l.quantity_to_move > 0
@@ -127,11 +117,11 @@ class ImportFromOpWizard(models.TransientModel):
 
 class ImportFromOpWizardLine(models.TransientModel):
     _name = 'import.from.op.wizard.line'
-    _description = 'Línea de Componente para Asistente de Importación desde OP'
+    _description = 'Línea de Producto para Asistente de Importación desde OP'
 
     wizard_id = fields.Many2one('import.from.op.wizard', string='Asistente', required=True, ondelete='cascade')
     selected = fields.Boolean(string='Seleccionar', default=True)
     product_id = fields.Many2one('product.product', string='Producto', readonly=True)
-    planned_qty = fields.Float(string='Cantidad Prevista', digits='Product Unit of Measure', readonly=True)
+    planned_qty = fields.Float(string='Cantidad Programada', digits='Product Unit of Measure', readonly=True)
     quantity_to_move = fields.Float(string='Cantidad a Mover', digits='Product Unit of Measure', required=True)
     product_uom_id = fields.Many2one('uom.uom', string='UdM', readonly=True)
