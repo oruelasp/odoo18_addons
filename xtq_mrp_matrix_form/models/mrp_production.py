@@ -215,7 +215,6 @@ class MrpProduction(models.Model):
 
     def get_matrix_data(self, matrix_type='programming'):
         self.ensure_one()
-        
         if matrix_type == 'programming':
             if not all([self.matrix_attribute_col_id, self.matrix_values_col_ids,
                         self.matrix_attribute_row_id, self.matrix_values_row_ids]):
