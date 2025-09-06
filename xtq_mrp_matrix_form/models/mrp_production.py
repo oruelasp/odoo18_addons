@@ -41,6 +41,11 @@ class MrpProduction(models.Model):
     # --- Fin Campos Matriz Distribución ---
     
     total_matrix_quantity = fields.Float(string="Cantidad Total en Matriz", compute='_compute_total_matrix_quantity', store=True)
+    total_distribution_matrix_quantity = fields.Float(
+        string="Cantidad Total en Matriz (Distribución)",
+        compute='_compute_total_distribution_matrix_quantity',
+        store=True
+    )
     matrix_qty_mismatch = fields.Boolean(
         string="Desfase de Cantidad en Matriz",
         compute="_compute_matrix_qty_mismatch",
@@ -66,6 +71,11 @@ class MrpProduction(models.Model):
     @api.depends('matrix_line_ids.product_qty')
     def _compute_total_matrix_quantity(self):
         for mo in self: mo.total_matrix_quantity = sum(line.product_qty for line in mo.matrix_line_ids)
+
+    @api.depends('distribution_line_ids.product_qty')
+    def _compute_total_distribution_matrix_quantity(self):
+        for mo in self:
+            mo.total_distribution_matrix_quantity = sum(line.product_qty for line in mo.distribution_line_ids)
 
     # --- La lógica de sincronización JSON se mantiene ---
     # Se eliminan los métodos create y write duplicados. La lógica se ha unificado en las

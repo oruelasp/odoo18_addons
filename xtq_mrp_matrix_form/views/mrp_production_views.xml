@@ -12,6 +12,7 @@
         <field name="arch" type="xml">
             <field name="name" position="after">
                 <field name="matrix_data_json" invisible="1"/>
+                <field name="distribution_data_json" invisible="1"/>
             </field>
 
             <xpath expr="//header" position="inside">
@@ -92,14 +93,26 @@
                 </page>
                 <!-- Pestaña de Distribución -->
                 <page string="Distribución" name="distribution_matrix">
-                    <field name="distribution_data_json"
-                           widget="production_matrix_widget"
+                    <div class="oe_button_box" name="button_box">
+                         <field name="matrix_state" widget="badge" decoration-success="matrix_state == 'done'" decoration-info="matrix_state in ['planned', 'progress']" decoration-warning="matrix_state == 'pending'"/>
+                    </div>
+                    <div class="alert alert-info text-center" role="alert" invisible="matrix_attribute_row_id and distribution_attribute_id and matrix_values_row_ids and distribution_values_ids">
+                        Configure Eje X (Distribución), Columna (Programación) y sus respectivos Valores para ver la matriz.
+                    </div>
+                    <field name="distribution_line_ids" nolabel="1" widget="production_matrix_widget"
                            context="{
                                 'json_field': 'distribution_data_json',
                                 'load_method': 'get_distribution_matrix_data',
                                 'cell_template': 'single_qty',
                                 'matrix_type': 'distribution'
-                           }"/>
+                           }"
+                           invisible="not (matrix_attribute_row_id and distribution_attribute_id and matrix_values_row_ids and distribution_values_ids)"/>
+                    <group class="oe_subtotal_footer oe_right" invisible="total_distribution_matrix_quantity == 0">
+                        <label for="total_distribution_matrix_quantity"/>
+                        <div>
+                            <field name="total_distribution_matrix_quantity" class="oe_inline"/>
+                        </div>
+                    </group>
                 </page>
             </xpath>
         </field>
