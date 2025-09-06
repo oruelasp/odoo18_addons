@@ -4,7 +4,7 @@
         <field name="name">import.from.op.wizard.form</field>
         <field name="model">import.from.op.wizard</field>
         <field name="arch" type="xml">
-            <form string="Importar Componentes desde Orden de Producción">
+            <form string="Importar Producto Terminado desde Orden de Producción">
                 <group>
                     <group>
                         <field name="production_id" options="{'no_create': True, 'no_open': True}"/>
@@ -14,11 +14,11 @@
                     </group>
                 </group>
 
-                <!-- Botón interno para cargar componentes -->
+                <!-- Botón interno para cargar producto -->
                 <group>
-                    <button name="action_load_components"
+                    <button name="action_load_product"
                             type="object"
-                            string="Cargar Componentes"
+                            string="Cargar Producto"
                             class="btn-secondary"/>
                 </group>
 
@@ -26,8 +26,8 @@
                     <list editable="bottom" create="0" delete="0">
                         <field name="selected"/>
                         <field name="product_id" readonly="1"/>
-                        <field name="planned_qty" readonly="1"/>
-                        <field name="quantity_to_move"/>
+                        <field name="planned_qty" readonly="1" string="Cantidad Programada"/>
+                        <field name="quantity_to_move" string="Cantidad Ejecutada"/>
                         <field name="product_uom_id" readonly="1"/>
                     </list>
                 </field>
@@ -43,7 +43,7 @@
     </record>
 
     <record id="action_import_from_op_wizard" model="ir.actions.act_window">
-        <field name="name">Importar Componentes desde OP</field>
+        <field name="name">Importar Producto Terminado desde OP</field>
         <field name="res_model">import.from.op.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
