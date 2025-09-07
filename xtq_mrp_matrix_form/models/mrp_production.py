@@ -252,6 +252,8 @@ class MrpProduction(models.Model):
                 'qty_producing': 0, # No aplica para distribución
             } for line in self.distribution_line_ids}
 
+            curve_proportions = {curve.attribute_value_id.id: curve.proportion for curve in self.matrix_curve_ids}
+            
             return {
                 'axis_y': {
                     'name': self.distribution_attribute_id.name,
