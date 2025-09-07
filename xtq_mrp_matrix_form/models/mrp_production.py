@@ -241,10 +241,10 @@ class MrpProduction(models.Model):
             }
         
         elif matrix_type == 'distribution':
-            # Eje Y (Fila) es compartido, Eje X (Columna) es de distribución
+            # Eje Y (Fila) es la COLUMNA de Programación. Eje X (Columna) es de distribución.
             if not all([self.distribution_attribute_id, self.distribution_values_ids,
-                        self.matrix_attribute_row_id, self.matrix_values_row_ids]):
-                return {'error': 'Configure los atributos de Fila (Programación) y Eje X (Distribución) con sus valores.'}
+                        self.matrix_attribute_col_id, self.matrix_values_col_ids]):
+                return {'error': 'Configure los atributos de Columna (Programación) y Eje X (Distribución) con sus valores.'}
 
             # Usamos distribution_line_ids para obtener las cantidades
             quantities = {f"{line.row_value_id.id}-{line.col_value_id.id}": {
@@ -254,12 +254,12 @@ class MrpProduction(models.Model):
 
             return {
                 'axis_y': {
-                    'name': self.matrix_attribute_row_id.name,
-                    'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_row_ids]
-                },
-                'axis_x': {
                     'name': self.distribution_attribute_id.name,
                     'values': [{'id': v.id, 'name': v.name} for v in self.distribution_values_ids]
+                },
+                'axis_x': {
+                    'name': self.matrix_attribute_col_id.name,
+                    'values': [{'id': v.id, 'name': v.name, 'proportion': curve_proportions.get(v.id, 0)} for v in self.matrix_values_col_ids]
                 },
                 'quantities': quantities,
                 'matrix_state': self.matrix_state, # El estado es compartido
