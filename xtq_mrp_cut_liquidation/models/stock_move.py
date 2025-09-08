@@ -37,19 +37,36 @@ class StockMove(models.Model):
 
     @api.depends('product_id.categ_id')
     def _compute_liquidation_visible(self):
-        # Correctly read the configured categories from the company
-        config_categs = self.env.company.liquidation_product_categ_ids
-        if not config_categs:
-            for move in self:
-                move.liquidation_visible = False
+        """
+        Computes visibility based on the product's category and its ancestors.
+        The button is visible if the product's category or any of its parent
+        categories are present in the company's liquidation category settings.
+        """
+        config_categ_ids = set(self.env.company.liquidation_product_categ_ids.ids)
+        if not config_categ_ids:
+            self.liquidation_visible = False
             return
 
-        # Get all child categories of the configured ones in a single search for efficiency
-        all_allowed_categs = self.env['product.category'].search([('id', 'child_of', config_categs.ids)])
-        allowed_categ_ids = set(all_allowed_categs.ids)
+        # Memoization cache for category visibility to avoid redundant computations
+        categ_visibility_cache = {}
 
         for move in self:
-            move.liquidation_visible = move.product_id.categ_id.id in allowed_categ_ids
+            if not move.product_id.categ_id:
+                move.liquidation_visible = False
+                continue
+
+            product_categ = move.product_id.categ_id
+            if product_categ.id in categ_visibility_cache:
+                move.liquidation_visible = categ_visibility_cache[product_categ.id]
+                continue
+
+            # Traverse up the category hierarchy using the parent_path field for efficiency
+            ancestor_ids = {int(cid) for cid in product_categ.parent_path.split('/') if cid}
+            
+            is_visible = bool(config_categ_ids.intersection(ancestor_ids))
+            
+            categ_visibility_cache[product_categ.id] = is_visible
+            move.liquidation_visible = is_visible
 
     def action_open_cut_liquidation(self):
         self.ensure_one()

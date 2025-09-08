@@ -7,12 +7,12 @@
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='move_raw_ids']/list/field[@name='product_uom_qty']" position="after">
-                <field name="liquidation_visible" invisible="1"/>
+                <field name="liquidation_visible" optional="hide"/>
                 <button name="action_open_cut_liquidation"
                         type="object"
                         icon="fa-scissors"
                         title="Liquidación de Corte"
-                        attrs="{'invisible': [('liquidation_visible', '=', False)]}"/>
+                        invisible="liquidation_visible == False"/>
             </xpath>
         </field>
     </record>
