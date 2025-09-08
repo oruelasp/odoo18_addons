@@ -50,30 +50,39 @@ class MrpCutLiquidationLine(models.Model):
     )
     scrap_percentage = fields.Float(
         string='Merma (%)',
+        compute='_compute_quantities',
+        store=True,
+        readonly=True,
     )
     scrap_quantity = fields.Float(
         string='Cant. Merma',
         compute='_compute_quantities',
         store=True,
+        readonly=True,
         digits='Product Unit of Measure',
     )
     effective_consumption = fields.Float(
         string='Consumo Efectivo',
         compute='_compute_quantities',
         store=True,
+        readonly=True,
         digits='Product Unit of Measure',
     )
 
-    @api.depends('fabric_out_qty', 'actual_spread_meters', 'marker_length', 'number_of_plies', 'scrap_percentage')
+    @api.depends('fabric_out_qty', 'actual_spread_meters', 'marker_length', 'number_of_plies')
     def _compute_quantities(self):
         for line in self:
             line.difference_qty = line.fabric_out_qty - line.actual_spread_meters
-            line.final_marker_qty = line.marker_length * line.number_of_plies
             
-            consumption = line.final_marker_qty
-            if line.scrap_percentage > 0:
-                line.scrap_quantity = consumption * (line.scrap_percentage / 100)
+            final_marker_qty = line.marker_length * line.number_of_plies
+            line.final_marker_qty = final_marker_qty
+
+            scrap_quantity = line.actual_spread_meters - final_marker_qty
+            line.scrap_quantity = scrap_quantity
+
+            if line.actual_spread_meters > 0:
+                line.scrap_percentage = (scrap_quantity / line.actual_spread_meters) * 100
             else:
-                line.scrap_quantity = 0
+                line.scrap_percentage = 0.0
             
-            line.effective_consumption = consumption + line.scrap_quantity
+            line.effective_consumption = line.actual_spread_meters

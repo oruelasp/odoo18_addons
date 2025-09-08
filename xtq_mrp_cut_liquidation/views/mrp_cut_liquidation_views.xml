@@ -33,6 +33,7 @@
                         <group>
                             <field name="product_id" readonly="1"/>
                             <field name="product_uom_qty" readonly="1" string="Demanda Inicial"/>
+                            <field name="should_consume_qty" readonly="1" string="Por consumir"/>
                         </group>
                         <group/>
                     </group>

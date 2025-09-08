@@ -18,9 +18,9 @@
     **Cuando** se abre el pop-up (vista de formulario),
     **Entonces** debo ver los detalles del componente (Producto, Demanda) en la cabecera y una sección de detalle para agregar una o más líneas de tendido.
 
-*   **Dado que** ingreso los datos en una línea de tendido en el pop-up,
+*   **Dado que** ingreso los datos en una línea de tendido en el pop-up (como `Tendido Real`, `Trazo` y `Paños`),
     **Cuando** salgo de los campos numéricos,
-    **Entonces** el sistema debe calcular y mostrar automáticamente la "Merma Calculada" y otros totales para esa línea y para el consolidado.
+    **Entonces** el sistema debe calcular y mostrar automáticamente el "Trazo Final", la "Cantidad de Merma" y la "Merma (%)" para esa línea y para el consolidado.
 
 *   **Dado que** completo la liquidación y hago clic en "Guardar y Cerrar",
     **Entonces** el sistema debe guardar los datos de las líneas de liquidación para futuras consultas, **sin modificar automáticamente** la línea del subproducto de merma ni la cantidad consumida del componente.
