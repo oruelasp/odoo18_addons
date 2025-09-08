@@ -10,8 +10,8 @@
                 <field name="liquidation_visible" invisible="1"/>
                 <button name="action_open_cut_liquidation"
                         type="object"
-                        icon="fa-cutlery"
-                        string="Abrir Liquidación"
+                        icon="fa-scissors"
+                        title="Liquidación de Corte"
                         attrs="{'invisible': [('liquidation_visible', '=', False)]}"/>
             </xpath>
         </field>

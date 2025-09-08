@@ -35,35 +35,32 @@ class StockMove(models.Model):
             move.total_scrap_qty = sum(move.liquidation_line_ids.mapped('scrap_quantity'))
             move.total_effective_consumption = sum(move.liquidation_line_ids.mapped('effective_consumption'))
 
-    def _get_liquidation_categ_ids(self):
-        """ Helper to get configured categories """
-        return self.env['res.config.settings'].get_values().get('liquidation_product_categ_ids', [])
-
+    @api.depends('product_id.categ_id')
     def _compute_liquidation_visible(self):
-        categ_ids = self._get_liquidation_categ_ids()
-        if not categ_ids:
+        # Correctly read the configured categories from the company
+        config_categs = self.env.company.liquidation_product_categ_ids
+        if not config_categs:
             for move in self:
                 move.liquidation_visible = False
             return
-        
-        # This approach avoids making a search for each move
-        all_categs = self.env['product.category'].browse(categ_ids)
-        child_categ_ids = self.env['product.category'].search([('id', 'child_of', all_categs.ids)]).ids
+
+        # Get all child categories of the configured ones in a single search for efficiency
+        all_allowed_categs = self.env['product.category'].search([('id', 'child_of', config_categs.ids)])
+        allowed_categ_ids = set(all_allowed_categs.ids)
 
         for move in self:
-            if move.product_id.categ_id.id in child_categ_ids:
-                move.liquidation_visible = True
-            else:
-                move.liquidation_visible = False
+            move.liquidation_visible = move.product_id.categ_id.id in allowed_categ_ids
 
     def action_open_cut_liquidation(self):
         self.ensure_one()
+        # Explicitly define the custom view to be used in the action
+        view_id = self.env.ref('xtq_mrp_cut_liquidation.stock_move_cut_liquidation_form_view').id
         return {
             'name': 'Liquidación de Corte',
             'type': 'ir.actions.act_window',
             'res_model': 'stock.move',
+            'views': [[view_id, 'form']],
             'view_mode': 'form',
             'res_id': self.id,
             'target': 'new',
-            'context': self.env.context,
         }
