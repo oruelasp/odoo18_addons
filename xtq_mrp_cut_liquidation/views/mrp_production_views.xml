@@ -6,7 +6,7 @@
         <field name="model">mrp.production</field>
         <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//field[@name='move_raw_ids']/tree/field[@name='product_uom_qty']" position="after">
+            <xpath expr="//field[@name='move_raw_ids']/list/field[@name='product_uom_qty']" position="after">
                 <field name="liquidation_visible" invisible="1"/>
                 <button name="action_open_cut_liquidation"
                         type="object"
