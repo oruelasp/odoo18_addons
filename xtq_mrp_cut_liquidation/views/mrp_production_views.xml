@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mrp_production_form_view_inherited" model="ir.ui.view">
+        <field name="name">mrp.production.form.view.inherited</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='move_raw_ids']/tree/field[@name='product_uom_qty']" position="after">
+                <field name="liquidation_visible" invisible="1"/>
+                <button name="action_open_cut_liquidation"
+                        type="object"
+                        icon="fa-cutlery"
+                        string="Abrir Liquidación"
+                        attrs="{'invisible': [('liquidation_visible', '=', False)]}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

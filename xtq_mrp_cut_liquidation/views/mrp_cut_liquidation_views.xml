@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Vista de lista/árbol para las líneas de liquidación -->
+    <record id="mrp_cut_liquidation_line_tree_view" model="ir.ui.view">
+        <field name="name">mrp.cut.liquidation.line.list</field>
+        <field name="model">mrp.cut.liquidation.line</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence"/>
+                <field name="fabric_width"/>
+                <field name="fabric_out_qty"/>
+                <field name="actual_spread_meters"/>
+                <field name="difference_qty" force_save="1"/>
+                <field name="marker_length"/>
+                <field name="number_of_plies"/>
+                <field name="final_marker_qty" force_save="1"/>
+                <field name="scrap_percentage"/>
+                <field name="scrap_quantity" force_save="1"/>
+                <field name="effective_consumption" force_save="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista de formulario para el stock.move (usada en el pop-up) -->
+    <record id="stock_move_cut_liquidation_form_view" model="ir.ui.view">
+        <field name="name">stock.move.cut.liquidation.form</field>
+        <field name="model">stock.move</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="product_id" readonly="1"/>
+                            <field name="product_uom_qty" readonly="1" string="Demanda Inicial"/>
+                        </group>
+                        <group/>
+                    </group>
+                    <notebook>
+                        <page string="Líneas de Liquidación">
+                            <field name="liquidation_line_ids"/>
+                        </page>
+                    </notebook>
+                    <group class="oe_subtotal_footer oe_right">
+                        <field name="total_scrap_qty" nolabel="0"/>
+                        <field name="total_effective_consumption" nolabel="0"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+</odoo>
