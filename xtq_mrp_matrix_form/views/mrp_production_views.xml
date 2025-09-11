@@ -55,7 +55,7 @@
                     </group>
                     <group>
                         <label for="matrix_curve_ids"/>
-                        <field name="matrix_curve_ids">
+                        <field name="matrix_curve_ids" nolabel="1">
                             <list editable="bottom">
                                 <field name="attribute_value_id" domain="[('attribute_id', '=', parent.matrix_attribute_col_id)]" options="{'no_create': True, 'no_open': True}"/>
                                 <field name="proportion"/>
