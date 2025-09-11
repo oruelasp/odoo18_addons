@@ -17,23 +17,20 @@ class MrpBom(models.Model):
     )
 
     def _compute_has_related_eco_and_op(self):
-        for bom in self:
-            # Búsqueda en dos pasos para evitar errores del ORM con campos One2many anidados.
-            # 1. Buscar las líneas de cambio de BoM que apuntan a este BoM como una nueva revisión.
-            # El modelo correcto es 'mrp.eco.bom.change', no 'mrp.eco.bom.line'.
-            eco_bom_changes = self.env['mrp.eco.bom.change'].search([
-                ('new_bom_id', '=', bom.id)
-            ])
-            
-            # 2. Buscar el ECO que contiene esas líneas y que además está ligado a una OP.
-            if eco_bom_changes:
-                eco = self.env['mrp.eco'].search([
-                    ('bom_change_ids', 'in', eco_bom_changes.ids),
-                    ('production_id', '!=', False)
-                ], limit=1)
-            else:
-                eco = self.env['mrp.eco']
+        # Búsqueda optimizada y directa para encontrar los ECOs relacionados.
+        # 1. Buscar todos los ECOs que apuntan a cualquiera de los BoMs del recordset actual
+        #    y que además tienen una Orden de Producción vinculada.
+        ecos = self.env['mrp.eco'].search([
+            ('new_bom_id', 'in', self.ids),
+            ('production_id', '!=', False)
+        ])
+        
+        # 2. Crear un mapa para una asignación eficiente: {bom_id: eco_record}
+        eco_map = {eco.new_bom_id.id: eco for eco in ecos}
 
+        # 3. Asignar los valores a cada BoM del recordset.
+        for bom in self:
+            eco = eco_map.get(bom.id)
             if eco:
                 bom.has_related_eco_and_op = True
                 bom.related_production_id = eco.production_id.id
