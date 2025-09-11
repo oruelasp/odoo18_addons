@@ -15,7 +15,7 @@ class MrpProduction(models.Model):
 
         # 1. Duplicar el BOM
         new_bom = self.bom_id.copy({
-            'reference': self.name,
+            'code': self.name,
             'product_qty': self.product_qty,
             'state': 'draft',
         })
