@@ -8,8 +8,10 @@
             <!-- Add the button and field to the 'Miscellaneous' page -->
             <xpath expr="//page[@name='miscellaneous']//group" position="inside">
                 <group string="Ficha de Producción">
+                    <button name="action_create_production_sheet" 
+                    string="Crear Ficha de Producción" type="object" 
+                    class="oe_link" invisible="sample_bom_id != False"/>
                     <field name="sample_bom_id"/>
-                    <button name="action_create_production_sheet" string="Crear Ficha de Producción" type="object" class="oe_link" invisible="sample_bom_id != False"/>
                 </group>
             </xpath>
         </field>
