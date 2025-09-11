@@ -11,13 +11,15 @@
              <xpath expr="//field[@name='product_qty']" position="attributes">
                 <attribute name="readonly">state != 'draft'</attribute>
             </xpath>
-            <header>
-                <button name="action_send_for_approval" string="Enviar a Aprobación" type="object" class="btn-primary" invisible="state != 'draft'"/>
-                <button name="action_approve" string="Aprobar" type="object" class="btn-primary" invisible="state != 'in_progress'"/>
-                <button name="action_reject" string="Rechazar" type="object" invisible="state != 'in_progress'"/>
-                <button name="action_reset_to_draft" string="Resetear a Borrador" type="object" invisible="state not in ['approved', 'rejected']"/>
-                <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,approved,rejected"/>
-            </header>
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_send_for_approval" string="Enviar a Aprobación" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Aprobar" type="object" class="btn-primary" invisible="state != 'in_progress'"/>
+                    <button name="action_reject" string="Rechazar" type="object" invisible="state != 'in_progress'"/>
+                    <button name="action_reset_to_draft" string="Resetear a Borrador" type="object" invisible="state not in ['approved', 'rejected']"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,approved,rejected"/>
+                </header>
+            </xpath>
             <xpath expr="//sheet//group[1]" position="inside">
                 <group>
                     <field name="rejection_note" invisible="(state != 'rejected') and (rejection_note == False)" readonly="1"/>
