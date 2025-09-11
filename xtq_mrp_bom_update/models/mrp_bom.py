@@ -16,7 +16,6 @@ class MrpBom(models.Model):
         string="Orden de Producción Relacionada"
     )
 
-    @api.depends('id')
     def _compute_has_related_eco_and_op(self):
         for bom in self:
             eco = self.env['mrp.eco'].search([
