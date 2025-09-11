@@ -1,48 +1,51 @@
-# models/mrp_production.py
 # -*- coding: utf-8 -*-
-from odoo import models, fields, api, _
+from odoo import models, fields, _
 from odoo.exceptions import UserError
 
 class MrpProduction(models.Model):
     _inherit = 'mrp.production'
 
-    sample_bom_id = fields.Many2one('mrp.bom', string="Orden de Muestra (BOM Base)", readonly=True)
-
-    def action_create_production_sheet(self):
-        self.ensure_one()
-        if not self.bom_id:
-            raise UserError(_("Por favor, establezca una Lista de Materiales base antes de crear la Ficha de Producción."))
-
-        # 1. Duplicar el BOM
-        new_bom = self.bom_id.copy({
-            'code': self.name,
-            'product_qty': self.product_qty,
-            'state': 'draft',
-            'bom_category': 'production',
-        })
-
-        # 2. Recalcular cantidades de componentes
-        factor = self.product_qty / self.bom_id.product_qty if self.bom_id.product_qty else 1
-        for line in new_bom.bom_line_ids:
-            line.product_qty = line.product_qty * factor
-
-        # 3. Asignar los BOMs a la OP
-        self.write({
-            'sample_bom_id': self.bom_id.id,
-            'bom_id': new_bom.id,
-        })
-
-        # 4. Abrir el nuevo BOM en una nueva ventana
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'mrp.bom',
-            'view_mode': 'form',
-            'res_id': new_bom.id,
-            'target': 'current',
-        }
+    sample_bom_id = fields.Many2one(
+        'mrp.bom', 
+        string="Orden de Muestra (BoM Base)",
+        help="BoM original que se utilizó como plantilla para la Ficha de Producción (ECO)."
+    )
     
     def action_update_bom(self):
-        # Heredar y extender la función estándar
-        if self.bom_id and self.bom_id.bom_category == 'production' and self.bom_id.state != 'approved':
-            raise UserError(_("Solo se pueden usar Fichas de Producción (BOM) aprobadas para actualizar la OP."))
+        """ 
+        Hereda la función estándar para validar que si un BoM fue generado
+        por un ECO, este debe estar en una etapa final (aprobado y vigente)
+        para poder actualizar los componentes de la OP.
+        """
+        for production in self:
+            if not production.bom_id:
+                continue
+
+            # Busca un ECO que haya generado la revisión actual del BoM de la OP
+            eco = self.env['mrp.eco'].search([
+                ('bom_ids.new_bom_id', '=', production.bom_id.id)
+            ], limit=1)
+
+            # Si existe un ECO relacionado, valida su estado
+            if eco and not eco.stage_id.final_stage:
+                 raise UserError(_(
+                    "La Ficha de Producción (BoM: %s) vinculada a esta OP está en medio de un "
+                    "proceso de cambio de ingeniería (ECO: %s) y aún no ha sido aprobada.\n\n"
+                    "Por favor, complete y valide el ECO antes de actualizar los componentes."
+                 ) % (production.bom_id.display_name, eco.display_name))
+
         return super(MrpProduction, self).action_update_bom()
+
+    def action_create_eco(self):
+        """
+        Extiende la acción estándar para autocompletar el campo `sample_bom_id`
+        al momento de crear un ECO desde la OP.
+        """
+        # Primero, ejecuta la acción estándar para obtener el diccionario de la acción
+        action = super().action_create_eco()
+        
+        # Luego, guarda el BoM actual como el 'sample_bom_id'
+        if self.bom_id:
+            self.sample_bom_id = self.bom_id.id
+            
+        return action
