@@ -5,18 +5,19 @@
         <field name="model">mrp.bom</field>
         <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@name='button_box']" position="inside">
-                 <button name="action_update_proportional_quantities"
-                        string="Actualizar Cantidades Proporcionales (OP)"
-                        type="object"
-                        class="oe_stat_button"
-                        icon="fa-cogs"
-                        invisible="not has_related_eco_and_op">
-                    <div class="o_field_widget o_stat_info">
-                        <span class="o_stat_text">Recalcular desde:</span>
-                        <field name="related_production_id" readonly="1" class="o_stat_value"/>
-                    </div>
-                </button>
+            <!-- Remove the previous smart button to avoid duplication -->
+            <xpath expr="//div[@name='button_box']/button[@name='action_update_proportional_quantities']" position="replace"/>
+
+            <!-- Add the action button to the header -->
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_update_proportional_quantities"
+                            string="Actualizar Cantidades"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-cogs"
+                            invisible="not has_related_eco_and_op"/>
+                </header>
             </xpath>
         </field>
     </record>
