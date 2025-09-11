@@ -5,6 +5,12 @@ from odoo import models, fields
 class MrpBom(models.Model):
     _inherit = 'mrp.bom'
 
+    bom_category = fields.Selection([
+        ('standard', 'Estándar'),
+        ('base', 'Base'),
+        ('production', 'Producción'),
+    ], string='Categoría', default='standard', required=True)
+
     state = fields.Selection([
         ('draft', 'Borrador'),
         ('in_progress', 'En Progreso'),

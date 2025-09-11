@@ -18,6 +18,7 @@ class MrpProduction(models.Model):
             'code': self.name,
             'product_qty': self.product_qty,
             'state': 'draft',
+            'bom_category': 'production',
         })
 
         # 2. Recalcular cantidades de componentes
@@ -42,6 +43,6 @@ class MrpProduction(models.Model):
     
     def action_update_bom(self):
         # Heredar y extender la función estándar
-        if self.bom_id and self.bom_id.state != 'approved':
+        if self.bom_id and self.bom_id.bom_category == 'production' and self.bom_id.state != 'approved':
             raise UserError(_("Solo se pueden usar Fichas de Producción (BOM) aprobadas para actualizar la OP."))
         return super(MrpProduction, self).action_update_bom()

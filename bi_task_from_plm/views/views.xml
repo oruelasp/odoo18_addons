@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="mrp_task_eco_view_form" model="ir.ui.view">
+            <field name="name">mrp.task.eco.view.form</field>
+            <field name="model">mrp.eco</field>
+            <field name="inherit_id" ref="mrp_plm.mrp_eco_view_form"/>
+            <field name="arch" type="xml">
+                <header>
+                        <button name="%(action_create_task_wizard)d" type="action" class="oe_highlight" string="Create Task"/>
+                </header>
+
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="eco_tasks" type="object" icon="fa-tasks" class="oe_stat_button">
+                        <field name="task_count" widget="statinfo" string="Tasks"/>
+                    </button>
+                </xpath>
+            </field>
+    </record>
+    </data>
+</odoo>
