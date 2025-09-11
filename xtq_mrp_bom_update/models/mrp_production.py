@@ -22,8 +22,9 @@ class MrpProduction(models.Model):
                 continue
 
             # Busca un ECO que haya generado la revisión actual del BoM de la OP
+            # La búsqueda se hace directamente sobre el campo new_bom_id del ECO.
             eco = self.env['mrp.eco'].search([
-                ('bom_ids.new_bom_id', '=', production.bom_id.id)
+                ('new_bom_id', '=', production.bom_id.id)
             ], limit=1)
 
             # Si existe un ECO relacionado, valida su estado

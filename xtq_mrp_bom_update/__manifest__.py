@@ -11,6 +11,7 @@
     'version': '18.0.2.0.0',
     'depends': [
         'mrp_plm',
+        'xtq_mrp_matrix_form',
     ],
     'data': [
         'security/ir.model.access.csv',
