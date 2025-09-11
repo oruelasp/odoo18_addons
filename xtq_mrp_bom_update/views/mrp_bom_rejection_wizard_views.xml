@@ -1,0 +1,19 @@
+<!-- views/mrp_bom_rejection_wizard_views.xml -->
+<odoo>
+    <record id="view_mrp_bom_rejection_wizard_form" model="ir.ui.view">
+        <field name="name">mrp.bom.rejection.wizard.form</field>
+        <field name="model">mrp.bom.rejection.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Motivo del Rechazo">
+                <group>
+                    <field name="rejection_reason" nolabel="1" placeholder="Explique por qué se rechaza esta ficha de producción..."/>
+                    <field name="bom_id" invisible="1"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_rejection" string="Confirmar Rechazo" type="object" class="btn-primary" data-hotkey="q"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
