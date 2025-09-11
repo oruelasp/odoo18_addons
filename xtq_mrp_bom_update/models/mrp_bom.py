@@ -20,16 +20,20 @@ class MrpBom(models.Model):
         for bom in self:
             # Búsqueda en dos pasos para evitar errores del ORM con campos One2many anidados.
             # 1. Buscar las líneas de cambio de BoM que apuntan a este BoM como una nueva revisión.
-            eco_bom_lines = self.env['mrp.eco.bom.line'].search([
+            # El modelo correcto es 'mrp.eco.bom.change', no 'mrp.eco.bom.line'.
+            eco_bom_changes = self.env['mrp.eco.bom.change'].search([
                 ('new_bom_id', '=', bom.id)
             ])
             
             # 2. Buscar el ECO que contiene esas líneas y que además está ligado a una OP.
-            eco = self.env['mrp.eco'].search([
-                ('bom_ids', 'in', eco_bom_lines.ids),
-                ('production_id', '!=', False)
-            ], limit=1)
-            
+            if eco_bom_changes:
+                eco = self.env['mrp.eco'].search([
+                    ('bom_change_ids', 'in', eco_bom_changes.ids),
+                    ('production_id', '!=', False)
+                ], limit=1)
+            else:
+                eco = self.env['mrp.eco']
+
             if eco:
                 bom.has_related_eco_and_op = True
                 bom.related_production_id = eco.production_id.id
