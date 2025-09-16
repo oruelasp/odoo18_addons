@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from . import mrp_eco_rejection_wizard
+from . import mrp_bom_rejection_wizard

@@ -1,20 +1,32 @@
 <!-- views/mrp_bom_views.xml -->
 <odoo>
-    <record id="mrp_bom_form_view_xtq_plm" model="ir.ui.view">
-        <field name="name">mrp.bom.form.xtq.plm</field>
+    <record id="mrp_bom_form_view_xtq_approval" model="ir.ui.view">
+        <field name="name">mrp.bom.form.xtq.approval</field>
         <field name="model">mrp.bom</field>
         <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
         <field name="arch" type="xml">
-            <!-- Add the action button to the header -->
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="bom_category"/>
+            </xpath>
+            <xpath expr="//field[@name='product_tmpl_id']" position="attributes">
+                <attribute name="readonly">state != 'draft'</attribute>
+            </xpath>
+             <xpath expr="//field[@name='product_qty']" position="attributes">
+                <attribute name="readonly">state != 'draft'</attribute>
+            </xpath>
             <xpath expr="//sheet" position="before">
                 <header>
-                    <button name="action_update_proportional_quantities"
-                            string="Actualizar Cantidades"
-                            type="object"
-                            class="btn-primary"
-                            icon="fa-cogs"
-                            invisible="not has_related_eco_and_op"/>
+                    <button name="action_send_for_approval" string="Enviar a Aprobación" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Aprobar" type="object" class="btn-primary" invisible="state != 'in_progress'"/>
+                    <button name="action_reject" string="Rechazar" type="object" invisible="state != 'in_progress'"/>
+                    <button name="action_reset_to_draft" string="Resetear a Borrador" type="object" invisible="state not in ['approved', 'rejected']"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,approved,rejected"/>
                 </header>
+            </xpath>
+            <xpath expr="//sheet//group[1]" position="inside">
+                <group>
+                    <field name="rejection_note" invisible="(state != 'rejected') and (rejection_note == False)" readonly="1"/>
+                </group>
             </xpath>
         </field>
     </record>

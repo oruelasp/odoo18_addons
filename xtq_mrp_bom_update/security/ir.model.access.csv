@@ -1,5 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mrp_bom_user,mrp.bom user,mrp.model_mrp_bom,base.group_user,1,1,1,1
 access_mrp_production_user,mrp.production user,mrp.model_mrp_production,base.group_user,1,1,1,1
-access_mrp_eco_user,mrp.eco user,mrp_plm.model_mrp_eco,base.group_user,1,1,1,1
-access_mrp_eco_rejection_wizard_user,mrp.eco.rejection.wizard user,model_mrp_eco_rejection_wizard,base.group_user,1,1,1,1
+access_mrp_bom_rejection_wizard_user,mrp.bom.rejection.wizard user,model_mrp_bom_rejection_wizard,base.group_user,1,1,1,1
