@@ -16,6 +16,7 @@
         'views/stock_picking_views.xml',
         'views/stock_move_line_views.xml',
         'views/mrp_workorder_views.xml',
+        'views/res_config_settings_views.xml',
     ],
     'installable': True,
     'application': False,
