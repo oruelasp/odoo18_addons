@@ -26,14 +26,25 @@ patch(ListRenderer.prototype, {
                 return;
             }
 
-            // 1. Verificar si el producto tiene la funcionalidad activada
-            const productData = await this.orm.read(
+            // Paso 1: Obtener el product.template ID desde el product.product
+            const productInfo = await this.orm.read(
                 "product.product",
                 [productId],
+                ["product_tmpl_id"]
+            );
+            if (!productInfo.length || !productInfo[0].product_tmpl_id) {
+                return;
+            }
+            const templateId = productInfo[0].product_tmpl_id[0];
+
+            // Paso 2: Verificar si la funcionalidad está activada en la plantilla del producto
+            const templateData = await this.orm.read(
+                "product.template",
+                [templateId],
                 ["show_quality_attrs_in_picking"]
             );
 
-            if (productData && productData[0].show_quality_attrs_in_picking) {
+            if (templateData && templateData[0].show_quality_attrs_in_picking) {
                 // Obtener todos los lot_ids de los registros que se van a mostrar
                 const lotIds = this.props.list.records.map(rec => rec.data.lot_id[0]).filter(Boolean);
 
