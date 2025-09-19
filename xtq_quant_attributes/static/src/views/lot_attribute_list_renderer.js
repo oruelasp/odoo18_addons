@@ -26,24 +26,18 @@ export class LotAttributeListRenderer extends ListRenderer {
             if (this.attributesFetched || list.records.length === 0) {
                 return;
             }
-
-            // Flujo definitivo: En los movimientos de stock, el contexto nos da el ID
-            // de la línea del movimiento (stock.move.line) que se está editando.
-            const moveLineId = list.context.active_id;
-            if (!moveLineId) {
-                this.attributesFetched = true;
-                return;
-            }
             this.attributesFetched = true;
 
-            // 1. A partir de la línea del movimiento, obtenemos el product_id de forma segura.
-            const moveLineData = await this.orm.read("stock.move.line", [moveLineId], ["product_id"]);
-            if (!moveLineData || !moveLineData[0].product_id) {
+            // Estrategia definitiva: Obtenemos el product_id directamente del primer
+            // registro de la lista. Esta es la fuente de verdad más fiable,
+            // ya que no depende del contexto.
+            const firstRecord = list.records[0];
+            if (!firstRecord.data.product_id || !firstRecord.data.product_id.length) {
                 return;
             }
-            const productId = moveLineData[0].product_id[0];
+            const productId = firstRecord.data.product_id[0];
             
-            // 2. Con el product_id, continuamos el flujo que ya conocemos.
+            // Con el product_id, continuamos el flujo que ya conocemos.
             const productInfo = await this.orm.read("product.product", [productId], ["product_tmpl_id"]);
             if (!productInfo.length || !productInfo[0].product_tmpl_id) { return; }
             const templateId = productInfo[0].product_tmpl_id[0];
