@@ -2,6 +2,7 @@
 from odoo import models, fields, api
 from odoo.tools.float_utils import float_compare
 from odoo.exceptions import UserError
+import re
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
@@ -20,22 +21,36 @@ class StockMove(models.Model):
     def action_show_attribute_selection(self):
         self.ensure_one()
         
-        # 1. Encontrar TODOS los atributos de calidad que son 'de lote'.
-        # La lógica ya no se basa en la plantilla del producto, sino en la configuración general
-        # de los atributos. El wizard se encargará de mostrar los valores si existen.
+        # 1. Obtener todos los atributos marcados como "de lote"
         lot_attributes = self.env['product.attribute'].search([
             ('is_lot_attribute', '=', True)
         ])
         
-        # 2. Encontrar quants disponibles
+        # 2. Reunir quants disponibles para el producto y ubicación
         available_quants = self.env['stock.quant']._gather(
             self.product_id,
             self.location_id,
             strict=False
         ).filtered(lambda q: q.quantity > 0)
 
-        # 3. Construir la arquitectura de la vista de lista dinámicamente
-        arch_string = """
+        # 3. Crear (si no existen) los campos dinámicos en el modelo de líneas del wizard
+        LineModel = self.env['quant.attribute.selection.line']
+        attr_to_field = {}
+        for attr in lot_attributes:
+            # Generar nombre técnico seguro del campo (sin prefijo x_)
+            fname = re.sub(r'[^a-z0-9_]', '_', attr.name.lower())
+            if not fname or fname[0].isdigit():
+                fname = f'_{fname}'
+            fname = f"attr_{fname}"
+            attr_to_field[attr.id] = fname
+            if fname not in LineModel._fields:
+                LineModel._add_field(fname, fields.Char(string=attr.display_name, readonly=True))
+
+        # 4. Construir la arquitectura de la vista usando los nombres técnicos
+        extra_columns = " ".join([
+            f"<field name='{attr_to_field[attr.id]}' string='{attr.display_name}'/>" for attr in lot_attributes
+        ])
+        arch_string = f"""
             <form>
                 <sheet>
                     <field name='quant_line_ids' nolabel='1'>
@@ -45,59 +60,40 @@ class StockMove(models.Model):
                             <field name='location_id'/>
                             <field name='quantity'/>
                             <field name='product_uom_id'/>
-                            {}
+                            {extra_columns}
                         </list>
                     </field>
                 </sheet>
                 <footer>
-                    <button string="Confirmar" type="object" name="action_confirm" class="oe_highlight"/>
-                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    <button string=\"Confirmar\" type=\"object\" name=\"action_confirm\" class=\"oe_highlight\"/>
+                    <button string=\"Cancelar\" class=\"btn-secondary\" special=\"cancel\"/>
                 </footer>
             </form>
-        """.format(" ".join([
-            f"<field name='{attr.name}'/>" for attr in lot_attributes
-        ]))
-        
-        # 4. Crear las líneas del asistente y añadir los valores de los atributos
+        """
+
+        # 5. Preparar líneas del wizard con valores de atributos
         wizard_lines = []
         for quant in available_quants:
             line_vals = {'quant_id': quant.id}
-            for attr in lot_attributes:
-                # Buscar el valor del atributo para el lote del quant
-                attr_line = quant.lot_id.attribute_line_ids.filtered(
-                    lambda l: l.attribute_id == attr
-                )
-                # Odoo no permite escribir directamente en campos related/compute en un create.
-                # En su lugar, lo añadiremos a la vista dinámica.
-                # Por ahora, solo creamos la línea base.
+            if quant.lot_id:
+                for attr in lot_attributes:
+                    fname = attr_to_field[attr.id]
+                    attr_line = quant.lot_id.attribute_line_ids.filtered(lambda l: l.attribute_id == attr)
+                    value = attr_line.value_id.name if attr_line else ''
+                    line_vals[fname] = value
             wizard_lines.append((0, 0, line_vals))
-        
-        # 5. Añadir dinámicamente los campos de atributos al modelo
-        LineModel = self.env['quant.attribute.selection.line']
-        for attr in lot_attributes:
-            if attr.name not in LineModel._fields:
-                field = fields.Char(
-                    string=attr.display_name,
-                    compute='_compute_attribute_value',
-                    store=False,
-                )
-                LineModel._add_field(attr.name, field)
-                # Pasamos el nombre del campo en el contexto para el compute
-                LineModel = LineModel.with_context(field_name_compute=attr.name)
 
-        # 6. Crear el wizard y devolver la acción para abrirlo
+        # 6. Crear el wizard y la vista dinámica
         wizard = self.env['quant.attribute.selection.wizard'].create({
             'quant_line_ids': wizard_lines,
         })
-
-        # 7. Crear una vista dinámica para el wizard
         view = self.env['ir.ui.view'].create({
-            'name': 'dynamic_wizard_view',
+            'name': 'dynamic_quant_attr_wizard_view',
             'type': 'form',
             'model': 'quant.attribute.selection.wizard',
             'arch': arch_string,
         })
-        
+
         return {
             'name': 'Seleccionar Lotes por Atributos',
             'type': 'ir.actions.act_window',
