@@ -6,11 +6,9 @@
             <field name="model">product.template</field>
             <field name="inherit_id" ref="stock.view_template_property_form"/>
             <field name="arch" type="xml">
-                <field name="tracking" position="after">
-                    <div invisible="tracking != 'lot'">
-                        <field name="show_quality_attrs_in_picking"/>
-                    </div>
-                </field>
+                <xpath expr="//group[@name='traceability']" position="inside">
+                    <field name="show_quality_attrs_in_picking" invisible="tracking != 'lot'"/>
+                </xpath>
             </field>
         </record>
     </data>
