@@ -2,7 +2,7 @@
 from odoo import models, fields, api
 from odoo.tools.float_utils import float_compare
 from odoo.exceptions import UserError
-import re
+
 
 class StockMove(models.Model):
     _inherit = 'stock.move'
@@ -20,75 +20,89 @@ class StockMove(models.Model):
 
     def action_show_attribute_selection(self):
         self.ensure_one()
-        
+
+        # 1. Encontrar atributos de lote
         lot_attributes = self.env['product.attribute'].search([
             ('is_lot_attribute', '=', True)
         ])
+        if not lot_attributes:
+            raise UserError("No se han configurado atributos de calidad de tipo 'lote' en el sistema.")
+
+        # Limitar a un máximo de 5 para coincidir con los campos genéricos del wizard
+        lot_attributes = lot_attributes[:5]
+
+        # 2. Encontrar quants disponibles
         available_quants = self.env['stock.quant']._gather(
             self.product_id,
             self.location_id,
             strict=False
-        ).filtered(lambda q: q.quantity > 0)
+        ).filtered(lambda q: q.quantity > 0 and q.lot_id)  # Asegurarse de que tengan lote
 
-        # Construir tabla HTML segura
-        headers = [
-            'Lote', 'Ubicación', 'Cantidad', 'UoM'
-        ] + [attr.display_name for attr in lot_attributes]
+        if not available_quants:
+            raise UserError("No se encontraron lotes/números de serie disponibles para este producto en la ubicación de origen.")
 
-        def td(val):
-            return f"<td>{(val or '')}</td>"
-
-        rows_html = []
+        # 3. Preparar los datos para las líneas del wizard
+        wizard_lines_vals = []
         for quant in available_quants:
-            base_cols = [
-                quant.lot_id.name if quant.lot_id else '',
-                quant.location_id.display_name,
-                quant.quantity,
-                quant.product_uom_id.name or ''
-            ]
-            attr_cols = []
-            for attr in lot_attributes:
-                attr_line = quant.lot_id.attribute_line_ids.filtered(lambda l: l.attribute_id == attr) if quant.lot_id else False
-                attr_cols.append(attr_line.value_id.name if attr_line else '')
-            row_html = '<tr>' + ''.join([td(v) for v in base_cols + attr_cols]) + '</tr>'
-            rows_html.append(row_html)
+            line_vals = {'quant_id': quant.id}
+            # Mapear valores de atributos a columnas genéricas
+            for i, attr in enumerate(lot_attributes):
+                attr_line = quant.lot_id.attribute_line_ids.filtered(
+                    lambda l: l.attribute_id == attr
+                )
+                field_name = f'attr_col_{i + 1}'
+                line_vals[field_name] = attr_line.value_id.name if attr_line else ''
+            wizard_lines_vals.append(line_vals)
 
-        table_html = (
-            '<table class="table table-sm table-striped">'
-            '<thead><tr>' + ''.join([f'<th>{h}</th>' for h in headers]) + '</tr></thead>'
-            '<tbody>' + ''.join(rows_html) + '</tbody>'
-            '</table>'
-        )
-
+        # 4. Crear el wizard y sus líneas
         wizard = self.env['quant.attribute.selection.wizard'].create({
-            'html_table': table_html,
+            'move_id': self.id,
+            'line_ids': [(0, 0, vals) for vals in wizard_lines_vals]
         })
 
-        # Vista mínima que muestra el HTML
-        arch_string = """
-            <form string="Atributos de Lotes">
+        # 5. Generar la vista de formulario/lista dinámica
+        arch_base = """
+            <form string="Seleccionar Lotes por Atributos">
                 <sheet>
-                    <div class="oe_title"><h2>Atributos de Calidad</h2></div>
-                    <field name="html_table" nolabel="1"/>
+                    <field name="line_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="selected"/>
+                            <field name="lot_id"/>
+                            <field name="location_id"/>
+                            <field name="available_quantity"/>
+                            <field name="quantity_to_reserve"/>
+                            <field name="product_uom_id" string="UdM"/>
+                            {dynamic_fields}
+                        </list>
+                    </field>
                 </sheet>
                 <footer>
-                    <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                    <button name="action_confirm_selection" string="Confirmar Selección" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
         """
+        dynamic_fields_str = ""
+        for i, attr in enumerate(lot_attributes):
+            field_name = f'attr_col_{i + 1}'
+            dynamic_fields_str += f'<field name="{field_name}" string="{attr.name}"/>'
 
+        view_arch = arch_base.format(dynamic_fields=dynamic_fields_str)
+
+        # 6. Crear la vista ir.ui.view temporal
         view = self.env['ir.ui.view'].create({
-            'name': 'dynamic_quant_attr_wizard_view_html',
+            'name': 'dynamic.quant.attribute.selection.form',
             'type': 'form',
             'model': 'quant.attribute.selection.wizard',
-            'arch': arch_string,
+            'arch': view_arch,
         })
 
+        # 7. Devolver la acción
         return {
-            'name': 'Atributos de Lotes',
+            'name': 'Seleccionar Lotes por Atributos',
             'type': 'ir.actions.act_window',
             'res_model': 'quant.attribute.selection.wizard',
             'views': [[view.id, 'form']],
             'res_id': wizard.id,
-            'target': 'new',
+            'target': 'current',  # Abrir en la vista principal
         }

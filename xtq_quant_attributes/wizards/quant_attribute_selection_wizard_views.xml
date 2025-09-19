@@ -5,12 +5,19 @@
             <field name="name">quant.attribute.selection.wizard.form</field>
             <field name="model">quant.attribute.selection.wizard</field>
             <field name="arch" type="xml">
-                <form string="Atributos de Lotes">
+                <form string="Selección de Lotes por Atributos">
                     <sheet>
-                        <field name="html_table" nolabel="1"/>
+                        <field name="line_ids" readonly="1">
+                            <list>
+                                <field name="lot_id"/>
+                                <field name="location_id"/>
+                                <field name="quantity"/>
+                            </list>
+                        </field>
                     </sheet>
                     <footer>
-                        <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                        <button string="Confirmar" name="action_confirm_selection" type="object" class="btn-primary"/>
+                        <button string="Cerrar" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
             </field>
