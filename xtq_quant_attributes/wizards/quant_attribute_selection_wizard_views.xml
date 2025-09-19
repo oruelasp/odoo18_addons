@@ -5,9 +5,13 @@
             <field name="name">quant.attribute.selection.wizard.form</field>
             <field name="model">quant.attribute.selection.wizard</field>
             <field name="arch" type="xml">
-                <!-- La vista se generará dinámicamente desde el backend -->
-                <form>
-                    <field name="view_arch" invisible="1"/>
+                <form string="Atributos de Lotes">
+                    <sheet>
+                        <field name="html_table" nolabel="1"/>
+                    </sheet>
+                    <footer>
+                        <button string="Cerrar" special="cancel" class="btn-secondary"/>
+                    </footer>
                 </form>
             </field>
         </record>
