@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_quant_attribute_selection_wizard_form" model="ir.ui.view">
+            <field name="name">quant.attribute.selection.wizard.form</field>
+            <field name="model">quant.attribute.selection.wizard</field>
+            <field name="arch" type="xml">
+                <!-- La vista se generará dinámicamente desde el backend -->
+                <form>
+                    <field name="view_arch" invisible="1"/>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

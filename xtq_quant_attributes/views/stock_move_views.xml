@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Heredamos de la vista de formulario de stock.picking para añadir nuestro botón
+             en la vista de lista editable de las operaciones (stock.move) -->
+        <record id="view_picking_form_inherit_quant_attributes" model="ir.ui.view">
+            <field name="name">stock.picking.form.inherit.quant.attributes</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='move_ids_without_package']/list" position="inside">
+                    <button name="action_show_attribute_selection"
+                            type="object"
+                            icon="fa-tasks"
+                            string="Seleccionar por Atributos"
+                            invisible="not show_quality_attrs_button"/>
+                    <field name="show_quality_attrs_button" column_invisible="True"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
