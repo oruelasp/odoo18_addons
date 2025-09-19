@@ -39,19 +39,22 @@ patch(ListRenderer.prototype, {
                     const result = await this.orm.call("stock.lot", "get_attributes_for_lots_view", [lotIds]);
                     this.lotAttributes = result;
 
-                    // Modificamos la definición de columnas directamente.
-                    const newColumns = [...list.archInfo.columns];
-                    this.lotAttributes.headers.forEach(header => {
-                        newColumns.push({
-                            name: `x_lot_attr_${header.replace(/\s+/g, '_')}`,
-                            string: header,
-                            type: 'char',
+                    // Guarda de seguridad: Asegurarse de que archInfo exista antes de modificarlo.
+                    if (list.archInfo) {
+                        // Modificamos la definición de columnas directamente.
+                        const newColumns = [...list.archInfo.columns];
+                        this.lotAttributes.headers.forEach(header => {
+                            newColumns.push({
+                                name: `x_lot_attr_${header.replace(/\s+/g, '_')}`,
+                                string: header,
+                                type: 'char',
+                            });
                         });
-                    });
-                    list.archInfo.columns = newColumns;
-                    
-                    // Forzamos el re-renderizado actualizando el estado.
-                    this.state.renderSignature++;
+                        list.archInfo.columns = newColumns;
+                        
+                        // Forzamos el re-renderizado actualizando el estado.
+                        this.state.renderSignature++;
+                    }
                 }
             }
         };
