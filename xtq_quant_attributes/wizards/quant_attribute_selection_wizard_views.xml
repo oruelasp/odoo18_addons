@@ -11,7 +11,8 @@
                             <list>
                                 <field name="lot_id"/>
                                 <field name="location_id"/>
-                                <field name="quantity"/>
+                                <field name="available_quantity"/>
+                                <field name="quantity_to_reserve"/>
                             </list>
                         </field>
                     </sheet>
