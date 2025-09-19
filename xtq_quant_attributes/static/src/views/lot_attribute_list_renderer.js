@@ -70,8 +70,15 @@ export class LotAttributeListRenderer extends ListRenderer {
     }
 
     get columns() {
-        const base = this.baseColumns || this.props.list.archInfo.columns;
-        return [...base, ...this.state.qualityColumns];
+        const base = this.baseColumns || (this.props.list.archInfo ? this.props.list.archInfo.columns : []);
+        
+        // Filtrado Defensivo: Nos aseguramos de que cada columna en la lista base sea válida
+        // y tenga una propiedad 'name', que es usada por Owl como clave en el t-foreach.
+        // Esto nos protege de la "corrupción" de datos por parte de otros componentes.
+        const filteredBase = base.filter(col => col && col.name);
+
+        // Devuelve las columnas base (ya limpias) + nuestras columnas de calidad.
+        return [...filteredBase, ...this.state.qualityColumns];
     }
     
     set columns(newColumns) {
