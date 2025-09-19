@@ -2,13 +2,16 @@
 
 import { patch } from "@web/core/utils/patch";
 import { ListRenderer } from "@web/views/list/list_renderer";
-import { onWillStart, onWillUpdateProps } from "@odoo/owl";
+import { useState, onWillStart, onWillUpdateProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 patch(ListRenderer.prototype, {
     setup() {
         super.setup();
         this.orm = useService("orm");
+        
+        // Estado para forzar un re-renderizado cuando las columnas cambien.
+        this.state = useState({ renderSignature: 0 });
 
         this.lotAttributes = { headers: [], data: {} };
         this.attributesFetched = false;
@@ -36,8 +39,7 @@ patch(ListRenderer.prototype, {
                     const result = await this.orm.call("stock.lot", "get_attributes_for_lots_view", [lotIds]);
                     this.lotAttributes = result;
 
-                    // Modificar directamente el archInfo de la lista actual.
-                    // Esta es la forma más segura de inyectar columnas dinámicamente.
+                    // Modificamos la definición de columnas directamente.
                     const newColumns = [...list.archInfo.columns];
                     this.lotAttributes.headers.forEach(header => {
                         newColumns.push({
@@ -47,6 +49,9 @@ patch(ListRenderer.prototype, {
                         });
                     });
                     list.archInfo.columns = newColumns;
+                    
+                    // Forzamos el re-renderizado actualizando el estado.
+                    this.state.renderSignature++;
                 }
             }
         };
