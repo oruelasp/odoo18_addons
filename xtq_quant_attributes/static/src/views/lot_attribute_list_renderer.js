@@ -99,8 +99,21 @@ export class LotAttributeListRenderer extends ListRenderer {
     }
 }
 
-// Registramos nuestro nuevo componente en el registro de renderers de Odoo.
+// 1. Registramos nuestro renderer personalizado para que Odoo lo conozca.
 registry.category("renderers").add("lot_attribute_list_renderer", {
     Component: LotAttributeListRenderer,
     target: "list",
 });
+
+// 2. Importamos la vista de lista base para poder heredar de ella.
+import { listView } from "@web/views/list/list_view";
+
+// 3. Creamos una nueva definición de vista que utiliza nuestro renderer.
+export const lotAttributeListView = {
+    ...listView,
+    Renderer: LotAttributeListRenderer,
+};
+
+// 4. Registramos esta nueva VISTA en el registro de vistas.
+// Ahora, cuando el XML use js_class="lot_attribute_list_renderer", encontrará esta definición.
+registry.category("views").add("lot_attribute_list_renderer", lotAttributeListView);
