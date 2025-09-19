@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_quant_attribute_selection_wizard,quant.attribute.selection.wizard.access,model_quant_attribute_selection_wizard,base.group_user,1,1,1,1
 access_quant_attribute_selection_line,quant.attribute.selection.line.access,model_quant_attribute_selection_line,base.group_user,1,1,1,1
+access_quant_attribute_selection_search_filter,quant.attribute.selection.search.filter.access,model_quant_attribute_selection_search_filter,base.group_user,1,1,1,1
