@@ -29,8 +29,8 @@
                             <page string="Búsqueda de Lotes">
                                 <group string="Filtros por Atributos">
                                     <field name="search_filter_ids" nolabel="1">
-                                        <list editable="bottom">
-                                            <field name="attribute_id"/>
+                                        <list>
+                                            <field name="attribute_id" readonly="1"/>
                                             <field name="value_id"/>
                                         </list>
                                     </field>

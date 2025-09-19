@@ -73,7 +73,7 @@ class StockMove(models.Model):
         # Definición de la lista base para reutilizar
         list_view_arch = """
             <list editable="bottom">
-                <field name="selected_transient"/>
+                <field name="selected"/>
                 <field name="lot_id"/>
                 <field name="location_id"/>
                 <field name="available_quantity"/>

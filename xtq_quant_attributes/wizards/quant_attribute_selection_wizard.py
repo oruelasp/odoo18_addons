@@ -5,6 +5,7 @@ from odoo.exceptions import UserError, ValidationError
 class QuantAttributeSelectionWizard(models.TransientModel):
     _name = 'quant.attribute.selection.wizard'
     _description = 'Asistente para Seleccionar Lotes por Atributos de Calidad'
+    _rec_name = 'picking_info'
 
     # --- CAMPOS DE CABECERA ---
     move_id = fields.Many2one('stock.move', string="Movimiento de Origen", required=True, readonly=True)
@@ -60,7 +61,7 @@ class QuantAttributeSelectionWizard(models.TransientModel):
     def action_add_to_selection(self):
         """Mueve las líneas seleccionadas de 'available' a 'selected'."""
         self.ensure_one()
-        self.line_ids.filtered(lambda l: l.selected_transient and l.selection_status == 'available').write({
+        self.line_ids.filtered(lambda l: l.selected and l.selection_status == 'available').write({
             'selection_status': 'selected'
         })
         return self._refresh_view()
@@ -68,7 +69,7 @@ class QuantAttributeSelectionWizard(models.TransientModel):
     def action_remove_from_selection(self):
         """Devuelve las líneas seleccionadas de 'selected' a 'available'."""
         self.ensure_one()
-        self.line_ids.filtered(lambda l: l.selected_transient and l.selection_status == 'selected').write({
+        self.line_ids.filtered(lambda l: l.selected and l.selection_status == 'selected').write({
             'selection_status': 'available'
         })
         return self._refresh_view()
@@ -114,7 +115,7 @@ class QuantAttributeSelectionLine(models.TransientModel):
 
     wizard_id = fields.Many2one('quant.attribute.selection.wizard', string="Asistente", required=True, ondelete='cascade')
     selection_status = fields.Selection([('available', 'Disponible'), ('selected', 'Seleccionado')], default='available', required=True)
-    selected_transient = fields.Boolean(string="Seleccionar")
+    selected = fields.Boolean(string="Seleccionar")
     is_visible_in_search = fields.Boolean(string="Visible en Búsqueda", default=True)
 
     quant_id = fields.Many2one('stock.quant', string="Quant", required=True)
