@@ -20,14 +20,13 @@ class StockMove(models.Model):
     def action_show_attribute_selection(self):
         self.ensure_one()
         
-        # 1. Encontrar atributos de calidad para este producto
-        lot_attributes = self.product_id.product_tmpl_id.attribute_line_ids.attribute_id.filtered(
-            lambda attr: attr.is_lot_attribute
-        )
+        # 1. Encontrar TODOS los atributos de calidad que son 'de lote'.
+        # La lógica ya no se basa en la plantilla del producto, sino en la configuración general
+        # de los atributos. El wizard se encargará de mostrar los valores si existen.
+        lot_attributes = self.env['product.attribute'].search([
+            ('is_lot_attribute', '=', True)
+        ])
         
-        if not lot_attributes:
-            raise UserError("Este producto no tiene atributos de calidad configurados para ser mostrados.")
-
         # 2. Encontrar quants disponibles
         available_quants = self.env['stock.quant']._gather(
             self.product_id,
