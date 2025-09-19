@@ -29,10 +29,18 @@ export class LotAttributeListRenderer extends ListRenderer {
             if (this.attributesFetched || list.records.length === 0) {
                 return;
             }
-            this.attributesFetched = true;
+            
+            // Corrección: El product_id no está en el contexto de la lista, sino en el contexto
+            // general de la vista (archInfo.context).
+            const productId = this.props.archInfo.context.product_id || list.context.default_product_id;
 
-            const productId = list.context.default_product_id;
-            if (!productId) { return; }
+            if (!productId) { 
+                // Si no hay product_id, marcamos como 'hecho' para no reintentar inútilmente.
+                this.attributesFetched = true;
+                return; 
+            }
+            
+            this.attributesFetched = true;
 
             const productInfo = await this.orm.read("product.product", [productId], ["product_tmpl_id"]);
             if (!productInfo.length || !productInfo[0].product_tmpl_id) { return; }
