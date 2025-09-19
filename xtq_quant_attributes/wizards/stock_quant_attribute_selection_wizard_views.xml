@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="stock_quant_attribute_selection_wizard_form_view" model="ir.ui.view">
+            <field name="name">stock.quant.attribute.selection.wizard.form</field>
+            <field name="model">stock.quant.attribute.selection.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <field name="move_id" invisible="1"/>
+                    <field name="quant_ids" nolabel="1">
+                        <list editable="bottom">
+                            <field name="lot_id" string="Lote/Nº de Serie"/>
+                            <field name="quantity" string="Disponible"/>
+                            <field name="location_id" string="Ubicación"/>
+                            
+                            <!-- Columna Atributo 1 -->
+                            <field name="x_lot_attr_label_1" invisible="1"/>
+                            <field name="x_lot_attr_value_1" 
+                                   t-att-string="x_lot_attr_label_1"
+                                   column_invisible="not x_lot_attr_label_1"/>
+                                   
+                            <!-- Columna Atributo 2 -->
+                            <field name="x_lot_attr_label_2" invisible="1"/>
+                            <field name="x_lot_attr_value_2" 
+                                   t-att-string="x_lot_attr_label_2"
+                                   column_invisible="not x_lot_attr_label_2"/>
+                                   
+                            <!-- Columna Atributo 3 -->
+                            <field name="x_lot_attr_label_3" invisible="1"/>
+                            <field name="x_lot_attr_value_3" 
+                                   t-att-string="x_lot_attr_label_3"
+                                   column_invisible="not x_lot_attr_label_3"/>
+                                   
+                            <!-- Columna Atributo 4 -->
+                            <field name="x_lot_attr_label_4" invisible="1"/>
+                            <field name="x_lot_attr_value_4" 
+                                   t-att-string="x_lot_attr_label_4"
+                                   column_invisible="not x_lot_attr_label_4"/>
+                                   
+                            <!-- Columna Atributo 5 -->
+                            <field name="x_lot_attr_label_5" invisible="1"/>
+                            <field name="x_lot_attr_value_5" 
+                                   t-att-string="x_lot_attr_label_5"
+                                   column_invisible="not x_lot_attr_label_5"/>
+                        </list>
+                    </field>
+                    <footer>
+                        <button name="action_apply_selection" string="Aplicar Selección" type="object" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
