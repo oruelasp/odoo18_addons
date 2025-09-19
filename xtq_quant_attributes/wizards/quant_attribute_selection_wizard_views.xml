@@ -29,10 +29,10 @@
                             <page string="Búsqueda de Lotes">
                                 <group string="Filtros por Atributos">
                                     <field name="search_filter_ids" nolabel="1">
-                                        <tree editable="bottom">
+                                        <list editable="bottom">
                                             <field name="attribute_id"/>
                                             <field name="value_id"/>
-                                        </tree>
+                                        </list>
                                     </field>
                                     <button name="action_search" string="Buscar" type="object" class="oe_highlight"/>
                                 </group>
