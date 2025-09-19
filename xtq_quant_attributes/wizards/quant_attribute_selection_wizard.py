@@ -38,17 +38,15 @@ class QuantAttributeSelectionWizard(models.TransientModel):
         Filtra las líneas disponibles basándose en los criterios de search_filter_ids.
         """
         self.ensure_one()
-        active_filters = self.search_filter_ids.filtered(lambda f: f.value_id)
+        # Considerar solo los filtros que el usuario marcó como activos y que tienen un valor seleccionado.
+        active_filters = self.search_filter_ids.filtered(lambda f: f.is_active and f.value_id)
         available_lines = self.line_ids.filtered(lambda l: l.selection_status == 'available')
 
         if not active_filters:
-            # Si no hay filtros, hacer visibles todas las líneas disponibles
             available_lines.write({'is_visible_in_search': True})
         else:
-            # Si hay filtros, evaluar cada línea
             for line in available_lines:
                 lot = line.lot_id
-                # Un lote debe coincidir con TODOS los filtros activos
                 match = all(
                     lot.attribute_line_ids.filtered(
                         lambda attr_line: attr_line.attribute_id == f.attribute_id and attr_line.value_id == f.value_id
@@ -62,7 +60,8 @@ class QuantAttributeSelectionWizard(models.TransientModel):
         """Mueve las líneas seleccionadas de 'available' a 'selected'."""
         self.ensure_one()
         self.line_ids.filtered(lambda l: l.selected and l.selection_status == 'available').write({
-            'selection_status': 'selected'
+            'selection_status': 'selected',
+            'selected': False, # Desmarcar para la siguiente operación
         })
         return self._refresh_view()
 
@@ -70,7 +69,8 @@ class QuantAttributeSelectionWizard(models.TransientModel):
         """Devuelve las líneas seleccionadas de 'selected' a 'available'."""
         self.ensure_one()
         self.line_ids.filtered(lambda l: l.selected and l.selection_status == 'selected').write({
-            'selection_status': 'available'
+            'selection_status': 'available',
+            'selected': False, # Desmarcar para la siguiente operación
         })
         return self._refresh_view()
         
@@ -145,5 +145,6 @@ class QuantAttributeSelectionSearchFilter(models.TransientModel):
     _description = 'Filtro de Búsqueda para Selección de Lotes'
 
     wizard_id = fields.Many2one('quant.attribute.selection.wizard', string="Asistente", required=True, ondelete='cascade')
+    is_active = fields.Boolean(string="Usar Filtro")
     attribute_id = fields.Many2one('product.attribute', string="Atributo", required=True, readonly=True)
-    value_id = fields.Many2one('product.attribute.value', string="Valor", domain="[('attribute_id', '=', attribute_id)]")
+    value_id = fields.Many2one('product.attribute.value', string="Valor a Buscar", domain="[('attribute_id', '=', attribute_id)]")
