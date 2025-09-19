@@ -20,9 +20,10 @@ class StockMove(models.Model):
         self.ensure_one()
         
         # 1. Encontrar atributos de calidad para este producto
+        # Corrección: El campo en product.attribute es 'product_tmpl_ids' (Many2many), no 'product_tmpl_id'.
         lot_attributes = self.env['product.attribute'].search([
             ('is_lot_attribute', '=', True),
-            ('product_tmpl_id', '=', self.product_id.product_tmpl_id.id)
+            ('product_tmpl_ids', 'in', self.product_id.product_tmpl_id.id)
         ])
         if not lot_attributes:
             # Si no hay atributos, no hacemos nada especial (o podríamos mostrar un mensaje)
