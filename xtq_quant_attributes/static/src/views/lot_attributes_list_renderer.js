@@ -10,13 +10,16 @@ patch(ListRenderer.prototype, {
         super.setup();
         this.orm = useService("orm");
         
-        // Estado para forzar un re-renderizado cuando las columnas cambien.
-        this.state = useState({ renderSignature: 0 });
-
+        this.state = useState({
+            qualityColumns: [], // Almacena solo nuestras columnas dinámicas.
+        });
+        
+        // Almacena las columnas base (originales o modificadas por otros componentes).
+        this.baseColumns = null; 
         this.lotAttributes = { headers: [], data: {} };
         this.attributesFetched = false;
 
-        const fetchDataAndInjectColumns = async (list) => {
+        const fetchData = async (list) => {
             const isLotSelection = list.resModel === 'stock.quant' && 'default_product_id' in list.context;
             if (!isLotSelection || this.attributesFetched || list.records.length === 0) {
                 return;
@@ -38,34 +41,41 @@ patch(ListRenderer.prototype, {
                 if (lotIds.length > 0) {
                     const result = await this.orm.call("stock.lot", "get_attributes_for_lots_view", [lotIds]);
                     this.lotAttributes = result;
-
-                    // Guarda de seguridad: Asegurarse de que archInfo exista antes de modificarlo.
-                    if (list.archInfo) {
-                        // Modificamos la definición de columnas directamente.
-                        const newColumns = [...list.archInfo.columns];
-                        this.lotAttributes.headers.forEach(header => {
-                            newColumns.push({
-                                name: `x_lot_attr_${header.replace(/\s+/g, '_')}`,
-                                string: header,
-                                type: 'char',
-                            });
+                    
+                    const newQualityColumns = [];
+                    this.lotAttributes.headers.forEach(header => {
+                        newQualityColumns.push({
+                            name: `x_lot_attr_${header.replace(/\s+/g, '_')}`,
+                            string: header,
+                            type: 'char',
                         });
-                        list.archInfo.columns = newColumns;
-                        
-                        // Forzamos el re-renderizado actualizando el estado.
-                        this.state.renderSignature++;
-                    }
+                    });
+                    
+                    // Actualiza el estado solo con nuestras columnas, lo que provoca un re-renderizado.
+                    this.state.qualityColumns = newQualityColumns;
                 }
             }
         };
 
-        onWillStart(() => fetchDataAndInjectColumns(this.props.list));
-        onWillUpdateProps((nextProps) => fetchDataAndInjectColumns(nextProps.list));
+        onWillStart(() => fetchData(this.props.list));
+        onWillUpdateProps((nextProps) => fetchData(nextProps.list));
+    },
+
+    get columns() {
+        const base = this.baseColumns || this.props.list.archInfo.columns;
+        // Devuelve las columnas base + nuestras columnas de calidad.
+        return [...base, ...this.state.qualityColumns];
+    },
+    
+    set columns(newColumns) {
+        // Intercepta los intentos de otros componentes de establecer las columnas
+        // y los guarda como la nueva base.
+        this.baseColumns = newColumns;
     },
 
     get cells() {
         const originalCellsGetter = super.cells;
-        if (!this.lotAttributes.headers || this.lotAttributes.headers.length === 0) {
+        if (!this.state.qualityColumns.length) {
             return originalCellsGetter;
         }
 
