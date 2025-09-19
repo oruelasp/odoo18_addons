@@ -69,8 +69,8 @@ patch(ListRenderer.prototype, {
     
     set columns(newColumns) {
         // Intercepta los intentos de otros componentes de establecer las columnas
-        // y los guarda como la nueva base.
-        this.baseColumns = newColumns;
+        // y guarda una COPIA para evitar problemas de referencia compartida.
+        this.baseColumns = newColumns ? [...newColumns] : [];
     },
 
     get cells() {
