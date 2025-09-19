@@ -15,8 +15,12 @@
     'data': [
         'security/ir.model.access.csv',
         'views/product_template_views.xml',
-        'views/stock_move_views.xml',
-        'wizards/stock_quant_attribute_selection_wizard_views.xml',
+        'views/stock_quant_views.xml',
     ],
+    'assets': {
+        'web.assets_backend': [
+            'xtq_quant_attributes/static/src/views/lot_attribute_list_renderer.js',
+        ],
+    },
     'license': 'OEEL-1',
 }
