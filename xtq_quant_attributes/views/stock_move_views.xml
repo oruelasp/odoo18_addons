@@ -8,12 +8,21 @@
             <field name="model">stock.picking</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
-                <xpath expr="//field[@name='move_ids_without_package']/list" position="inside">
+                <xpath expr="//field[@name='move_ids_without_package']/list/button[@name='action_show_details']" position="after">
+                    <!-- Botón original del wizard, ahora invisible -->
                     <button name="action_show_attribute_selection"
                             type="object"
                             icon="fa-tasks"
-                            string="Atributos"
+                            string="Seleccionar por Atributos"
+                            invisible="1"/>
+                    
+                    <!-- Nuevo botón para la vista de stock.quant -->
+                    <button name="action_open_stock_quant_list"
+                            type="object"
+                            icon="fa-cubes"
+                            string="Stock por Atributos"
                             invisible="not show_quality_attrs_button"/>
+                    
                     <field name="show_quality_attrs_button" column_invisible="True"/>
                 </xpath>
             </field>

@@ -126,3 +126,18 @@ class StockMove(models.Model):
             'res_id': wizard.id,
             'target': 'current',
         }
+
+    def action_open_stock_quant_list(self):
+        self.ensure_one()
+        return {
+            'name': f"Stock Disponible para: {self.product_id.display_name}",
+            'type': 'ir.actions.act_window',
+            'res_model': 'stock.quant',
+            'view_mode': 'list,form',
+            'domain': [
+                ('product_id', '=', self.product_id.id),
+                ('location_id', 'child_of', self.location_id.id),
+                ('quantity', '>', 0),
+            ],
+            'target': 'current',
+        }
