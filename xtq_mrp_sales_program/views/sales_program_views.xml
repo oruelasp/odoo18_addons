@@ -14,60 +14,40 @@
                     <button name="action_draft" type="object" string="Set to Draft" invisible="state not in ['cancel', 'approved']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,done"/>
                 </header>
-                <sheet>
-                    <widget name="web_ribbon" title="Approved" bg_color="bg-success" invisible="state != 'approved'"/>
-                    <widget name="web_ribbon" title="Done" bg_color="bg-info" invisible="state != 'done'"/>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
-                    </div>
+                <div class="oe_title">
+                    <h1>
+                        <field name="name" readonly="1"/>
+                    </h1>
+                </div>
+                <group>
                     <group>
-                        <group>
-                            <field name="description"/>
-                            <field name="date_planned_start"/>
-                        </group>
-                        <group>
-                            <field name="company_id" groups="base.group_multi_company"/>
-                        </group>
+                        <field name="description"/>
+                        <field name="date_planned_start"/>
+                        <field name="company_id" groups="base.group_multi_company"/>
                     </group>
-                    <notebook>
-                        <page string="Production Lines" name="production_lines">
-                            <field name="line_ids">
-                                <list editable="bottom">
-                                    <field name="product_id"/>
-                                    <field name="product_qty"/>
-                                    <field name="product_uom_id" invisible="1"/>
-                                    <field name="bom_id"/>
-                                    <field name="tag_ids" widget="many2many_tags"/>
-                                </list>
-                            </field>
-                        </page>
-                        <page string="Technical Settings" name="technical_settings">
-                             <group>
-                                <group>
-                                    <field name="picking_type_id"/>
-                                    <field name="location_src_id"/>
-                                </group>
-                                <group>
-                                    <field name="location_dest_id"/>
-                                    <field name="tag_ids" widget="many2many_tags" string="Global Tags"/>
-                                </group>
-                             </group>
-                        </page>
-                         <page string="Manufacturing Orders" name="manufacturing_orders" invisible="production_count == 0">
-                            <field name="production_ids" readonly="1">
-                                <list>
-                                    <field name="name"/>
-                                    <field name="product_id"/>
-                                    <field name="product_qty"/>
-                                    <field name="state"/>
-                                </list>
-                            </field>
-                        </page>
-                    </notebook>
-                </sheet>
-                 <div class="oe_chatter">
+                    <group>
+                        <field name="picking_type_id"/>
+                        <field name="location_src_id"/>
+                        <field name="location_dest_id"/>
+                    </group>
+                </group>
+                
+                <separator string="Production Lines"/>
+                <field name="line_ids" nolabel="1">
+                    <list editable="bottom">
+                        <field name="product_id"/>
+                        <field name="product_qty"/>
+                        <field name="product_uom_id" invisible="1"/>
+                        <field name="bom_id" optional="show"/>
+                        <field name="tag_ids" widget="many2many_tags" optional="show"/>
+                    </list>
+                </field>
+
+                <group string="Global Tags" name="global_tags">
+                    <field name="tag_ids" nolabel="1" widget="many2many_tags"/>
+                </group>
+
+                <div class="oe_chatter">
                     <field name="message_follower_ids"/>
                     <field name="activity_ids"/>
                     <field name="message_ids"/>
