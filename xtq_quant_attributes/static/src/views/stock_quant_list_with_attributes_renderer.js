@@ -2,6 +2,7 @@
 
 import { registry } from "@web/core/registry";
 import { ListRenderer } from "@web/views/list/list_renderer";
+import { listView } from "@web/views/list/list_view"; // Importación clave
 import { onWillStart, onWillUpdateProps, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
@@ -12,20 +13,21 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
         this.state = useState({
             attributeData: {},
             attributeHeaders: [],
-            showAttributes: this.props.arch.attrs.class?.includes('stock_quant_list_with_attributes'),
+            // La comprobación ahora es más robusta
+            showAttributes: this.props.arch.attrs.js_class === 'stock_quant_list_with_attributes',
         });
 
         onWillStart(async () => {
             if (this.state.showAttributes) {
                 await this._fetchAttributeData();
-                this._updateColumns();
+                this._updateColumnsVisibility();
             }
         });
 
         onWillUpdateProps(async (nextProps) => {
             if (this.state.showAttributes) {
                 await this._fetchAttributeData(nextProps);
-                this._updateColumns(nextProps);
+                this._updateColumnsVisibility(nextProps);
             }
         });
     }
@@ -47,27 +49,43 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
         this.state.attributeHeaders = data.headers;
     }
     
-    _updateColumns(props = this.props) {
+    _updateColumnsVisibility(props = this.props) {
         if (!this.state.showAttributes) return;
 
-        // Mostrar solo las columnas de atributos que tienen datos
-        for (const col of props.arch.children) {
-            if (col.attrs.name.startsWith('x_attr_')) {
-                const header = col.attrs.string;
-                col.attrs.invisible = this.state.attributeHeaders.includes(header) ? '0' : '1';
+        // Itera sobre las columnas definidas en el arch para decidir su visibilidad
+        props.list.columns.forEach(col => {
+            if (col.name.startsWith('x_attr_')) {
+                col.optional = this.state.attributeHeaders.includes(col.string) ? false : 'hide';
             }
-        }
+        });
     }
 
-    getColumns(props = this.props) {
-        // Devuelve las columnas actualizadas
-        // Esta función podría ser necesaria si _updateColumns no refleja los cambios a tiempo
-        return super.getColumns(props);
+    // Sobrescribimos get cells para inyectar los datos de los atributos
+    get cells() {
+        const originalCells = super.cells;
+        if (!this.state.showAttributes) {
+            return originalCells;
+        }
+
+        return originalCells.map(row => {
+            const lotId = row.record.data.lot_id && row.record.data.lot_id[0];
+            if (lotId && this.state.attributeData[lotId]) {
+                const lotAttrs = this.state.attributeData[lotId];
+                return row.map(cell => {
+                    if (cell.name.startsWith('x_attr_')) {
+                        const attrName = cell.string;
+                        return { ...cell, value: lotAttrs[attrName] || "" };
+                    }
+                    return cell;
+                });
+            }
+            return row;
+        });
     }
 }
 
-// Vincular el nuevo renderer a la vista a través de la js_class
+// Vincular el nuevo renderer a la vista. Usamos 'listView' importado.
 registry.category("views").add("stock_quant_list_with_attributes", {
-    ...registry.get("web.ListView"),
+    ...listView,
     Renderer: StockQuantListWithAttributesRenderer,
 });
