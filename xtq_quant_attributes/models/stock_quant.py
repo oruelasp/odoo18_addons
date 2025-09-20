@@ -38,10 +38,10 @@ class StockQuant(models.Model):
                 return res
 
             doc = etree.XML(res['arch'])
-            # El nodo puede ser 'list' o 'tree' dependiendo de la versión y el contexto
-            parent_node = doc.find('.//tree')
+            # Prioritize <list> for Odoo 18+, fallback to <tree> for compatibility
+            parent_node = doc.find('.//list')
             if parent_node is None:
-                 parent_node = doc.find('.//list')
+                 parent_node = doc.find('.//tree')
             if parent_node is None:
                 return res
             
