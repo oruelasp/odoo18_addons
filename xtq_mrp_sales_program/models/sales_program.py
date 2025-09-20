@@ -61,12 +61,20 @@ class SalesProgram(models.Model):
     location_src_id = fields.Many2one(
         'stock.location',
         "Components Location",
+        compute="_compute_locations",
+        store=True,
+        readonly=False,
+        precompute=True,
         domain="[('usage','=','internal')]",
         required=True,
     )
     location_dest_id = fields.Many2one(
         'stock.location',
         "Finished Products Location",
+        compute="_compute_locations",
+        store=True,
+        readonly=False,
+        precompute=True,
         domain="[('usage','=','internal')]",
         required=True,
     )
@@ -80,6 +88,20 @@ class SalesProgram(models.Model):
         for program in self:
             program.production_count = len(program.production_ids)
     
+    @api.depends('picking_type_id')
+    def _compute_locations(self):
+        for program in self:
+            if not program.picking_type_id:
+                continue
+            
+            fallback_loc = False
+            if not program.picking_type_id.default_location_src_id or not program.picking_type_id.default_location_dest_id:
+                company_id = program.company_id.id if program.company_id else self.env.company.id
+                fallback_loc = self.env['stock.warehouse'].search([('company_id', '=', company_id)], limit=1).lot_stock_id
+
+            program.location_src_id = program.picking_type_id.default_location_src_id.id or fallback_loc
+            program.location_dest_id = program.picking_type_id.default_location_dest_id.id or fallback_loc
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -152,11 +174,27 @@ class SalesProgramLine(models.Model):
         'uom.uom',
         'Unit of Measure',
         required=True,
+        compute='_compute_uom_id',
+        store=True,
+        readonly=False,
+        precompute=True,
     )
     bom_id = fields.Many2one(
         'mrp.bom',
         'Bill of Material',
-        domain="[('product_tmpl_id', '=', product_tmpl_id)]"
+        compute='_compute_bom_id',
+        store=True,
+        readonly=False,
+        precompute=True,
+        domain="""[
+            '&',
+                '|',
+                    ('product_tmpl_id', '=', product_tmpl_id),
+                    '&',
+                        ('product_id.product_tmpl_id.product_variant_ids', '=', product_id),
+                        ('product_id', '=', False),
+            ('type', '=', 'normal')
+        ]"""
     )
     product_tmpl_id = fields.Many2one(
         related='product_id.product_tmpl_id',
@@ -166,10 +204,31 @@ class SalesProgramLine(models.Model):
         string="Tags",
     )
 
-    @api.onchange('product_id')
-    def _onchange_product_id(self):
-        if self.product_id:
-            self.product_uom_id = self.product_id.uom_id.id
-            bom = self.env['mrp.bom']._bom_find(product=self.product_id, bom_type='normal')
-            if bom:
-                self.bom_id = bom[self.product_id].id if self.product_id in bom else False
+    @api.depends('product_id', 'program_id.picking_type_id', 'program_id.company_id')
+    def _compute_bom_id(self):
+        for line in self:
+            if not line.product_id:
+                line.bom_id = False
+                continue
+            # Ensure program_id is available
+            if not line.program_id or not isinstance(line.program_id.id, int):
+                line.bom_id = False
+                continue
+            
+            bom = self.env['mrp.bom']._bom_find(
+                line.product_id,
+                picking_type=line.program_id.picking_type_id,
+                company_id=line.program_id.company_id.id,
+                bom_type='normal'
+            )
+            line.bom_id = bom.get(line.product_id, False)
+
+    @api.depends('bom_id', 'product_id')
+    def _compute_uom_id(self):
+        for line in self:
+            if line.bom_id and (not line.product_uom_id or line.bom_id != line._origin.bom_id):
+                line.product_uom_id = line.bom_id.product_uom_id.id
+            elif line.product_id and not line.product_uom_id:
+                line.product_uom_id = line.product_id.uom_id.id
+            elif not line.product_id and not line.bom_id:
+                line.product_uom_id = False
