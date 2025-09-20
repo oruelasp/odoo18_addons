@@ -105,8 +105,16 @@ class SalesProgram(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if vals.get('name', _('New')) == _('New'):
-                vals['name'] = self.env['ir.sequence'].next_by_code('sales.program') or _('New')
+            if 'name' not in vals or vals.get('name', _('New')) == _('New'):
+                picking_type_id = vals.get('picking_type_id')
+                if picking_type_id:
+                    picking_type = self.env['stock.picking.type'].browse(picking_type_id)
+                    if picking_type.sequence_id:
+                        vals['name'] = picking_type.sequence_id.next_by_id()
+                    else:
+                        vals['name'] = self.env['ir.sequence'].next_by_code('sales.program') or _('New')
+                else:
+                    vals['name'] = self.env['ir.sequence'].next_by_code('sales.program') or _('New')
         return super().create(vals_list)
 
     def action_approve(self):
