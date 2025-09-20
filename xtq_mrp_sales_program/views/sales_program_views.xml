@@ -11,7 +11,7 @@
                     <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
                     <button name="action_generate_productions" type="object" string="Generate MOs" class="oe_highlight" invisible="state != 'approved'"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'approved')"/>
-                    <button name="action_draft" type="object" string="Set to Draft" invisible="state == 'draft'"/>
+                    <button name="action_draft" type="object" string="Set to Draft" invisible="state not in ['cancel', 'approved']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,done"/>
                 </header>
                 <sheet>
@@ -32,27 +32,38 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Production Lines">
+                        <page string="Production Lines" name="production_lines">
                             <field name="line_ids">
                                 <list editable="bottom">
                                     <field name="product_id"/>
                                     <field name="product_qty"/>
-                                    <field name="product_uom_id" column_invisible="1"/>
+                                    <field name="product_uom_id" invisible="1"/>
                                     <field name="bom_id"/>
                                     <field name="tag_ids" widget="many2many_tags"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Technical Settings">
+                        <page string="Technical Settings" name="technical_settings">
                              <group>
-                                <field name="picking_type_id"/>
-                                <field name="location_src_id"/>
-                                <field name="location_dest_id"/>
-                                <field name="tag_ids" widget="many2many_tags" string="Global Tags"/>
+                                <group>
+                                    <field name="picking_type_id"/>
+                                    <field name="location_src_id"/>
+                                </group>
+                                <group>
+                                    <field name="location_dest_id"/>
+                                    <field name="tag_ids" widget="many2many_tags" string="Global Tags"/>
+                                </group>
                              </group>
                         </page>
-                         <page string="Manufacturing Orders" invisible="production_count == 0">
-                            <field name="production_ids"/>
+                         <page string="Manufacturing Orders" name="manufacturing_orders" invisible="production_count == 0">
+                            <field name="production_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
