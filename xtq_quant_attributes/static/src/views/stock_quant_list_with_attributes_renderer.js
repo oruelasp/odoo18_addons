@@ -3,21 +3,20 @@
 import { registry } from "@web/core/registry";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
-import { onWillStart, useState } from "@odoo/owl";
+import { onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 export class StockQuantListWithAttributesRenderer extends ListRenderer {
     setup() {
         super.setup();
         this.orm = useService("orm");
-        this.state = useState({
-            fieldMap: {},
-        });
 
         onWillStart(async () => {
             if (this.props.list.context.show_lot_attributes) {
-                const map = await this._fetchAttributeMap();
-                this.state.fieldMap = map;
+                const fieldMap = await this._fetchAttributeMap();
+                if (Object.keys(fieldMap).length > 0) {
+                    this._updateColumns(fieldMap);
+                }
             }
         });
     }
@@ -34,28 +33,26 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
         );
     }
 
-    get columns() {
-        const originalColumns = super.columns;
+    _updateColumns(fieldMap) {
+        const fieldsToShow = new Set(Object.keys(fieldMap));
         
-        if (!this.props.list.context.show_lot_attributes || Object.keys(this.state.fieldMap).length === 0) {
-            return originalColumns;
-        }
+        // Modificar directamente el array de columnas en las props.
+        // En onWillStart, este objeto es mutable.
+        const columns = this.props.list.columns;
+        const finalColumns = [];
 
-        const fieldsToShow = new Set(Object.keys(this.state.fieldMap));
-        const updatedColumns = [];
-
-        for (const col of originalColumns) {
+        for (const col of columns) {
             if (col.name.startsWith('x_attr_')) {
                 if (fieldsToShow.has(col.name)) {
-                    col.string = this.state.fieldMap[col.name];
-                    updatedColumns.push(col);
+                    col.string = fieldMap[col.name];
+                    finalColumns.push(col);
                 }
             } else {
-                updatedColumns.push(col);
+                finalColumns.push(col);
             }
         }
-        
-        return updatedColumns;
+
+        this.props.list.columns = finalColumns;
     }
 }
 
