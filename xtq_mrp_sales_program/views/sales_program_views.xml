@@ -83,7 +83,7 @@
         id="menu_sales_program"
         name="Sales Programs"
         action="action_sales_program"
-        parent="mrp.menu_mrp_planning_main"
+        parent="mrp.menu_mrp_planning"
         sequence="50"
     />
 
