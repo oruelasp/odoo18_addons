@@ -36,57 +36,38 @@ class StockQuant(models.Model):
             lot_attributes = self._get_lot_attributes_for_product(product_id)
             if not lot_attributes:
                 return res
+            
+            # Limpiar campos 'x_attr_' existentes que podrían ser de una ejecución anterior
+            self.env['ir.model.fields'].search([
+                ('model', '=', 'stock.quant'),
+                ('name', 'like', 'x_attr_')
+            ]).unlink()
 
             doc = etree.XML(res['arch'])
-            # Prioritize <list> for Odoo 18+, fallback to <tree> for compatibility
             parent_node = doc.find('.//list')
             if parent_node is None:
                  parent_node = doc.find('.//tree')
             if parent_node is None:
                 return res
             
-            # Elige un campo de referencia para insertar las columnas después (ej. lot_id)
             ref_node = parent_node.find(".//field[@name='lot_id']")
             if ref_node is not None:
-                # Insertar columnas en orden inverso para mantener el orden original
                 for attr in reversed(lot_attributes):
                     field_name = self._sanitize_header_for_field_name(attr.name)
-                    new_node = etree.Element('field', name=field_name, string=attr.name, readonly="1")
+                    # Crear el campo en el modelo ir.model.fields
+                    self.env['ir.model.fields'].create({
+                        'name': field_name,
+                        'model_id': self.env['ir.model']._get_id('stock.quant'),
+                        'ttype': 'char',
+                        'string': attr.name,
+                        'readonly': True,
+                    })
+                    # Añadir el campo a la arquitectura de la vista
+                    new_node = etree.Element('field', name=field_name, string=attr.name, readonly="1", optional="hide")
                     ref_node.addnext(new_node)
             
             res['arch'] = etree.tostring(doc, encoding='unicode')
         
         return res
-
-    @api.model
-    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
-        """
-        Intercepta la lectura de datos para inyectar los valores de los atributos.
-        """
-        records = super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
-        
-        if self.env.context.get('show_lot_attributes') and records:
-            product_id = self.env.context.get('lot_attributes_product_id')
-            lot_attributes = self._get_lot_attributes_for_product(product_id)
-            if not lot_attributes:
-                return records
-
-            lot_ids = [rec['lot_id'][0] for rec in records if rec.get('lot_id')]
-            if not lot_ids:
-                return records
-
-            attribute_data = self.env['stock.lot'].get_attributes_for_lots_view(lot_ids)
-            lot_values = attribute_data.get('data', {})
-
-            for rec in records:
-                lot_id = rec.get('lot_id') and rec['lot_id'][0]
-                if lot_id in lot_values:
-                    for attr in lot_attributes:
-                        field_name = self._sanitize_header_for_field_name(attr.name)
-                        rec[field_name] = lot_values[lot_id].get(attr.name, '')
-                else:
-                    for attr in lot_attributes:
-                        field_name = self._sanitize_header_for_field_name(attr.name)
-                        rec[field_name] = ''
-        
-        return records
+    
+    # Se elimina la sobrecarga de search_read ya que los datos se manejarán en JS.

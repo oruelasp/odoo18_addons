@@ -20,4 +20,9 @@
         'wizards/quant_attribute_selection_wizard_views.xml',
     ],
     'license': 'OEEL-1',
+    'assets': {
+        'web.assets_backend': [
+            'xtq_quant_attributes/static/src/views/stock_quant_list_with_attributes_renderer.js',
+        ],
+    },
 }
