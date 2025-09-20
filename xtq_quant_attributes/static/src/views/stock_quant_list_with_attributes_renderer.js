@@ -9,6 +9,12 @@ import { useService } from "@web/core/utils/hooks";
 export class StockQuantListWithAttributesRenderer extends ListRenderer {
     setup() {
         super.setup();
+
+        // Guarda de seguridad para prevenir el error si arch no está definido.
+        if (!this.props.arch) {
+            return;
+        }
+
         this.orm = useService("orm");
         this.state = useState({
             attributeData: {},
