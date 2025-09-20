@@ -10,14 +10,19 @@
             <field name="name">stock.quant.list.with.attributes.base</field>
             <field name="model">stock.quant</field>
             <field name="arch" type="xml">
-                <!-- Se añade js_class para vincular el renderer de JS -->
-                <list js_class="stock_quant_list_with_attributes">
+                <list>
                     <field name="product_id" optional="hide"/>
                     <field name="lot_id"/>
                     <field name="location_id"/>
                     <field name="quantity"/>
                     <field name="product_uom_id"/>
-                    <!-- Las columnas se inyectarán aquí por Python y se gestionarán por JS -->
+                    <!-- Campos genéricos que se mostrarán/ocultarán y cuyas etiquetas se cambiarán dinámicamente -->
+                    <field name="x_attr_1" optional="show"/>
+                    <field name="x_attr_2" optional="show"/>
+                    <field name="x_attr_3" optional="show"/>
+                    <field name="x_attr_4" optional="show"/>
+                    <field name="x_attr_5" optional="show"/>
+                    <field name="x_attr_6" optional="show"/>
                 </list>
             </field>
         </record>
