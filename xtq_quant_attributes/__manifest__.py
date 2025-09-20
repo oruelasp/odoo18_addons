@@ -16,6 +16,7 @@
         'security/ir.model.access.csv',
         'views/product_template_views.xml',
         'views/stock_move_views.xml',
+        'views/stock_quant_views.xml', # Añadir la nueva vista
         'wizards/quant_attribute_selection_wizard_views.xml',
     ],
     'license': 'OEEL-1',

@@ -129,15 +129,23 @@ class StockMove(models.Model):
 
     def action_open_stock_quant_list(self):
         self.ensure_one()
+        # Referencia a la nueva vista XML que crearemos
+        view_id = self.env.ref('xtq_quant_attributes.view_stock_quant_list_with_attributes').id
+        
         return {
             'name': f"Stock Disponible para: {self.product_id.display_name}",
             'type': 'ir.actions.act_window',
             'res_model': 'stock.quant',
             'view_mode': 'list,form',
+            'views': [(view_id, 'list'), (False, 'form')],
             'domain': [
                 ('product_id', '=', self.product_id.id),
                 ('location_id', 'child_of', self.location_id.id),
                 ('quantity', '>', 0),
             ],
+            'context': {
+                'show_lot_attributes': True,
+                'lot_attributes_product_id': self.product_id.id,
+            },
             'target': 'current',
         }
