@@ -3,20 +3,21 @@
 import { registry } from "@web/core/registry";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
-import { onWillStart } from "@odoo/owl";
+import { onWillStart, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 export class StockQuantListWithAttributesRenderer extends ListRenderer {
     setup() {
         super.setup();
         this.orm = useService("orm");
+        this.state = useState({
+            fieldMap: {},
+        });
 
         onWillStart(async () => {
             if (this.props.list.context.show_lot_attributes) {
-                const fieldMap = await this._fetchAttributeMap();
-                if (Object.keys(fieldMap).length > 0) {
-                    this._updateColumns(fieldMap);
-                }
+                const map = await this._fetchAttributeMap();
+                this.state.fieldMap = map;
             }
         });
     }
@@ -33,21 +34,28 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
         );
     }
 
-    _updateColumns(fieldMap) {
-        const fieldsToShow = new Set(Object.keys(fieldMap));
+    get columns() {
+        const originalColumns = super.columns;
+        
+        if (!this.props.list.context.show_lot_attributes || Object.keys(this.state.fieldMap).length === 0) {
+            return originalColumns;
+        }
 
-        for (const col of this.props.list.columns) {
+        const fieldsToShow = new Set(Object.keys(this.state.fieldMap));
+        const updatedColumns = [];
+
+        for (const col of originalColumns) {
             if (col.name.startsWith('x_attr_')) {
                 if (fieldsToShow.has(col.name)) {
-                    // Actualiza la etiqueta y se asegura de que sea visible
-                    col.string = fieldMap[col.name];
-                    col.optional = false; 
-                } else {
-                    // Si no está en el mapa, nos aseguramos de que esté oculta
-                    col.optional = 'hide';
+                    col.string = this.state.fieldMap[col.name];
+                    updatedColumns.push(col);
                 }
+            } else {
+                updatedColumns.push(col);
             }
         }
+        
+        return updatedColumns;
     }
 }
 
