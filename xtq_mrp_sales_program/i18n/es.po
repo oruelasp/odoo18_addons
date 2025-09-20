@@ -1,0 +1,180 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#   * xtq_mrp_sales_program
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\\n"
+"Report-Msgid-Bugs-To: \\n"
+"POT-Creation-Date: 2025-09-20 18:00+0000\\n"
+"PO-Revision-Date: 2025-09-20 18:00+0000\\n"
+"Last-Translator: \\n"
+"Language-Team: Spanish (http://www.transifex.com/odoo/odoo-11/language/es/)\\n"
+"Language: es\\n"
+"MIME-Version: 1.0\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: \\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\\n"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model,name:xtq_mrp_sales_program.model_sales_program
+msgid "Sales Program"
+msgstr "Programa de Venta"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__name
+msgid "Program Number"
+msgstr "Número de Programa"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__description
+msgid "Description"
+msgstr "Descripción"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__state
+msgid "Status"
+msgstr "Estado"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields.selection,name:xtq_mrp_sales_program.selection__sales_program__state__draft
+msgid "Draft"
+msgstr "Borrador"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields.selection,name:xtq_mrp_sales_program.selection__sales_program__state__approved
+msgid "Approved"
+msgstr "Aprobado"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields.selection,name:xtq_mrp_sales_program.selection__sales_program__state__done
+msgid "Done"
+msgstr "Finalizado"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields.selection,name:xtq_mrp_sales_program.selection__sales_program__state__cancel
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__date_planned_start
+msgid "Planned Date"
+msgstr "Fecha Planificada"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__company_id
+msgid "Company"
+msgstr "Compañía"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__line_ids
+msgid "Program Lines"
+msgstr "Líneas del Programa"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__production_ids
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Manufacturing Orders"
+msgstr "Órdenes de Producción"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__production_count
+msgid "Manufacturing Order Count"
+msgstr "Conteo de Órdenes de Producción"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__picking_type_id
+msgid "Operation Type"
+msgstr "Tipo de Operación"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__location_src_id
+msgid "Components Location"
+msgstr "Ubicación de Componentes"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__location_dest_id
+msgid "Finished Products Location"
+msgstr "Ubicación de Productos Terminados"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program__tag_ids
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program_line__tag_ids
+msgid "Tags"
+msgstr "Etiquetas"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program_line__product_id
+msgid "Product"
+msgstr "Producto"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program_line__product_qty
+msgid "Quantity"
+msgstr "Cantidad"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program_line__product_uom_id
+msgid "Unit of Measure"
+msgstr "Unidad de Medida"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.model.fields,field_description:xtq_mrp_sales_program.field_sales_program_line__bom_id
+msgid "Bill of Material"
+msgstr "Lista de Materiales"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Approve"
+msgstr "Aprobar"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Generate MOs"
+msgstr "Generar OPs"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Cancel"
+msgstr "Cancelar"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Set to Draft"
+msgstr "Pasar a Borrador"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Production Lines"
+msgstr "Líneas de Producción"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Technical Settings"
+msgstr "Configuración Técnica"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.ui.view,arch_db:xtq_mrp_sales_program.view_sales_program_form
+msgid "Global Tags"
+msgstr "Etiquetas Globales"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.actions.act_window,name:xtq_mrp_sales_program.action_sales_program
+#: model:ir.ui.menu,name:xtq_mrp_sales_program.menu_sales_program
+msgid "Sales Programs"
+msgstr "Programas de Venta"
+
+#. module: xtq_mrp_sales_program
+#: model:ir.actions.act_window,help:xtq_mrp_sales_program.action_sales_program
+msgid "Create a new Sales Program to forecast demand."
+msgstr "Crea un nuevo Programa de Venta para proyectar la demanda."
+
+#. module: xtq_mrp_sales_program
+#: model:ir.sequence,name:xtq_mrp_sales_program.seq_sales_program
+msgid "Sales Program Sequence"
+msgstr "Secuencia de Programa de Venta"
+
+#. module: xtq_mrp_sales_program
+#: code:python,src/addons/xtq_mrp_sales_program/models/sales_program.py:0
+msgid "New"
+msgstr "Nuevo"

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_sales_program_form" model="ir.ui.view">
+        <field name="name">sales.program.form</field>
+        <field name="model">sales.program</field>
+        <field name="arch" type="xml">
+            <form string="Sales Program">
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_generate_productions" type="object" string="Generate MOs" class="oe_highlight" invisible="state != 'approved'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'approved')"/>
+                    <button name="action_draft" type="object" string="Set to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,done"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Approved" bg_color="bg-success" invisible="state != 'approved'"/>
+                    <widget name="web_ribbon" title="Done" bg_color="bg-info" invisible="state != 'done'"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="description"/>
+                            <field name="date_planned_start"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Production Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="product_id"/>
+                                    <field name="product_qty"/>
+                                    <field name="product_uom_id" column_invisible="1"/>
+                                    <field name="bom_id"/>
+                                    <field name="tag_ids" widget="many2many_tags"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Technical Settings">
+                             <group>
+                                <field name="picking_type_id"/>
+                                <field name="location_src_id"/>
+                                <field name="location_dest_id"/>
+                                <field name="tag_ids" widget="many2many_tags" string="Global Tags"/>
+                             </group>
+                        </page>
+                         <page string="Manufacturing Orders" invisible="production_count == 0">
+                            <field name="production_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                 <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_sales_program_list" model="ir.ui.view">
+        <field name="name">sales.program.list</field>
+        <field name="model">sales.program</field>
+        <field name="arch" type="xml">
+            <list string="Sales Programs">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="date_planned_start"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'" decoration-info="state == 'done'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_sales_program" model="ir.actions.act_window">
+        <field name="name">Sales Programs</field>
+        <field name="res_model">sales.program</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Sales Program to forecast demand.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem
+        id="menu_sales_program_root"
+        name="Sales Program"
+        sequence="5"
+        parent="mrp.menu_mrp_root"
+    />
+    <menuitem
+        id="menu_sales_program"
+        name="Sales Programs"
+        action="action_sales_program"
+        parent="menu_sales_program_root"
+        sequence="10"
+    />
+
+    <!-- Sequence -->
+    <record id="seq_sales_program" model="ir.sequence">
+        <field name="name">Sales Program Sequence</field>
+        <field name="code">sales.program</field>
+        <field name="prefix">SP/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>
