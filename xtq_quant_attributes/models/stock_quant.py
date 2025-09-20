@@ -25,7 +25,7 @@ class StockQuant(models.Model):
             # Podríamos filtrar por atributos específicos del producto si fuera necesario.
             # Por ahora, usamos todos los que son de tipo lote para consistencia.
         
-        return self.env['product.attribute'].search([('is_lot_attribute', '=', True)], limit=6)
+        return self.env['product.attribute'].search([('is_lot_attribute', '=', True)], order='name', limit=6)
 
     def _compute_lot_attributes_data(self):
         """
@@ -45,6 +45,11 @@ class StockQuant(models.Model):
         lot_values = attribute_data.get('data', {})
 
         for quant in self:
+            if not quant.lot_id:
+                for i in range(1, 7):
+                    setattr(quant, f'x_attr_{i}', '')
+                continue
+
             values_for_lot = lot_values.get(quant.lot_id.id, {})
             for i, attr in enumerate(attributes_to_display):
                 field_name = f'x_attr_{i + 1}'
@@ -71,7 +76,7 @@ class StockQuant(models.Model):
             for i, attr in enumerate(attributes_to_display):
                 field_node = doc.find(f".//field[@name='x_attr_{i + 1}']")
                 if field_node is not None:
-                    field_node.set('string', attr.name)
+                    field_node.set('string', attr.display_name)
                     # Eliminamos el 'invisible' por si estaba en la vista base
                     if 'invisible' in field_node.attrib:
                         del field_node.attrib['invisible']
