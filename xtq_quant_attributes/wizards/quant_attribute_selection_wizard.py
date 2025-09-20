@@ -5,7 +5,10 @@ from odoo.exceptions import UserError, ValidationError
 class QuantAttributeSelectionWizard(models.TransientModel):
     _name = 'quant.attribute.selection.wizard'
     _description = 'Asistente para Seleccionar Lotes por Atributos de Calidad'
-    _rec_name = 'picking_info'
+    _rec_name = 'display_name'
+
+    # --- NEW DISPLAY NAME FIELD ---
+    display_name = fields.Char(string="Título", compute='_compute_display_name')
 
     # --- CAMPOS DE CABECERA ---
     move_id = fields.Many2one('stock.move', string="Movimiento de Origen", required=True, readonly=True)
@@ -20,6 +23,11 @@ class QuantAttributeSelectionWizard(models.TransientModel):
 
     # --- CAMPOS DE BÚSQUEDA ---
     search_filter_ids = fields.One2many('quant.attribute.selection.search.filter', 'wizard_id', string="Filtros de Búsqueda")
+
+    @api.depends('picking_info')
+    def _compute_display_name(self):
+        for wizard in self:
+            wizard.display_name = f"Selección Asistida para: {wizard.picking_info}"
 
     @api.depends('move_id.picking_id')
     def _compute_picking_info(self):
