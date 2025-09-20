@@ -61,10 +61,11 @@ class StockMove(models.Model):
         for attr in lot_attributes:
             search_filters_vals.append((0, 0, {'attribute_id': attr.id}))
 
-        # 5. Crear el wizard y sus líneas/filtros
+        # 5. Crear el wizard. La lista de líneas se deja vacía intencionadamente.
+        # El usuario debe buscar activamente los lotes que desea ver.
         wizard = self.env['quant.attribute.selection.wizard'].create({
             'move_id': self.id,
-            'line_ids': wizard_lines_vals,
+            'line_ids': [],
             'search_filter_ids': search_filters_vals,
         })
 

@@ -43,30 +43,59 @@ class QuantAttributeSelectionWizard(models.TransientModel):
 
     def action_search(self):
         """
-        Filtra las líneas disponibles basándose en los criterios de search_filter_ids.
-        Si no hay filtros activos, no se muestra ningún resultado.
+        Limpia los resultados anteriores y ejecuta una nueva búsqueda de quants
+        basándose en los filtros activos, creando nuevas líneas de wizard solo para los resultados.
         """
         self.ensure_one()
-        active_filters = self.search_filter_ids.filtered(lambda f: f.is_active and f.value_id)
-        available_lines = self.line_ids.filtered(lambda l: l.selection_status == 'available')
-
-        if not active_filters:
-            # Si no hay filtros activos, el usuario espera un resultado vacío.
-            available_lines.write({'is_visible_in_search': False})
-        else:
-            # Si hay filtros, se evalúa cada línea.
-            for line in available_lines:
-                lot = line.lot_id
-                # El lote debe coincidir con TODOS los filtros activos (lógica AND).
-                match = all(
-                    lot.attribute_line_ids.filtered(
-                        lambda attr_line: attr_line.attribute_id == f.attribute_id and attr_line.value_id == f.value_id
-                    ) for f in active_filters
-                )
-                line.is_visible_in_search = match
         
-        # Devolver False simplemente refresca la vista actual sin acciones de ventana.
-        return False
+        # 1. Limpiar resultados de búsqueda anteriores (líneas en estado 'available')
+        available_lines = self.line_ids.filtered(lambda l: l.selection_status == 'available')
+        if available_lines:
+            self.line_ids = [(2, line.id) for line in available_lines]
+
+        # 2. Obtener filtros activos
+        active_filters = self.search_filter_ids.filtered(lambda f: f.is_active and f.value_id)
+        if not active_filters:
+            # Si no hay filtros activos, no se muestra nada, como se solicitó.
+            return
+
+        # 3. Buscar todos los quants base que podrían ser candidatos
+        all_quants = self.env['stock.quant']._gather(
+            self.product_id, self.move_id.location_id, strict=False
+        ).filtered(lambda q: q.quantity > 0 and q.lot_id)
+
+        # 4. Filtrar los quants que coincidan con TODOS los atributos seleccionados
+        matching_quants = []
+        for quant in all_quants:
+            lot = quant.lot_id
+            if all(
+                lot.attribute_line_ids.filtered(
+                    lambda attr_line: attr_line.attribute_id == f.attribute_id and attr_line.value_id == f.value_id
+                ) for f in active_filters
+            ):
+                matching_quants.append(quant)
+
+        # 5. Preparar los valores para crear las nuevas líneas del wizard
+        column_attributes = self.env['product.attribute'].browse(
+            self.search_filter_ids.mapped('attribute_id').ids
+        )
+        new_lines_vals = []
+        for quant in matching_quants:
+            line_vals = {
+                'quant_id': quant.id,
+                'selection_status': 'available',
+            }
+            for i, attr in enumerate(column_attributes[:5]):
+                attr_line = quant.lot_id.attribute_line_ids.filtered(
+                    lambda l: l.attribute_id == attr
+                )
+                field_name = f'attr_col_{i + 1}'
+                line_vals[field_name] = attr_line.value_id.name if attr_line else ''
+            new_lines_vals.append((0, 0, line_vals))
+
+        # 6. Escribir las nuevas líneas en el wizard
+        if new_lines_vals:
+            self.write({'line_ids': new_lines_vals})
 
     def action_add_to_selection(self):
         """Mueve las líneas seleccionadas de 'available' a 'selected'."""
