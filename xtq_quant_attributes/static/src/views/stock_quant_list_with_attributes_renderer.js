@@ -3,56 +3,68 @@
 import { registry } from "@web/core/registry";
 import { ListRenderer } from "@web/views/list/list_renderer";
 import { listView } from "@web/views/list/list_view";
-import { onWillStart } from "@odoo/owl";
+import { onWillStart, onWillUpdateProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 
 export class StockQuantListWithAttributesRenderer extends ListRenderer {
     setup() {
         super.setup();
         this.orm = useService("orm");
+        this.fieldMap = null; // {'x_attr_1': 'Tono', ...}
 
         onWillStart(async () => {
-            if (this.props.list.context.show_lot_attributes) {
-                const fieldMap = await this._fetchAttributeMap();
-                if (Object.keys(fieldMap).length > 0) {
-                    this._updateColumns(fieldMap);
-                }
+            if (this.props.list?.context?.show_lot_attributes) {
+                this.fieldMap = await this._fetchAttributeMap();
+                this._updateColumns(this.props);
             }
+        });
+
+        onWillUpdateProps(async (nextProps) => {
+            if (!nextProps.list?.context?.show_lot_attributes) {
+                return;
+            }
+            if (!this.fieldMap) {
+                this.fieldMap = await this._fetchAttributeMap(nextProps);
+            }
+            this._updateColumns(nextProps);
         });
     }
 
-    async _fetchAttributeMap() {
-        const productId = this.props.list.context.lot_attributes_product_id;
+    async _fetchAttributeMap(props = this.props) {
+        const productId = props.list?.context?.lot_attributes_product_id;
         if (!productId) {
             return {};
         }
         return await this.orm.call(
-            'stock.quant',
-            'get_attribute_field_map',
+            "stock.quant",
+            "get_attribute_field_map",
             [productId]
         );
     }
 
-    _updateColumns(fieldMap) {
-        const fieldsToShow = new Set(Object.keys(fieldMap));
-        
-        // Modificar directamente el array de columnas en las props.
-        // En onWillStart, este objeto es mutable.
-        const columns = this.props.list.columns;
-        const finalColumns = [];
+    _updateColumns(props = this.props) {
+        if (!this.fieldMap || Object.keys(this.fieldMap).length === 0) return;
 
-        for (const col of columns) {
-            if (col.name.startsWith('x_attr_')) {
+        const archInfo = props.archInfo;
+        if (!archInfo || !Array.isArray(archInfo.columns)) return;
+
+        const cols = archInfo.columns;
+        const fieldsToShow = new Set(Object.keys(this.fieldMap));
+
+        for (const col of cols) {
+            if (!col || typeof col.name !== "string") continue;
+            if (col.name.startsWith("x_attr_")) {
                 if (fieldsToShow.has(col.name)) {
-                    col.string = fieldMap[col.name];
-                    finalColumns.push(col);
+                    // Odoo 18 usa 'label' para el texto de cabecera
+                    col.label = this.fieldMap[col.name];
+                    col.optional = false;
+                    // limpiar invisibilidad si la tuviera
+                    if (col.invisible) delete col.invisible;
+                } else {
+                    col.optional = "hide";
                 }
-            } else {
-                finalColumns.push(col);
             }
         }
-
-        this.props.list.columns = finalColumns;
     }
 }
 
