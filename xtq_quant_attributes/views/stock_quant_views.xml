@@ -10,19 +10,20 @@
             <field name="name">stock.quant.list.with.attributes.base</field>
             <field name="model">stock.quant</field>
             <field name="arch" type="xml">
-                <list>
+                <!-- Se añade js_class para que el renderer de JS tome el control -->
+                <list js_class="stock_quant_list_with_attributes">
                     <field name="product_id" optional="hide"/>
                     <field name="lot_id"/>
                     <field name="location_id"/>
                     <field name="quantity"/>
                     <field name="product_uom_id"/>
-                    <!-- Campos genéricos que se mostrarán/ocultarán y cuyas etiquetas se cambiarán dinámicamente -->
-                    <field name="x_attr_1" optional="show"/>
-                    <field name="x_attr_2" optional="show"/>
-                    <field name="x_attr_3" optional="show"/>
-                    <field name="x_attr_4" optional="show"/>
-                    <field name="x_attr_5" optional="show"/>
-                    <field name="x_attr_6" optional="show"/>
+                    <!-- Campos genéricos. JS decidirá si se muestran y con qué etiqueta. -->
+                    <field name="x_attr_1" optional="hide"/>
+                    <field name="x_attr_2" optional="hide"/>
+                    <field name="x_attr_3" optional="hide"/>
+                    <field name="x_attr_4" optional="hide"/>
+                    <field name="x_attr_5" optional="hide"/>
+                    <field name="x_attr_6" optional="hide"/>
                 </list>
             </field>
         </record>

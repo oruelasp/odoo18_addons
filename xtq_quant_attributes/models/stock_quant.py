@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 from odoo import api, models, fields
-from lxml import etree
 
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
 
     # --- CAMPOS GENÉRICOS PARA ATRIBUTOS ---
-    # Usamos campos Char para máxima compatibilidad. Se pueden añadir más si es necesario.
     x_attr_1 = fields.Char(string="Atributo 1", compute='_compute_lot_attributes_data', store=False)
     x_attr_2 = fields.Char(string="Atributo 2", compute='_compute_lot_attributes_data', store=False)
     x_attr_3 = fields.Char(string="Atributo 3", compute='_compute_lot_attributes_data', store=False)
@@ -15,21 +13,18 @@ class StockQuant(models.Model):
     x_attr_6 = fields.Char(string="Atributo 6", compute='_compute_lot_attributes_data', store=False)
 
     def _get_attributes_to_display(self):
-        """
-        Determina qué atributos se deben mostrar.
-        Se basa en el contexto si está disponible, o en todos los atributos de lote como fallback.
-        """
+        """ Determina qué atributos se deben mostrar, en un orden predecible. """
         product_id = self.env.context.get('lot_attributes_product_id')
-        if product_id:
-            product = self.env['product.product'].browse(product_id)
-            # Podríamos filtrar por atributos específicos del producto si fuera necesario.
-            # Por ahora, usamos todos los que son de tipo lote para consistencia.
-        
-        return self.env['product.attribute'].search([('is_lot_attribute', '=', True)], order='name', limit=6)
+        # La lógica se mantiene simple: todos los atributos de lote del sistema.
+        # Podría extenderse para ser específico del producto si es necesario.
+        return self.env['product.attribute'].search(
+            [('is_lot_attribute', '=', True)], order='name', limit=6
+        )
 
     def _compute_lot_attributes_data(self):
         """
         Calcula y asigna los valores de los atributos a los campos genéricos.
+        Esta parte sigue siendo responsabilidad de Python por eficiencia.
         """
         attributes_to_display = self._get_attributes_to_display()
         lot_ids = self.mapped('lot_id')
@@ -40,7 +35,6 @@ class StockQuant(models.Model):
                     setattr(quant, f'x_attr_{i}', '')
             return
 
-        # Usamos el método existente para obtener todos los datos en una sola consulta
         attribute_data = self.env['stock.lot'].get_attributes_for_lots_view(lot_ids.ids)
         lot_values = attribute_data.get('data', {})
 
@@ -55,38 +49,23 @@ class StockQuant(models.Model):
                 field_name = f'x_attr_{i + 1}'
                 value = values_for_lot.get(attr.name, '')
                 setattr(quant, field_name, value)
-            # Limpiar los campos restantes
+            
             for i in range(len(attributes_to_display) + 1, 7):
                  setattr(quant, f'x_attr_{i}', '')
 
     @api.model
-    def fields_view_get(self, view_id=None, view_type='list', toolbar=False, submenu=False):
+    def get_attribute_field_map(self, product_id):
         """
-        Intercepta la construcción de la vista para cambiar las etiquetas de las columnas
-        y ocultar las que no se usan.
+        Devuelve un mapeo de campos genéricos a nombres de atributos reales.
+        Este método es llamado por JS para construir las cabeceras de las columnas.
         """
-        res = super().fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
+        # Usamos un contexto temporal para llamar al método helper
+        context = dict(self.env.context, lot_attributes_product_id=product_id)
+        attributes = self.with_context(context)._get_attributes_to_display()
         
-        if view_type == 'list' and self.env.context.get('show_lot_attributes'):
-            attributes_to_display = self._get_attributes_to_display()
+        field_map = {}
+        for i, attr in enumerate(attributes):
+            field_name = f'x_attr_{i + 1}'
+            field_map[field_name] = attr.display_name
             
-            doc = etree.XML(res['arch'])
-            
-            # Cambiar etiquetas y visibilidad de las columnas genéricas
-            for i, attr in enumerate(attributes_to_display):
-                field_node = doc.find(f".//field[@name='x_attr_{i + 1}']")
-                if field_node is not None:
-                    field_node.set('string', attr.display_name)
-                    # Eliminamos el 'invisible' por si estaba en la vista base
-                    if 'invisible' in field_node.attrib:
-                        del field_node.attrib['invisible']
-            
-            # Ocultar las columnas genéricas que no se están usando
-            for i in range(len(attributes_to_display) + 1, 7):
-                field_node = doc.find(f".//field[@name='x_attr_{i + 1}']")
-                if field_node is not None:
-                    field_node.set('invisible', '1')
-
-            res['arch'] = etree.tostring(doc, encoding='unicode')
-        
-        return res
+        return field_map

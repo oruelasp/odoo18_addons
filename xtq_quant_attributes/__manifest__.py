@@ -22,8 +22,7 @@
     'license': 'OEEL-1',
     'assets': {
         'web.assets_backend': [
-            # Se elimina el archivo JS, ya no es necesario
-            # 'xtq_quant_attributes/static/src/views/stock_quant_list_with_attributes_renderer.js',
+            'xtq_quant_attributes/static/src/views/stock_quant_list_with_attributes_renderer.js',
         ],
     },
 }
