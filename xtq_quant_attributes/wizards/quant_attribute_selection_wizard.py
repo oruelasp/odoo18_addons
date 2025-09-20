@@ -44,17 +44,20 @@ class QuantAttributeSelectionWizard(models.TransientModel):
     def action_search(self):
         """
         Filtra las líneas disponibles basándose en los criterios de search_filter_ids.
+        Si no hay filtros activos, no se muestra ningún resultado.
         """
         self.ensure_one()
-        # Considerar solo los filtros que el usuario marcó como activos y que tienen un valor seleccionado.
         active_filters = self.search_filter_ids.filtered(lambda f: f.is_active and f.value_id)
         available_lines = self.line_ids.filtered(lambda l: l.selection_status == 'available')
 
         if not active_filters:
-            available_lines.write({'is_visible_in_search': True})
+            # Si no hay filtros activos, el usuario espera un resultado vacío.
+            available_lines.write({'is_visible_in_search': False})
         else:
+            # Si hay filtros, se evalúa cada línea.
             for line in available_lines:
                 lot = line.lot_id
+                # El lote debe coincidir con TODOS los filtros activos (lógica AND).
                 match = all(
                     lot.attribute_line_ids.filtered(
                         lambda attr_line: attr_line.attribute_id == f.attribute_id and attr_line.value_id == f.value_id
@@ -62,7 +65,8 @@ class QuantAttributeSelectionWizard(models.TransientModel):
                 )
                 line.is_visible_in_search = match
         
-        return self._refresh_view()
+        # Devolver False simplemente refresca la vista actual sin acciones de ventana.
+        return False
 
     def action_add_to_selection(self):
         """Mueve las líneas seleccionadas de 'available' a 'selected'."""
@@ -71,7 +75,6 @@ class QuantAttributeSelectionWizard(models.TransientModel):
             'selection_status': 'selected',
             'selected': False, # Desmarcar para la siguiente operación
         })
-        return self._refresh_view()
 
     def action_remove_from_selection(self):
         """Devuelve las líneas seleccionadas de 'selected' a 'available'."""
@@ -80,19 +83,7 @@ class QuantAttributeSelectionWizard(models.TransientModel):
             'selection_status': 'available',
             'selected': False, # Desmarcar para la siguiente operación
         })
-        return self._refresh_view()
         
-    def _refresh_view(self):
-        """Función helper para devolver una acción que recargue la vista del wizard."""
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'res_id': self.id,
-            'view_mode': 'form',
-            'target': 'current',
-            'flags': {'new_window': False},
-        }
-
     def action_confirm_selection(self):
         self.ensure_one()
         selected_lines = self.line_ids.filtered(lambda l: l.selection_status == 'selected')
