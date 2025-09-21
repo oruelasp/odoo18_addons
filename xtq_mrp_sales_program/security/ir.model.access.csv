@@ -3,3 +3,4 @@ access_sales_program_user,access.sales.program.user,model_sales_program,base.gro
 access_sales_program_line_user,access.sales.program.line.user,model_sales_program_line,base.group_user,1,1,1,1
 access_sales_program_curve_line_user,access.sales.program.curve.line.user,model_sales_program_curve_line,base.group_user,1,1,1,1
 access_sales_program_attribute_line_user,access.sales.program.attribute.line.user,model_sales_program_attribute_line,base.group_user,1,1,1,1
+access_sales_program_matrix_line_user,access.sales.program.matrix.line.user,model_sales_program_matrix_line,base.group_user,1,1,1,1

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 
 class SalesProgram(models.Model):
@@ -114,6 +115,13 @@ class SalesProgram(models.Model):
         string='Líneas de Atributos'
     )
 
+    # Matrix lines
+    matrix_line_ids = fields.One2many(
+        'sales.program.matrix.line',
+        'program_id',
+        string='Líneas de Matriz de Producción'
+    )
+
     @api.depends('production_ids')
     def _compute_production_count(self):
         for program in self:
@@ -178,6 +186,7 @@ class SalesProgram(models.Model):
                 'tag_ids': [(6, 0, tag_ids.ids)],
                 # Add curve data
                 'matrix_attribute_col_id': self.matrix_attribute_col_id.id,
+                'matrix_values_col_ids': [(6, 0, self.matrix_values_col_ids.ids)],
                 'matrix_curve_ids': curve_lines_data,
             })
         
@@ -192,6 +201,43 @@ class SalesProgram(models.Model):
         action = self.env['ir.actions.act_window']._for_xml_id('mrp.mrp_production_action')
         action['domain'] = [('id', 'in', productions.ids)]
         return action
+
+    def action_calculate_matrix(self):
+        self.ensure_one()
+        
+        # 1. Validations
+        if not self.line_ids:
+            raise UserError(_("Por favor, añada al menos una línea de producción."))
+        if not self.matrix_curve_ids:
+            raise UserError(_("Por favor, defina la Curva de Tallas."))
+
+        # 2. Prepare proportions
+        curve_map = {c.attribute_value_id.id: c.proportion for c in self.matrix_curve_ids}
+        total_proportion = sum(curve_map.values())
+        if total_proportion == 0:
+            raise UserError(_("La suma de las proporciones en la Curva de Tallas no puede ser cero."))
+
+        # 3. Clear existing matrix and prepare new lines
+        matrix_lines_vals = []
+        self.matrix_line_ids = [(5, 0, 0)]
+
+        for line in self.line_ids:
+            for curve_line in self.matrix_curve_ids:
+                proportion = curve_line.proportion
+                calculated_qty = (line.product_qty * proportion) / total_proportion
+                
+                matrix_lines_vals.append({
+                    'program_id': self.id,
+                    'sales_program_line_id': line.id,
+                    'col_value_id': curve_line.attribute_value_id.id,
+                    'product_qty': calculated_qty,
+                })
+        
+        # 4. Create new matrix lines
+        if matrix_lines_vals:
+            self.env['sales.program.matrix.line'].create(matrix_lines_vals)
+
+        return True
 
     def action_view_productions(self):
         self.ensure_one()
