@@ -12,6 +12,7 @@
         'mrp_tag',
         'project',
         'xtq_mrp_matrix_form',
+        'xtq_lot_attributes',
     ],
     'data': [
         'security/ir.model.access.csv',

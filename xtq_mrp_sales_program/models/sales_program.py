@@ -100,6 +100,19 @@ class SalesProgram(models.Model):
         string='Curva de Tallas',
         copy=True,
     )
+    matrix_values_col_ids = fields.Many2many(
+        'product.attribute.value', 
+        'sales_program_matrix_col_rel', 
+        string='Valores para Curva', 
+        domain="[('attribute_id', '=', matrix_attribute_col_id)]"
+    )
+
+    # Attribute lines
+    attribute_line_ids = fields.One2many(
+        'sales.program.attribute.line',
+        'program_id',
+        string='Líneas de Atributos'
+    )
 
     @api.depends('production_ids')
     def _compute_production_count(self):

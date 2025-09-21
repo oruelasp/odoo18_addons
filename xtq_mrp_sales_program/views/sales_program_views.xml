@@ -57,6 +57,7 @@
                         <page string="Curva de Tallas">
                              <group>
                                 <field name="matrix_attribute_col_id" options="{'no_create': True, 'no_open': True}"/>
+                                <field name="matrix_values_col_ids" widget="many2many_tags" options="{'no_create': True, 'no_open': True}"/>
                              </group>
                              <field name="matrix_curve_ids" nolabel="1">
                                 <list editable="bottom">
@@ -64,6 +65,14 @@
                                     <field name="proportion"/>
                                 </list>
                              </field>
+                        </page>
+                        <page string="Atributos">
+                            <field name="attribute_line_ids">
+                                <list editable="bottom">
+                                    <field name="attribute_id"/>
+                                    <field name="attribute_value_id"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
