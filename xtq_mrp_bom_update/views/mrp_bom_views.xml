@@ -20,7 +20,7 @@
                     <button name="action_approve" string="Aprobar" type="object" class="btn-primary" invisible="state != 'in_progress'"/>
                     <button name="action_reject" string="Rechazar" type="object" invisible="state != 'in_progress'"/>
                     <button name="action_reset_to_draft" string="Resetear a Borrador" type="object" invisible="state not in ['approved', 'rejected']"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,approved,rejected"/>
+                    <field name="state" widget="statusbar" invisible="1" statusbar_visible="draft,in_progress,approved,rejected"/>
                 </header>
             </xpath>
             <xpath expr="//sheet//group[1]" position="inside">
