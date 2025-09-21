@@ -13,6 +13,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'data/sales_program_data.xml',
         'views/sales_program_views.xml',
     ],
     'installable': True,

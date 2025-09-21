@@ -93,13 +93,4 @@
         sequence="10"
     />
 
-    <!-- Sequence -->
-    <record id="seq_sales_program" model="ir.sequence">
-        <field name="name">Sales Program</field>
-        <field name="code">sales.program</field>
-        <field name="prefix">SP</field>
-        <field name="padding">4</field>
-        <field name="company_id" groups="base.group_multi_company"/>
-    </record>
-
 </odoo>
