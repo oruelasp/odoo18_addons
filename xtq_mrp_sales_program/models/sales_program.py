@@ -149,7 +149,6 @@ class SalesProgram(models.Model):
             return
 
         productions = self.env['mrp.production'].create(productions_to_create)
-        productions.action_confirm()
         
         self.write({'state': 'done'})
         
