@@ -83,6 +83,13 @@
                                     <field name="product_qty" sum="Total"/>
                                 </list>
                             </field>
+                            <separator string="Matriz (editable)"/>
+                            <field name="matrix_line_ids" nolabel="1" widget="production_matrix_widget"
+                                   context="{
+                                       'json_field': 'matrix_data_json',
+                                       'cell_template': 'default',
+                                       'matrix_type': 'programming'
+                                   }"/>
                         </page>
                     </notebook>
                 </sheet>

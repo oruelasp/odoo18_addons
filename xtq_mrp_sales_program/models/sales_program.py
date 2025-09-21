@@ -121,6 +121,9 @@ class SalesProgram(models.Model):
         'program_id',
         string='Líneas de Matriz de Producción'
     )
+    
+    # JSON payload used by the matrix widget
+    matrix_data_json = fields.Text(string="Matrix Data JSON", copy=False)
 
     @api.depends('production_ids')
     def _compute_production_count(self):
@@ -202,6 +205,64 @@ class SalesProgram(models.Model):
         action['domain'] = [('id', 'in', productions.ids)]
         return action
 
+    # --- Matrix widget integration ---
+    def get_matrix_data(self, matrix_type='programming'):
+        self.ensure_one()
+        # Eje Y: líneas del programa
+        axis_y = {
+            'name': _('Línea del Programa'),
+            'values': [{'id': line.id, 'name': line.name or str(line.id)} for line in self.line_ids]
+        }
+        # Eje X: valores seleccionados del atributo columna
+        axis_x = {
+            'name': self.matrix_attribute_col_id.name if self.matrix_attribute_col_id else _('Columna'),
+            'values': [{'id': v.id, 'name': v.name} for v in self.matrix_values_col_ids]
+        }
+        # Mapear cantidades existentes
+        quantities = {}
+        for ml in self.matrix_line_ids:
+            key = f"{ml.sales_program_line_id.id}-{ml.col_value_id.id}"
+            quantities[key] = {
+                'product_qty': ml.product_qty,
+                'qty_producing': 0,
+            }
+        return {
+            'axis_y': axis_y,
+            'axis_x': axis_x,
+            'quantities': quantities,
+            'matrix_state': 'pending',
+        }
+
+    def _sync_matrix_lines_from_json(self, json_data):
+        """Replace matrix_line_ids from provided JSON structure."""
+        import json
+        self.ensure_one()
+        try:
+            data = json.loads(json_data or '[]')
+        except Exception:
+            data = []
+        commands = [(5, 0, 0)]
+        for item in data:
+            row_id = item.get('yValueId')
+            col_id = item.get('xValueId')
+            qty = item.get('product_qty') or 0.0
+            if not row_id or not col_id:
+                continue
+            commands.append((0, 0, {
+                'program_id': self.id,
+                'sales_program_line_id': row_id,
+                'col_value_id': col_id,
+                'product_qty': qty,
+            }))
+        self.write({'matrix_line_ids': commands})
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'matrix_data_json' in vals:
+            for program in self:
+                program._sync_matrix_lines_from_json(vals.get('matrix_data_json'))
+        return res
+
     def action_calculate_matrix(self):
         self.ensure_one()
         
@@ -251,6 +312,11 @@ class SalesProgramLine(models.Model):
     _name = 'sales.program.line'
     _description = 'Sales Program Line'
 
+    name = fields.Char(
+        string='Descripción de Línea',
+        compute='_compute_name',
+        store=True,
+    )
     program_id = fields.Many2one(
         'sales.program',
         string='Sales Program',
@@ -301,6 +367,12 @@ class SalesProgramLine(models.Model):
         'mrp.tag',
         string="Tags",
     )
+
+    @api.depends('tag_ids', 'product_qty')
+    def _compute_name(self):
+        for line in self:
+            tags = ', '.join(line.tag_ids.mapped('name'))
+            line.name = f"{tags}: {line.product_qty}" if tags else str(line.product_qty)
 
     @api.depends('product_id', 'program_id.picking_type_id', 'program_id.company_id')
     def _compute_bom_id(self):
