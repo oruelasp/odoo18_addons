@@ -42,9 +42,10 @@ class MrpEco(models.Model):
         if not openpyxl:
             raise UserError(_("La librería 'openpyxl' no está instalada. Por favor, ejecute 'pip install openpyxl' en su terminal."))
 
-        bom = self.bom_id
+        # Usar la LdM de la revisión (smartbutton "Revision" / open_new_bom). Si no existe, caer en la LdM de referencia.
+        bom = self.new_bom_id or self.bom_id
         if not bom:
-            raise UserError(_("La Orden de Muestra no tiene una Lista de Materiales (LdM) de referencia en la pestaña 'Información Adicional'. Por favor, asígnela."))
+            raise UserError(_("La Orden de Muestra no tiene una Lista de Materiales (LdM) disponible. Cree una revisión (Start Revision) o asigne una LdM de referencia."))
 
         # Create workbook and select active sheet
         workbook = openpyxl.Workbook()
@@ -127,7 +128,7 @@ class MrpEco(models.Model):
         
         mol_total = 0
         if bom.operation_ids:
-            fresh_operations = self.env['mrp.routing.workcenter'].search([('bom_id', '=', self.bom_id.id)])
+            fresh_operations = self.env['mrp.routing.workcenter'].search([('bom_id', '=', bom.id)])
             for op in fresh_operations:
                 row += 1
                 set_cell(f'B{row}', op.name, border=thin_border)
