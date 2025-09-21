@@ -88,6 +88,19 @@ class SalesProgram(models.Model):
         string="Tags",
     )
 
+    # Size Curve fields
+    matrix_attribute_col_id = fields.Many2one(
+        'product.attribute', 
+        string='Atributo para Curva (Tallas)',
+        help="Atributo que se usará como eje para la curva de tallas."
+    )
+    matrix_curve_ids = fields.One2many(
+        'sales.program.curve.line',
+        'program_id',
+        string='Curva de Tallas',
+        copy=True,
+    )
+
     @api.depends('production_ids')
     def _compute_production_count(self):
         for program in self:
@@ -134,6 +147,15 @@ class SalesProgram(models.Model):
     def action_generate_productions(self):
         self.ensure_one()
         productions_to_create = []
+        
+        # Prepare curve data
+        curve_lines_data = []
+        for curve_line in self.matrix_curve_ids:
+            curve_lines_data.append((0, 0, {
+                'attribute_value_id': curve_line.attribute_value_id.id,
+                'proportion': curve_line.proportion,
+            }))
+
         for line in self.line_ids:
             # Inherit tags from the line or the program header
             tag_ids = line.tag_ids or self.tag_ids
@@ -149,6 +171,9 @@ class SalesProgram(models.Model):
                 'sales_program_id': self.id,
                 'company_id': self.company_id.id,
                 'tag_ids': [(6, 0, tag_ids.ids)],
+                # Add curve data
+                'matrix_attribute_col_id': self.matrix_attribute_col_id.id,
+                'matrix_curve_ids': curve_lines_data,
             })
         
         if not productions_to_create:
