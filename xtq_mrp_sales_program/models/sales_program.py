@@ -27,6 +27,11 @@ class SalesProgram(models.Model):
         default=fields.Datetime.now,
         required=True,
     )
+    project_id = fields.Many2one(
+        'project.project',
+        string='Project',
+        tracking=True
+    )
     company_id = fields.Many2one(
         'res.company',
         string='Company',
@@ -133,6 +138,7 @@ class SalesProgram(models.Model):
             # Inherit tags from the line or the program header
             tag_ids = line.tag_ids or self.tag_ids
             productions_to_create.append({
+                'project_id': self.project_id.id,
                 'product_id': line.product_id.id,
                 'product_qty': line.product_qty,
                 'product_uom_id': line.product_uom_id.id,

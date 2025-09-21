@@ -10,6 +10,7 @@
     'depends': [
         'mrp',
         'mrp_tag',
+        'project',
     ],
     'data': [
         'security/ir.model.access.csv',
