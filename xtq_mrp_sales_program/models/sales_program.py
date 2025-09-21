@@ -128,12 +128,11 @@ class SalesProgram(models.Model):
 
     def action_generate_productions(self):
         self.ensure_one()
-        productions = self.env['mrp.production']
+        productions_to_create = []
         for line in self.line_ids:
             # Inherit tags from the line or the program header
             tag_ids = line.tag_ids or self.tag_ids
-            
-            vals = {
+            productions_to_create.append({
                 'product_id': line.product_id.id,
                 'product_qty': line.product_qty,
                 'product_uom_id': line.product_uom_id.id,
@@ -144,10 +143,13 @@ class SalesProgram(models.Model):
                 'sales_program_id': self.id,
                 'company_id': self.company_id.id,
                 'tag_ids': [(6, 0, tag_ids.ids)],
-            }
-            production = self.env['mrp.production'].create(vals)
-            production.action_confirm()
-            productions |= production
+            })
+        
+        if not productions_to_create:
+            return
+
+        productions = self.env['mrp.production'].create(productions_to_create)
+        productions.action_confirm()
         
         self.write({'state': 'done'})
         
