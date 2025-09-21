@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--
+            Inherited Form View for the main MrpEco model.
+        -->
+        <record id="mrp_eco_view_form_add_sample_attributes" model="ir.ui.view">
+            <field name="name">mrp.eco.form.sample.attributes</field>
+            <field name="model">mrp.eco</field>
+            <field name="inherit_id" ref="mrp_plm.mrp_eco_view_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="action_generate_excel_report" type="object" string="Imprimir Receta de Desarrollo" class="oe_highlight"/>
+                </xpath>
+                <xpath expr="//notebook" position="inside">
+                    <page string="Atributos de Muestra" name="sample_attributes">
+                        <group>
+                            <group>
+                                <field name="sample_size"/>
+                                <field name="sample_garment_count"/>
+                                <field name="sample_designer_id"/>
+                                <field name="sample_season"/>
+                            </group>
+                            <group>
+                                <field name="sample_sale_month"/>
+                                <field name="sample_year"/>
+                                <field name="sample_type"/>
+                                <field name="sample_maker"/>
+                            </group>
+                            <group>
+                                <field name="sample_circuit_number"/>
+                                <field name="sample_delivery_date"/>
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

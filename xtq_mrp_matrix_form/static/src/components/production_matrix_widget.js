@@ -39,14 +39,13 @@ export class ProductionMatrixWidget extends Component {
     }
 
     async loadMatrixData(props = this.props) {
-        // CORRECCIÓN DEFINITIVA: Configuración basada en el nombre del campo, no en el contexto.
-        // Esto es más robusto y evita problemas de ciclo de vida del componente.
+        // Configuración basada en el nombre del campo
         if (props.name === 'distribution_line_ids') {
             this.jsonField = 'distribution_data_json';
             this.matrixType = 'distribution';
             this.cellTemplate = 'single_qty';
         } else {
-            // Configuración por defecto para 'matrix_line_ids' (Programación)
+            // Por defecto para matrices de programación
             this.jsonField = 'matrix_data_json';
             this.matrixType = 'programming';
             this.cellTemplate = 'default';
@@ -54,7 +53,7 @@ export class ProductionMatrixWidget extends Component {
 
         const record = props.record;
 
-        // Forzar el reseteo del estado antes de cada carga de datos.
+        // Resetear estado
         this.state.axis_x = { name: "X", values: [] };
         this.state.axis_y = { name: "Y", values: [] };
         this.state.quantities = {};
@@ -65,7 +64,6 @@ export class ProductionMatrixWidget extends Component {
             return;
         }
         try {
-            // Llamar siempre a 'get_matrix_data' pero pasando 'matrix_type' como kwarg.
             const data = await this.orm.call(record.resModel, "get_matrix_data", [record.resId], {
                 matrix_type: this.matrixType 
             });
@@ -136,7 +134,6 @@ export class ProductionMatrixWidget extends Component {
         if (!this.state.quantities[key]) {
             this.state.quantities[key] = { product_qty: 0, qty_producing: 0 };
         }
-        // Para la matriz de distribución, asumimos que se modifica product_qty
         this.state.quantities[key].product_qty = value;
         
         this.calculateTotals();
@@ -169,22 +166,18 @@ export class ProductionMatrixWidget extends Component {
         const lines = [];
         for (const [key, cellData] of Object.entries(this.state.quantities)) {
             const [yValueId, xValueId] = key.split('-').map(Number);
-            
-            // CORRECCIÓN 2: Guardado inteligente basado en el tipo de matriz.
             const lineData = {
                 yValueId: yValueId,
                 xValueId: xValueId,
                 product_qty: cellData.product_qty || 0,
             };
-            // Solo añadimos qty_producing si estamos en la matriz de programación.
+            // Añadir qty_producing solo en matriz de programación
             if (this.matrixType === 'programming') {
                 lineData.qty_producing = cellData.qty_producing || 0;
             }
             lines.push(lineData);
         }
         const jsonData = JSON.stringify(lines);
-
-        // Usar el campo JSON dinámico
         await this.props.record.update({ [this.jsonField]: jsonData });
     }
 
