@@ -80,11 +80,26 @@
 
     <!-- Menu -->
     <menuitem
-        id="menu_sales_program"
-        name="Sales Programs"
-        action="action_sales_program"
-        parent="mrp.menu_mrp_planning"
-        sequence="50"
+        id="menu_sales_program_root"
+        name="Planificación"
+        sequence="5"
+        parent="mrp.menu_mrp_root"
     />
+    <menuitem
+        id="menu_sales_program"
+        name="Programa de Ventas"
+        action="action_sales_program"
+        parent="xtq_mrp_sales_program.menu_sales_program_root"
+        sequence="10"
+    />
+
+    <!-- Sequence -->
+    <record id="seq_sales_program" model="ir.sequence">
+        <field name="name">Sales Program</field>
+        <field name="code">sales.program</field>
+        <field name="prefix">SP</field>
+        <field name="padding">4</field>
+        <field name="company_id" groups="base.group_multi_company"/>
+    </record>
 
 </odoo>
