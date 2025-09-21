@@ -6,15 +6,20 @@
         <field name="name">sales.program.form</field>
         <field name="model">sales.program</field>
         <field name="arch" type="xml">
-            <form string="Sales Program">
+            <form string="Programa de Venta">
                 <header>
-                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_generate_productions" type="object" string="Generate MOs" class="oe_highlight" invisible="state != 'approved'"/>
-                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('draft', 'approved')"/>
-                    <button name="action_draft" type="object" string="Set to Draft" invisible="state not in ['cancel', 'approved']"/>
+                    <button name="action_approve" type="object" string="Aprobar" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_generate_productions" type="object" string="Generar OPs" class="oe_highlight" invisible="state != 'approved'"/>
+                    <button name="action_cancel" type="object" string="Cancelar" invisible="state not in ('draft', 'approved')"/>
+                    <button name="action_draft" type="object" string="Pasar a Borrador" invisible="state not in ['cancel', 'approved']"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,done"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_productions" type="object" class="oe_stat_button" icon="fa-gears">
+                            <field name="production_count" widget="statinfo" string="Órdenes de Producción"/>
+                        </button>
+                    </div>
                     <div class="oe_title">
                         <h1>
                             <field name="name" readonly="1"/>
@@ -32,7 +37,7 @@
                             <field name="location_dest_id"/>
                         </group>
                     </group>
-                    <separator string="Production Lines"/>
+                    <separator string="Líneas de Producción"/>
                     <field name="line_ids" nolabel="1">
                         <list editable="bottom">
                             <field name="product_id"/>
@@ -42,11 +47,15 @@
                             <field name="tag_ids" widget="many2many_tags" optional="show"/>
                         </list>
                     </field>
-                    <group string="Global Tags" name="global_tags">
+                    <group string="Etiquetas Globales" name="global_tags">
                         <field name="tag_ids" nolabel="1" widget="many2many_tags"/>
                     </group>
                 </sheet>
-                <chatter/>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
             </form>
         </field>
     </record>
@@ -56,7 +65,7 @@
         <field name="name">sales.program.list</field>
         <field name="model">sales.program</field>
         <field name="arch" type="xml">
-            <list string="Sales Programs">
+            <list string="Programas de Venta">
                 <field name="name"/>
                 <field name="description"/>
                 <field name="date_planned_start"/>
@@ -68,12 +77,12 @@
 
     <!-- Action -->
     <record id="action_sales_program" model="ir.actions.act_window">
-        <field name="name">Sales Programs</field>
+        <field name="name">Programas de Venta</field>
         <field name="res_model">sales.program</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create a new Sales Program to forecast demand.
+                Crea un nuevo Programa de Venta para proyectar la demanda.
             </p>
         </field>
     </record>

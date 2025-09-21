@@ -157,6 +157,13 @@ class SalesProgram(models.Model):
         action['domain'] = [('id', 'in', productions.ids)]
         return action
 
+    def action_view_productions(self):
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id('mrp.mrp_production_action')
+        action['domain'] = [('id', 'in', self.production_ids.ids)]
+        action['context'] = {'create': False}
+        return action
+
 
 class SalesProgramLine(models.Model):
     _name = 'sales.program.line'
