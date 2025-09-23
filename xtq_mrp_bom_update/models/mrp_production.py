@@ -21,8 +21,9 @@ class MrpProduction(models.Model):
             'product_qty': self.product_qty,
             'state': 'draft',
             'bom_category': 'production',
-            'operation_ids': False,  # Limpiar operaciones copiadas por defecto
-            'bom_line_ids': False,   # Limpiar componentes copiados por defecto
+            'operation_ids': False,  # Limpiar para copia manual
+            'bom_line_ids': False,   # Limpiar para copia manual
+            'byproduct_ids': False,  # Limpiar para copia manual
         })
         
         # 2. Copiar operaciones y crear un mapa de IDs (Viejo -> Nuevo)
@@ -40,18 +41,29 @@ class MrpProduction(models.Model):
                 new_line_vals['operation_id'] = new_op_id
             self.env['mrp.bom.line'].create(new_line_vals)
 
-        # 4. Recalcular cantidades de componentes
+        # 4. Copiar líneas de subproductos, usando el mapa de operaciones
+        for byproduct in self.bom_id.byproduct_ids:
+            new_byproduct_vals = byproduct.copy_data()[0]
+            new_byproduct_vals['bom_id'] = new_bom.id
+            if byproduct.operation_id:
+                new_op_id = operation_id_map.get(byproduct.operation_id.id)
+                new_byproduct_vals['operation_id'] = new_op_id
+            self.env['mrp.bom.byproduct'].create(new_byproduct_vals)
+
+        # 5. Recalcular cantidades de componentes y subproductos
         factor = self.product_qty / self.bom_id.product_qty if self.bom_id.product_qty else 1
         for line in new_bom.bom_line_ids:
             line.product_qty = line.product_qty * factor
+        for byproduct in new_bom.byproduct_ids:
+            byproduct.product_qty = byproduct.product_qty * factor
 
-        # 5. Asignar los BOMs a la OP
+        # 6. Asignar los BOMs a la OP
         self.write({
             'sample_bom_id': self.bom_id.id,
             'bom_id': new_bom.id,
         })
 
-        # 6. Abrir el nuevo BOM en una nueva ventana
+        # 7. Abrir el nuevo BOM en una nueva ventana
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'mrp.bom',
