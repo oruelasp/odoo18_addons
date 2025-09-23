@@ -13,16 +13,14 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
         this.fieldMap = null; // {'x_attr_1': 'Tono', ...}
 
         onWillStart(async () => {
-            if (this.props.list?.context?.show_lot_attributes) {
+            if (this._shouldEnable(this.props)) {
                 this.fieldMap = await this._fetchAttributeMap();
                 this._updateColumns(this.props);
             }
         });
 
         onWillUpdateProps(async (nextProps) => {
-            if (!nextProps.list?.context?.show_lot_attributes) {
-                return;
-            }
+            if (!this._shouldEnable(nextProps)) return;
             if (!this.fieldMap) {
                 this.fieldMap = await this._fetchAttributeMap(nextProps);
             }
@@ -65,6 +63,12 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
                 }
             }
         }
+    }
+
+    _shouldEnable(props) {
+        const cols = props?.archInfo?.columns;
+        if (!Array.isArray(cols) || cols.length === 0) return false;
+        return cols.some((c) => c && typeof c.name === "string" && c.name.startsWith("x_attr_"));
     }
 }
 
