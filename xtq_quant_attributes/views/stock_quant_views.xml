@@ -36,7 +36,6 @@
             <field name="arch" type="xml">
                 <xpath expr="//list" position="attributes">
                     <attribute name="js_class">stock_quant_list_with_attributes</attribute>
-                    <attribute name="context">{'show_lot_attributes': True}</attribute>
                 </xpath>
                 <xpath expr="//field[@name='lot_properties']" position="after">
                     <field name="x_attr_1" optional="hide"/>
