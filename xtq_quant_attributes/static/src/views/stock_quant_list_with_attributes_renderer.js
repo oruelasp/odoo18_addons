@@ -29,10 +29,7 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
     }
 
     async _fetchAttributeMap(props = this.props) {
-        const productId = props.list?.context?.lot_attributes_product_id || props.list?.context?.default_product_id;
-        if (!productId) {
-            return {};
-        }
+        const productId = props.list?.context?.lot_attributes_product_id || props.list?.context?.default_product_id || false;
         return await this.orm.call(
             "stock.quant",
             "get_attribute_field_map",
@@ -54,7 +51,10 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
             if (col.name.startsWith("x_attr_")) {
                 if (fieldsToShow.has(col.name)) {
                     // Odoo 18 usa 'label' para el texto de cabecera
-                    col.label = this.fieldMap[col.name];
+                    const label = this.fieldMap[col.name];
+                    col.label = label;
+                    // algunos contextos aún leen 'string' en columnas
+                    col.string = label;
                     col.optional = false;
                     // limpiar invisibilidad si la tuviera
                     if (col.invisible) delete col.invisible;
