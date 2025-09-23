@@ -27,5 +27,44 @@
                 </list>
             </field>
         </record>
+
+        <!-- Inherit standard stock quant list (simple) used in pick_from to inject attrs cols and JS -->
+        <record id="view_stock_quant_tree_simple_inherit_xtq_attrs" model="ir.ui.view">
+            <field name="name">stock.quant.list.simple.inherit.xtq.attrs</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.view_stock_quant_tree_simple"/>
+            <field name="arch" type="xml">
+                <xpath expr="//list" position="attributes">
+                    <attribute name="js_class">stock_quant_list_with_attributes</attribute>
+                    <attribute name="context">{'show_lot_attributes': True}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='lot_properties']" position="after">
+                    <field name="x_attr_1" optional="hide"/>
+                    <field name="x_attr_2" optional="hide"/>
+                    <field name="x_attr_3" optional="hide"/>
+                    <field name="x_attr_4" optional="hide"/>
+                    <field name="x_attr_5" optional="hide"/>
+                    <field name="x_attr_6" optional="hide"/>
+                </xpath>
+            </field>
+        </record>
+
+        <!-- Inherit standard stock quant list (primary) to inject cols (conservative: keep existing js_class) -->
+        <record id="view_stock_quant_tree_inherit_xtq_attrs" model="ir.ui.view">
+            <field name="name">stock.quant.list.inherit.xtq.attrs</field>
+            <field name="model">stock.quant</field>
+            <field name="inherit_id" ref="stock.view_stock_quant_tree"/>
+            <field name="arch" type="xml">
+                <!-- No cambiamos js_class aquí para no afectar otras funcionalidades globales -->
+                <xpath expr="//field[@name='lot_properties']" position="after">
+                    <field name="x_attr_1" optional="hide"/>
+                    <field name="x_attr_2" optional="hide"/>
+                    <field name="x_attr_3" optional="hide"/>
+                    <field name="x_attr_4" optional="hide"/>
+                    <field name="x_attr_5" optional="hide"/>
+                    <field name="x_attr_6" optional="hide"/>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>

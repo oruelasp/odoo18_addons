@@ -31,7 +31,7 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
     }
 
     async _fetchAttributeMap(props = this.props) {
-        const productId = props.list?.context?.lot_attributes_product_id;
+        const productId = props.list?.context?.lot_attributes_product_id || props.list?.context?.default_product_id;
         if (!productId) {
             return {};
         }
