@@ -55,6 +55,19 @@ export class StockQuantListWithAttributesRenderer extends ListRenderer {
                     col.label = label;
                     // algunos contextos aún leen 'string' en columnas
                     col.string = label;
+                    // refinar también metadatos del campo si existen
+                    if (col.field) {
+                        try {
+                            col.field.string = label;
+                        } catch (_) {}
+                        if (col.field.description) {
+                            try { col.field.description.string = label; } catch (_) {}
+                            try { col.field.description.label = label; } catch (_) {}
+                            try { col.field.description.display_name = label; } catch (_) {}
+                        }
+                    }
+                    // fallback genérico usado por algunos headers
+                    col.title = label;
                     col.optional = false;
                     // limpiar invisibilidad si la tuviera
                     if (col.invisible) delete col.invisible;
