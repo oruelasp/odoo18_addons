@@ -1,0 +1,36 @@
+<odoo>
+
+    <record id="view_sale_order_form_niubiz" model="ir.ui.view">
+        <field name="name">sale.order.niubiz.additional.fields</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_term_id']" position="after">
+                <field name="is_niubiz" invisible="1"/>
+                <field name="state" invisible="1"/>
+                <field name="niubiz_confirm_state" invisible="1"/>
+                <field name="niubiz_cancel_state" invisible="1"/>
+                <field name="niubiz_countable" readonly="1"
+                       options="{'modifiers': {'invisible': [('is_niubiz', '=', False)]}}"/>
+                <field name="niubiz_state" readonly="1" style="color:blue"/>
+                <field name="niubiz_amount" readonly="1"
+                       options="{'modifiers': {'invisible': [('is_niubiz', '=', False)]}}"/>
+                <field name="niubiz_transaction_msg" readonly="1" style="color:green"
+                       options="{'modifiers': {'invisible': [('is_niubiz', '=', False)]}}"/>
+
+                <!-- Botón Confirmar Niubiz -->
+                <field name="niubiz_confirm" readonly="1"
+                       options="{'modifiers': {'invisible': [('is_niubiz', '=', True), ('niubiz_countable', '=', False), ('niubiz_confirm_state', '=', True)]}}"/>
+
+                <!-- Botón Cancelar Niubiz cuando no esté cancelado -->
+                <field name="niubiz_cancel" readonly="1"
+                       options="{'modifiers': {'invisible': [('is_niubiz', '=', True), ('state', '=', 'cancel'), ('niubiz_cancel_state', '=', False)]}}"/>
+              <field name="is_sap_confirm" />
+              <field name="id_sap" />
+              <field name="numero_tarjeta" invisible="1" />
+              <field name="tipo_tarjeta" invisible="1" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

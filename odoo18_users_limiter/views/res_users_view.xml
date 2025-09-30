@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_users_form_inherit" model="ir.ui.view">
+        <field name="name">res.users.inherited</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+
+            <!-- You can control visibility in other ways in Odoo 17, but let's remove attrs for now -->
+            <xpath expr="//field[@name='login']" position="after">
+                <group>
+                    <field name="set_users_limit"/>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

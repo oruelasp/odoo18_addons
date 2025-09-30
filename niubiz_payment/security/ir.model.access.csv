@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_niubiz_payment_1,niubiz_payment users,model_sale_order,niubiz_group_user,1,0,0,0
+access_niubiz_payment_2,niubiz_payment manager,model_sale_order,niubiz_group_manager,1,1,1,1

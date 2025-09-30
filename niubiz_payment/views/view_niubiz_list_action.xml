@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="niubiz_payment.list">
+            <field name="name">niubiz_payment.tree</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="mode">primary</field>
+            <field name="arch" type="xml">
+<!--                <xpath expr="//tree//field[@name='date_order']" position="attributes">-->
+<!--                    <attribute name="invisible">1</attribute>-->
+<!--                </xpath>-->
+<!--                <xpath expr="//tree/field[@name='commitment_date']" position="attributes">-->
+<!--                    <attribute name="invisible">1</attribute>-->
+<!--                </xpath>-->
+<!--                <xpath expr="//tree/field[@name='expected_date']" position="attributes">-->
+<!--                    <attribute name="invisible">1</attribute>-->
+<!--                </xpath>-->
+<!--                <xpath expr="//tree/field[@name='user_id']" position="attributes">-->
+<!--                    <attribute name="invisible">1</attribute>-->
+<!--                </xpath>-->
+                    <xpath expr="//field[@name='commitment_date']" position="after">
+                        <field name="niubiz_state"/>
+                        <field name="niubiz_amount"/>
+                        <field name="niubiz_confirm"/>
+                        <field name="niubiz_cancel"/>
+                        <field name="is_sap_confirm"/>
+                        <field name="id_sap"/>
+                    </xpath>
+            </field>
+        </record>
+
+        <record id="niubiz_payment.form" model="ir.ui.view">
+            <field name="name">niubiz_payment.formview</field>
+            <field name="model">sale.order</field>
+            <field name="mode">primary</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='action_draft']" position="after">
+                    <button
+                        name="action_confirm_niubiz"
+                        type="object"
+                        string="Confirmar Niubiz"
+                        class="btn-info"
+                        groups="niubiz_payment.niubiz_group_manager"
+                        invisible="1"
+                        domain="[('niubiz_cancel_state', '=', False),
+                                ('is_niubiz', '=', True),
+                                ('niubiz_confirm_state', '=', False)]"
+                    />
+
+                    <button
+                        name="action_cancel_niubiz"
+                        string="Cancelar Niubiz"
+                        type="object"
+                        class="btn-danger"
+                        groups="niubiz_payment.niubiz_group_manager"
+                        invisible="1"
+                        domain="[('niubiz_cancel_state', '=', False),
+                                ('is_niubiz', '=', True),
+                                ('state', '=', 'cancel')]"
+                    />
+                </xpath>
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="niubiz_payment.action_window">
+            <field name="name">Pago con Niubiz</field>
+            <field name="res_model">sale.order</field>
+            <field name="view_mode">list,form</field>
+            <field name="views" eval="[(ref('niubiz_payment.list'), 'list'), (ref('niubiz_payment.form'), 'form')]"/>
+            <field name="domain">[('is_niubiz', '=', True)]</field>
+        </record>
+                <!-- Top menu item -->
+        <menuitem name="Pagos con niubiz"
+                  id="niubiz_payment.menu_list"
+                  groups="niubiz_payment.niubiz_group_manager"
+                  action="niubiz_payment.action_window"
+                  parent="website_sale.menu_orders"
+                  sequence="84"/>
+    </data>
+</odoo>

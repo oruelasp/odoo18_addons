@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo >
+
+    <record id="payment_method_niubiz" model="payment.method">
+        <field name="name">Pago con trajeta</field>
+        <field name="code">niubiz</field>
+        <field name="sequence">1000</field>
+        <field name="active">True</field>
+        <field name="image" type="base64" file="niubiz_payment/static/src/img/niubiz_icon.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+         <field name="provider_ids"
+               eval="[Command.set([
+                         ref('niubiz_payment.payment_provider_niubiz'),
+                     ])]"
+        />
+    </record>
+</odoo>

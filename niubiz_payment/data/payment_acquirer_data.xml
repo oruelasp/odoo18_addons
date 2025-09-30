@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Se crea un diario por defecto este se debbe configurar según la finalizad del negocío-->
+    <record id="account_journal_niubiz_demo" model="account.journal">
+        <field name="name">Niubiz</field>
+        <field name="type">bank</field>
+        <field name="code">NIU</field>
+    </record>
+
+
+    <record id="payment_provider_niubiz" model="payment.provider">
+        <field name="code">niubiz</field>
+        <field name="name">Niubiz</field>
+        <field name="company_id" ref="base.main_company"/>
+        <field name="image_128" type="base64" file="niubiz_payment/static/src/img/niubiz_icon.png"/>
+        <field name="state">test</field>
+        <field name="inline_form_view_id" ref="niubiz_payment.niubiz_form"/>
+        <field name="niubiz_merchant_id">456879853</field>
+        <field name="niubiz_username">integraciones@niubiz.com.pe</field>
+        <field name="niubiz_password">_7z3@8fF</field>
+        <field name="niubiz_merchant_id_secondary_currency">456879852</field>
+        <field name="niubiz_username_secondary_currency">integraciones@niubiz.com.pe</field>
+        <field name="niubiz_password_secondary_currency">_7z3@8fF</field>
+        <field name="pending_msg">Su pago ha sido procesado con éxito pero está esperando su aprobación.</field>
+        <field name="done_msg">
+            ¡Pago exitoso!
+            Gracias por confiar en tu lista, recibirás tu pedido según el método elegido.
+            ¡Disfruta de tu compra!!!
+        </field>
+        <field name="cancel_msg">Su pago ha sido cancelado.</field>
+        <field name="journal_id" ref="account_journal_niubiz_demo"/>
+    </record>
+</odoo>

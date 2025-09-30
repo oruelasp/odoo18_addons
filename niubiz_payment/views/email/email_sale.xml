@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<record id="email_confirm_sale_order" model="mail.template">
+		<field name="name">Cummins: Confirmacion ventas</field>
+		<field name="model_id" ref="sale.model_sale_order" />
+		<field name="subject">{{ object.company_id.name }} {{ (object.get_portal_last_transaction().state == 'pending') and 'Orden pendiente' or 'Orden' }} (Ref {{ object.name or 'n/a' }})</field>
+		<field name="email_from">{{ (object.user_id.email_formatted or object.company_id.email_formatted or user.email_formatted) }}</field>
+		<field name="email_to">{{ object.partner_id.email }}</field>
+		<field name="lang">{{ object.partner_id.lang }}</field>
+		<field name="report_template_ids" eval="[(4, ref('niubiz_payment.action_reporte_sale_order'))]" />
+		<field name="body_html">
+			<![CDATA[
+<div style="margin: 0px; padding: 0px;" data-oe-version="1.2">
+ <style>
+							body {
+							font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif; /* Similar a la fuente de las capturas */
+							margin: 0;
+							padding: 0;
+							background-color: #f8f9fa; /* Un gris claro similar al fondo de la web */
+							color: #333; /* Color de texto principal */
+							font-size: 10px; /* Base, se ajustará por elementos */
+							}
+							
+							.report-container {
+							max-width: 800px;
+							margin: 30px auto;
+							padding: 25px;
+							background-color: #fff;
+							border: 1px solid #dee2e6;
+							box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+							}
+							
+							/* ----- Encabezado del Reporte ----- */
+							.report-header {
+							display: flex;
+							justify-content: space-between;
+							align-items: flex-start;
+							border-bottom: 2px solid #e0e0e0;
+							padding-bottom: 15px;
+							margin-bottom: 20px;
+							}
+							
+							.company-info .logo {
+							max-width: 90px; /* Ajusta según el tamaño real de tu logo */
+							margin-bottom: 15px;
+							}
+							
+							.company-info h1 {
+							font-size: 16px;
+							color: #212529; /* Un negro/gris oscuro para títulos */
+							margin: 0 0 5px 0;
+							font-weight: 600;
+							}
+							
+							.company-info p, .client-info p {
+							margin: 3px 0;
+							font-size: 10px;
+							line-height: 1.5;
+							}
+							.client-info strong {
+							color: #444;
+							}
+							
+							.order-details {
+							text-align: right;
+							}
+							
+							.order-details h2 {
+							font-size: 18px;
+							color: #CC0000; /* Rojo Cummins */
+							margin: 0 0 10px 0;
+							font-weight: bold;
+							}
+							.order-details p {
+							font-size: 10px;
+							margin: 3px 0;
+							}
+							.order-details strong {
+							color: #333;
+							}
+							
+							
+							/* ----- Sección de Introducción ----- */
+							.intro-text {
+							margin-bottom: 20px;
+							font-size: 11px;
+							line-height: 1.6;
+							}
+							
+							/* ----- Tabla de Ítems ----- */
+							.items-table {
+							width: 100%;
+							border-collapse: collapse;
+							margin-bottom: 20px;
+							font-size: 9.5px;
+							}
+							
+							.items-table th, .items-table td {
+							border: 1px solid #ddd;
+							padding: 8px 6px; /* Más padding para legibilidad */
+							text-align: left;
+							vertical-align: top;
+							}
+							
+							.items-table th {
+							background-color: #f2f2f2; /* Gris claro para encabezados de tabla */
+							font-weight: bold;
+							color: #333;
+							font-size: 10px;
+							}
+							
+							.items-table .text-right { text-align: right; }
+							.items-table .text-center { text-align: center; }
+							.items-table .col-item { width: 5%; }
+							.items-table .col-code { width: 12%; }
+							.items-table .col-desc { width: 28%; }
+							.items-table .col-brand { width: 10%; }
+							.items-table .col-qty { width: 10%; }
+							.items-table .col-price { width: 10%; }
+							.items-table .col-discount { width: 10%; }
+							.items-table .col-sale-price { width: 10%; }
+							.items-table .col-total { width: 10%; }
+							
+							/* ----- Sección de Totales ----- */
+							.totals-section {
+							display: flex;
+							justify-content: flex-end; /* Alinea los totales a la derecha */
+							margin-bottom: 20px;
+							}
+							
+							.totals-table {
+							width: 45%; /* Ocupa menos espacio, alineado a la derecha */
+							font-size: 10px;
+							border:0px;
+							}
+							.totals-table tbody {
+							border:0px;
+							}
+							.totals-table td {
+							padding: 5px 8px;
+							border:0px;
+							}
+							
+							.totals-table td:first-child {
+							font-weight: bold;
+							color: #444;
+							border:0px;
+							}
+							.totals-table td:last-child {
+							text-align: right;
+							}
+							.totals-table .grand {
+							border:0px;
+							}
+							.totals-table .grand-total td {
+							font-weight: bold;
+							border:0px;
+							font-size: 11px;
+							border-top: 1px solid #aaa;
+							border-bottom: 1px solid #aaa;
+							padding-top: 8px;
+							padding-bottom: 8px;
+							color: #CC0000; /* Rojo Cummins para el total final */
+							}
+							
+							/* ----- Monto en Palabras ----- */
+							.amount-in-words {
+							font-weight: bold;
+							margin-bottom: 25px;
+							font-size: 11px;
+							padding: 10px;
+							background-color: #f8f8f8;
+							border-left: 3px solid #CC0000;
+							}
+							
+							/* ----- Información de Envío y Pie de Página ----- */
+							.shipping-info, .report-footer {
+							margin-bottom: 20px;
+							font-size: 10px;
+							line-height: 1.6;
+							}
+							.shipping-info h3, .report-footer h3 {
+							font-size: 13px;
+							color: #CC0000; /* Rojo Cummins para subtítulos */
+							margin-bottom: 8px;
+							padding-bottom: 5px;
+							border-bottom: 1px solid #eee;
+							font-weight: 600;
+							}
+							.shipping-info p, .report-footer p {
+							margin-bottom: 8px;
+							}
+							.report-footer a {
+							color: #CC0000; /* Rojo Cummins para enlaces */
+							text-decoration: none;
+							}
+							.report-footer a:hover {
+							text-decoration: underline;
+							}
+							.report-footer .social-icons img {
+							width: 20px; /* Tamaño de iconos sociales */
+							margin-right: 5px;
+							vertical-align: middle;
+							}
+							
+							/* Utilidades */
+							.bold { font-weight: bold; }
+						</style>  
+<p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size: 12px;">
+    Hola,<br/><br/>
+    ¡Muchas gracias por tu compra! Tu confianza nos impulsa a seguir ofreciéndote la calidad y el servicio que esperas.<br/>
+    Tu pedido, con el número #<t t-out="object.name"></t> - <t t-out="object.id_sap or ''"></t>, ha sido confirmado y está
+    siendo preparado con el mayor cuidado por nuestro equipo.
+  </p>
+<section class="items-section">
+                            <table class="items-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-item text-center">
+												Item
+											</th>
+                                        <th class="col-code text-center">
+												Código de material
+											</th>
+                                        <th class="col-desc text-center">
+												Descripción de material
+											</th>
+                                        <!-- <th class="col-brand">Marca</th> -->
+                                        <th class="col-qty text-center">
+												Cantidad solicitada
+											</th>
+                                        <th class="col-price text-center">
+												Precio de lista
+											</th>
+                                        <th class="col-discount text-center">
+												% Descuento
+											</th>
+                                        <th class="col-sale-price text-center">
+												Precio de venta
+											</th>
+                                        <th class="col-total text-center">
+												Valor total
+											</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="item" t-value="0"></t>
+                                    <t t-set="total_price" t-value="0"></t>
+                                    <!-- Total de los precios de venta -->
+                                    <t t-set="total_discount" t-value="0"></t>
+                                    <!-- Total del descuento -->
+                                    <t t-set="total_shipping_cost" t-value="0"></t>
+                                    <t t-set="entrega" t-value="''"></t>
+                                    <!-- Total del costo de envío -->
+                                    <t t-foreach="object.order_line" t-as="line">
+                                        <t t-set="line_price" t-value="line.price_unit * line.product_uom_qty"></t>
+                                        <t t-set="line_discount" t-value="line_price * (line.discount / 100)"></t>
+                                        <t t-set="line_sale_price" t-value="line_price - line_discount"></t>
+                                        <t t-set="line_shipping_cost" t-value="0"></t>
+                                        <!-- Comprobamos si el tipo de producto es 'service' para sumar el costo de envío -->
+                                        <t t-if="line.product_id.type == 'service'">
+                                            <t t-set="entrega" t-value="env['delivery.carrier'].sudo().search([('product_id','=', line.product_id.id)], limit=1)"></t>
+                                            <t t-set="line_shipping_cost" t-value="line_sale_price"></t>
+                                            <t t-set="total_shipping_cost" t-value="total_shipping_cost + line_shipping_cost"></t></t>
+                                        <t t-set="total_price" t-value="total_price + line_sale_price"></t>
+                                        <t t-set="total_discount" t-value="total_discount + line_discount"></t>
+                                        <t t-if="not entrega">
+                                            <t t-set="item" t-value="item + 1"></t>
+
+                                            <tr>
+                                                <td class="text-center">
+                                                    <t t-out="item"></t>
+                                                    <!--<t t-out="entrega"></t>-->
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.product_template_id.default_code"></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.name"></t>
+                                                </td>
+                                                <!-- <td>Fleetguard</td> -->
+                                                <td class="text-center">
+                                                    <t t-esc="line.product_uom_qty"></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.price_unit"></t>
+                                                    <t t-esc="object.currency_id.name"></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.discount"></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.price_subtotal"></t>
+                                                    <t t-esc="object.currency_id.name"></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-esc="line.price_total"></t>
+                                                    <t t-esc="object.currency_id.name"></t>
+                                                </td>
+                                            </tr>
+                                        </t>
+
+                                    </t>
+                                    <!-- Se repetirían más líneas según el pedido -->
+                                </tbody>
+                            </table>
+                        </section>
+
+
+                        <section class="totals-section">
+                            <table style="border:0px !important;" class="table">
+                                <tbody style="border:0px !important;">
+                                    <tr style="border:0px !important;">
+                                        <td class="col-4" style="border:0px !important;">
+                                        </td><td class="col-4" style="border:0px !important;">
+                                        </td><td class="col-4" style="border:0px !important;">
+                                            <table style="border:0px !important; width:100%;" class="totals-table">
+                                                <tbody style="border:0px !important;">
+                                                    <tr style="border:0px !important;">
+                                                        <td>
+                											Valor de venta:
+                										</td>
+                                                        <!-- Total de los precios de venta sin incluir costo de envío -->
+                                                        <t t-set="value_without_shipping" t-value="total_price - line_shipping_cost"></t>
+                                                        <td>
+                                                            <t t-esc="'%.2f' % value_without_shipping"></t>
+                                                            <t t-esc="object.currency_id.name"></t>
+                                                        </td>
+                                                    </tr>
+                                                    <tr style="border:0px !important;">
+                                                        <td>
+                											Descuento:
+                										</td>
+                                                        <td>
+                                                            <t t-esc="'%.2f' % total_discount"></t>
+                                                            <t t-esc="object.currency_id.name"></t>
+                                                        </td>
+                                                    </tr>
+                                                    <tr style="border:0px !important;">
+                                                        <td>
+                											Costo de envío:
+                										</td>
+                                                        <td>
+                                                            <t t-esc="'%.2f' % line_shipping_cost"></t>
+                                                            <t t-esc="object.currency_id.name"></t>
+                                                        </td>
+                                                    </tr>
+                                                    <tr style="border:0px !important;">
+                                                        <td style="border:0px !important;">
+                											IGV (18%):
+                										</td>
+                                                        <!-- Calculamos IGV sobre el valor sin envío -->
+                                                        <t t-set="total_without_tax" t-value="value_without_shipping"></t>
+                                                        <t t-set="igv" t-value="total_without_tax * 0.18"></t>
+                                                        <td>
+                                                            <t t-esc="'%.2f' % object.tax_totals['tax_amount_currency']"></t>
+                                                            <t t-esc="object.currency_id.name"></t>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="grand-total">
+                                                        <td>
+                											Precio de venta:
+                										</td>
+                                                        <!-- Precio final considerando todos los cálculos anteriores -->
+                                                        <!-- <t t-set="final_price" t-value="value_without_shipping + total_shipping_cost + igv"></t> -->
+                                                        <td>
+                                                            <t t-esc="'%.2f' % object.tax_totals['total_amount_currency']"></t>
+                                                            <!--<t t-esc="object.tax_totals"></t>-->
+                                                            <!--<t t-esc="final_price"></t>-->
+                                                            <t t-esc="object.currency_id.name"></t>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+
+
+
+
+<br/>
+  <span class="h6-fs" style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size:14px;"><strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Datos de cliente:</strong></span><br/>
+  <hr style="border-top-width:1px;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-radius: 0px; border-style: solid none none; padding: 0px; margin: 16px 0px; box-sizing: border-box; border-width: 1px 0px 0px; opacity: 0.25; color: #374151;"/>
+  <t t-if="object.partner_invoice_id">
+    <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size: 12px;">
+      <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Dirección de facturación:</strong><br/>
+      <t t-out="object.partner_invoice_id.street"></t><br/>
+      <t t-out="object.partner_invoice_id.city"></t>, <t t-out="object.partner_invoice_id.state_id.name"></t>
+      <t t-out="object.partner_invoice_id.zip"></t><br/>
+      <t t-out="object.partner_invoice_id.country_id.name"></t>
+    </p>A
+  </t>
+
+  <t t-if="tx_sudo">
+    <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size: 12px;">
+      <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Método de pago:</strong>
+      <t t-if="tx_sudo.token_id">
+        <t t-out="tx_sudo.token_id.display_name"></t>
+      </t>
+      <t t-else="">
+        <t t-out="tx_sudo.provider_id.sudo().name"></t>
+      </t>
+      (<t t-esc="format_amount(tx_sudo.amount, object.currency_id)"></t>)
+    </p>
+  </t>
+
+  <t t-if="object.partner_shipping_id and not object.only_services">
+    <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size: 12px;">
+      <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Dirección de envío:</strong><br/>
+      <t t-out="object.partner_shipping_id.street"></t><br/>
+      <t t-out="object.partner_shipping_id.city"></t>, <t t-out="object.partner_shipping_id.state_id.name"></t>
+      <t t-out="object.partner_shipping_id.zip"></t><br/>
+      <t t-out="object.partner_shipping_id.country_id.name"></t>
+    </p>
+  </t>
+  <br/>
+  <span class="h6-fs" style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size:14px;"><strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Información de envío:</strong></span><br/>
+  <hr style="border-top-width:1px;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-radius: 0px; border-style: solid none none; padding: 0px; margin: 16px 0px; box-sizing: border-box; border-width: 1px 0px 0px; opacity: 0.25; color: #374151;"/>
+  <t t-if="object.carrier_id">
+    <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size: 12px;">
+      <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">Método de envío:</strong>
+      <t t-out="object.carrier_id.name"></t>
+      <t t-if="object.amount_delivery == 0.0"> (Gratis)</t>
+      <t t-else=""> (<t t-esc="format_amount(object.amount_delivery, object.currency_id)"></t>)</t><br/>
+      <t t-if="object.carrier_id.tipo_entrega == 'envio'">
+        
+        </t></p><div class="envio-domicilio" style="font-size:12px;">
+          <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;">
+            
+            
+            Tu pedido será enviado a la siguiente dirección:
+
+            <t t-esc="object.partner_id.name"></t>
+            <br/>
+            <t t-esc="object.partner_id.street"></t>
+            <t t-esc="object.partner_id.l10n_pe_district.name"></t>
+            -
+
+            <t t-esc="object.partner_id.city_id.name"></t>
+            -
+
+            <t t-esc="object.partner_id.state_id.name"></t>
+          </p>
+        </div>
+      </t>
+      <t t-else="">
+        
+        <div class="recojo-tienda" style="font-size:12px;">
+          <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;">
+            
+            
+            Tu pedido lo podrás recoger en la tienda:
+
+            <br/>
+            <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">
+                 <t t-esc="object.carrier_id.name_ct or object.carrier_id.name"></t>:
+            </strong>
+            <t t-esc="object.carrier_id.direccion_local"></t>
+            <br/>
+            <a t-att-href="object.carrier_id.url_maps" target="_blank" style="color: #333333; text-decoration: none; border-radius: 0px; border-style: none; padding: 0px; margin: 0px; box-sizing: border-box; border-width: 0px;"><font style="color: #374151;">[Enlace de Google Maps de la Tienda]&nbsp;</font></a>
+          </p>
+        </div>
+      </t>
+    <p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;">
+    <br/></p><p style="border-radius:0px;border-style:none;padding:0px;margin:0px 0 16px 0;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-size:12px;">
+      <strong style="border-radius:0px;border-style:none;padding:0px;margin:0px;box-sizing:border-box;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;font-weight:bolder;">¿Necesitas ayuda?</strong><br/>
+
+Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos. Puedes enviarnos un correo a contacto@cummins.com o llamarnos al (01)614-7979.<br/>
+
+Gracias nuevamente por confiar en Distribuidora Cummins Perú S.A.C.<br/>
+
+Saludos cordiales,<br/><br/>
+
+El equipo de Distribuidora Cummins Perú S.A.C. <a t-att-href="object.company_id.website" style="color: #333333; text-decoration: none; border-radius: 0px; border-style: none; padding: 0px; margin: 0px; box-sizing: border-box; border-width: 0px;"><font style="color: #374151;">
+        <t t-esc="object.company_id.website"></t>&nbsp;</font></a>
+    </p>
+  
+</div>
+
+		
+		]]>
+		</field>
+	</record>
+</odoo>

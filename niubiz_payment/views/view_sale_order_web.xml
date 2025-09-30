@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<!-- INGRESAR FECHA DE ENTREGA DESPUES DE LA FECHA DE PEDIDO -->
+	<template id="sale_order_portal_content" name="Pedido de venta" inherit_id="sale.sale_order_portal_content">
+		<xpath expr="//tbody[@id='sale_info_table']/tr[1]" position="after">
+			<t t-if="sale_order.state in ['sale', 'cancel']">
+				<tr>
+					<th class="ps-0 pb-0">
+						Fecha de entrega:
+					</th>
+					<td class="w-100 pb-0 text-wrap">
+						<span t-field="sale_order.fecha_entrega" t-options="{&quot;widget&quot;: &quot;date&quot;}" />
+					</td>
+				</tr>
+				<t t-if="sale_order.id_sap">
+					<tr>
+						<th class="ps-0 pb-0">
+							ID de compra:
+						</th>
+						<td class="w-100 pb-0 text-wrap">
+							<span t-field="sale_order.id_sap" />
+						</td>
+					</tr>
+				</t>
+			</t>
+		</xpath>
+		<xpath expr="//section[@id='details']//td[@id='product_name']/*" position="replace">
+			<a t-if="line.product_id.website_published" t-att-href="line.product_id.website_url" class="d-block text-wrap" style="max-width: 35vw">
+				<span t-field="line.name" />
+			</a>
+			<t t-if="not line.product_id.website_published">
+				<t t-set="entrega" t-value="env['delivery.carrier'].sudo().search([('product_id','=', line.product_id.id)], limit=1)" />
+				<p class="m-0" t-if="entrega">
+					<span t-out="entrega.name" />
+				</p>
+				<t t-if="entrega.tipo_entrega != 'envio'">
+					<span style="font-size:12.5px;">
+						<i class="fa fa-phone fa-fw" role="img" aria-label="Teléfono" title="Teléfono">
+						</i>
+						<span t-out="entrega.telefono">
+						</span>
+					</span>
+					<p style="font-size:12.5px;" class="m-0" t-if="entrega">
+						<span>
+							<i class="fa fa-envelope fa-fw" role="img" aria-label="Correo electrónico" title="Correo electrónico">
+							</i>
+							<span t-out="entrega.contacto">
+							</span>
+						</span>
+					</p>
+				</t>
+			</t>
+		</xpath>
+		<xpath expr="//section[@id='terms']/em" position="replace">
+			<em>
+				Términos y condiciones:
+				<a href="https://www.cumminsperu.pe/integridad/politica-de-proteccion-de-datos-personales">
+					https://www.cumminsperu.pe/integridad/politica-de-proteccion-de-datos-personales
+				</a>
+			</em>
+		</xpath>
+		<xpath expr="//section[@t-if='sale_order.payment_term_id']" position="replace">
+			<section t-if="sale_order.payment_term_id" class="mt-4">
+				<h4 class="">
+					Metodo de pago
+				</h4>
+				<hr class="mt-0 mb-1" />
+				<span>Fecha de pago: <span t-field="sale_order.date_order"></span></span><br></br>
+				<span>Número de tarjeta: <span t-field="sale_order.numero_tarjeta"></span></span><br></br>
+				<span>Tipo de tarjeta: <span t-field="sale_order.tipo_tarjeta"></span></span><br></br>
+				(Niubiz)
+			</section>
+		</xpath>
+	</template>
+	<!-- BLOQUE DE SEGUIMIENTO ED ENTREGAS ODOO -->
+	<template id="template_entregas_hidden" name="Orders Shipping Followup" inherit_id="sale_stock.sale_order_portal_content_inherit_sale_stock">
+		<xpath expr="//div[@t-if='delivery_orders']" position="replace">
+		</xpath>
+	</template>
+</odoo>

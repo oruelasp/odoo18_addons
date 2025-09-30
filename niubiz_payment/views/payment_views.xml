@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_provider_form_inherit_payment_niubiz_payment" model="ir.ui.view">
+        <field name="name">payment.provider.form.inherit.payment.niubiz.payment</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <group name="provider_credentials" position='inside'>
+                <group invisible="code != 'niubiz'">
+                    <field name="niubiz_merchant_id"/>
+                    <field name="niubiz_username"/>
+                    <field name="niubiz_password"/>
+                    <field name="niubiz_channel"/>
+                    <field name="niubiz_countable"/>
+                    <field name="niubiz_merchant_id_secondary_currency"/>
+                    <field name="niubiz_username_secondary_currency"/>
+                    <field name="niubiz_password_secondary_currency"/>
+<!--                    <field name="niubiz_merchantlogo" widget="url"/>-->
+                </group>
+            </group>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<record id="email_pago_confirm_sale" model="mail.template">
+		<field name="name">Cummins: pago realizado</field>
+		<field name="model_id" ref="sale.model_sale_order" />
+        <field name="subject">{{ object.company_id.name }} {{ (object.get_portal_last_transaction().state == 'pending') and 'Orden pendiente' or 'Orden' }} (Ref {{ object.name or 'n/a' }})</field>
+		<field name="email_from">{{ (object.user_id.email_formatted or user.email_formatted) }}</field>
+        <field name="email_to">{{ object.partner_id.email }}</field>
+        <field name="lang">{{ object.partner_id.lang }}</field>
+		<field name="report_template_ids" eval="[(4, ref('niubiz_payment.action_reporte_sale_order'))]" />
+
+		<field name="body_html">
+			<![CDATA[
+			<div style="margin: 0px; padding: 0px;">
+    <p style="margin: 0px; padding: 0px; font-size: 12px;">
+        <t t-set="transaction_sudo" t-value="object.get_portal_last_transaction()"/>
+        Hola,
+        <br><br>
+        El pago con la referencia
+        <span style="font-weight:bold;" t-out="transaction_sudo.reference or ''">SOOO49</span>
+        por un total de
+        <span style="font-weight:bold;" t-out="format_amount(object.niubiz_amount, object.currency_id) or ''">$ 10.00</span>
+        para la orden
+        <span style="font-weight:bold;" t-out="object.name or ''">S00049</span>
+        <t t-if="transaction_sudo and transaction_sudo.state == 'pending'">
+            está pendiente.
+            <br>
+            <t t-if="object.currency_id.compare_amounts(object.niubiz_amount, object.amount_total) >= 0 and object.state in ('draft', 'sent')">
+                Confirmaremos su orden una vez que se confirme el pago.
+            </t>
+            <t t-else="">
+                Una vez que se confirmen, faltarán
+                <span style="font-weight:bold;" t-out="format_amount(object.amount_total - object.niubiz_amount, object.currency_id) or ''">$ 10.00</span>
+                por pagar.
+            </t>
+        </t>
+        <t t-else="">
+            se confirmó.
+            <t t-if="object.currency_id.compare_amounts(object.niubiz_amount, object.amount_total) < 0">
+                <br>
+                <span style="font-weight:bold;" t-out="format_amount(object.amount_total - object.niubiz_amount, object.currency_id) or ''">$ 10.00</span>
+                faltan por pagar.
+            </t>
+        </t>
+        <br><br>
+        Agradecemos su confianza.
+        <br>
+        No dude en ponerse en contacto con nosotros si tiene alguna pregunta.
+        <t t-if="not is_html_empty(object.user_id.signature)" data-o-mail-quote-container="1">
+            <br><br>
+            <t t-out="object.user_id.signature or ''" data-o-mail-quote="1"/>
+        </t>
+        <br><br>
+    </p>
+</div>
+
+            
+			]]>
+		</field>
+	</record>
+</odoo>

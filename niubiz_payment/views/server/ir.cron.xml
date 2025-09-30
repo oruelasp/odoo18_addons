@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Definir la tarea programada -->
+        <record id="ir_cron_lead_fechas" model="ir.cron">
+            <field name="name">Envio de Ventas ODOO - SAP</field>
+            <field name="model_id" ref="model_sale_order"/> <!-- Referencia correcta al modelo -->
+            <field name="state">code</field>
+            <field name="code">model.set_order_sap()</field> <!-- Llamar al método que envía la notificación -->
+            <field name="interval_number">1</field> <!-- Ejecutar cada 1 día -->
+            <field name="interval_type">days</field> <!-- Tipo de intervalo en días -->
+            <field name="active">True</field> <!-- Activar la tarea -->
+            <field name="nextcall">2025-06-21 08:00:00</field> <!-- Evita que se ejecute inmediatamente -->
+
+        </record>
+
+    </data>
+</odoo>
