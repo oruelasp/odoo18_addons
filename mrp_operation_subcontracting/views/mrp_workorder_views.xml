@@ -28,12 +28,13 @@
             <xpath expr="//group[1]" position="after">
                 <group string="Ordenes de Servicio de Subcontratación" name="subcontracting_pos" invisible="not is_subcontract">
                     <field name="purchase_order_ids" readonly="1">
-                        <tree>
+                        <list>
                             <field name="name"/>
+                            <field name="partner_id"/>
                             <field name="date_order"/>
                             <field name="amount_total"/>
                             <field name="state"/>
-                        </tree>
+                        </list>
                     </field>
                 </group>
             </xpath>
