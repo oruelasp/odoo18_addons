@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<template id="custom_form_new" inherit_id="website_sale.address">
+		<xpath expr="//div[@id='wrap']" position="replace">
+			<style>
+				body {
+				height:auto;
+				}
+			</style>
+			<div id="wrap">
+				<div class="oe_website_sale o_wsale_address_fill container py-2">
+					<div class="row">
+						<div class="col-12">
+							<t t-call="website_sale.wizard_checkout" />
+						</div>
+					</div>
+					<div class="row">
+						<div class="oe_cart col-12 col-lg-8">
+							<div>
+								<t t-if="not is_anonymous_cart">
+									<t t-if="use_delivery_as_billing">
+										<h3 class="mb-3">
+											Su dirección
+										</h3>
+									</t>
+									<t t-elif="address_type == 'delivery'">
+										<h3 class="mb-3">
+											Dirección de entrega
+										</h3>
+									</t>
+									<t t-else="">
+										<h3 class="mb-3">
+											<t groups="!account.group_delivery_invoice_address">
+												Su dirección
+											</t>
+											<t groups="account.group_delivery_invoice_address">
+												Dirección de facturación
+											</t>
+										</h3>
+									</t>
+								</t>
+								<div t-if="use_delivery_as_billing and not only_services and partner_sudo" class="alert alert-warning" role="alert" groups="account.group_delivery_invoice_address">
+									<h4 class="alert-heading">
+										¡Esté atento!
+									</h4>
+									<p>
+										Está editando sus direcciones de
+										<b>
+											envío y facturación
+										</b>
+										al mismo tiempo.
+										<br />
+										Si quiere modificar su dirección de facturación, cree una
+										<a href="/shop/address?address_type=billing">
+											nueva dirección
+										</a>
+										.
+									</p>
+								</div>
+								<div id="errors" />
+								<!-- for js -->
+								<form action="/shop/address/submit" method="post" class="checkout_autoformat" t-att-data-company-country-code="res_company.country_id.code">
+									<t t-if="is_anonymous_cart">
+										<div id="div_email_public" t-attf-class="col-lg-6">
+											<label class="col-form-label" for="o_email">
+												Correo electrónico
+											</label>
+											<div t-if="website.account_on_checkout != 'disabled'" class="align-items-center float-end" style="margin-top: -11px">
+												<span>
+													¿Ya tiene una cuenta?
+												</span>
+												<a role="button" href="/web/login?redirect=/shop/checkout" class="btn btn-primary">
+													Iniciar sesión
+												</a>
+											</div>
+											<input id="o_email" type="email" name="email" class="form-control" t-att-value="partner_sudo.email" />
+										</div>
+										<h4 class="mb-1 mt-5">
+											Complete su dirección
+										</h4>
+									</t>
+									<div class="row">
+										<input type="hidden" id="token_api" t-att-value="request.env.company.token_api" />
+										<t t-if="website._display_partner_b2b_fields()">
+											<div id="direccion_contacto">
+												<br />
+												<h6>
+													Datos personales y contacto
+												</h6>
+												<hr />
+												<div class="w-100" />
+												<!-- <t t-if="show_vat"> -->
+												<!-- <t t-set="vat_warning" t-value="partner_sudo.vat and not can_edit_vat"/> -->
+												<t t-set="identification_types" t-value="env['l10n_latam.identification.type'].sudo().search([('name', 'in', ['DNI', 'RUC'])])" />
+												<div t-att-class="'d-none col-xl-6 mb-3' if (request.env.user.id != request.website.user_id.id and address_type == 'billing') else 'd-block'">
+													<label class="col-form-label" for="l10n_latam_identification_type_id">
+														Tipo de identificación
+													</label>
+													<!-- <t t-if="can_edit_vat"> -->
+													<select name="l10n_latam_identification_type_id" class="form-select">
+														<option value="">
+															Tipo de identificación...
+														</option>
+														<t t-foreach="identification_types" t-as="id_type">
+															<option t-att-value="id_type.id" t-att-selected="id_type.id == partner_sudo.l10n_latam_identification_type_id.id">
+																<t t-out="id_type.name" />
+															</option>
+														</t>
+													</select>
+												</div>
+												<!-- <p class="form-control" t-out="partner_sudo.l10n_latam_identification_type_id.name" readonly="1" title="Changing Identification type is not allowed once document(s) have been issued for your account. Please contact us directly for this operation."/> -->
+												<!-- <input name="l10n_latam_identification_type_id" class="form-control" t-att-value="partner_sudo.l10n_latam_identification_type_id.id" type="hidden"/> -->
+												<div class="col-xl-6 mb-3" t-att-class="'d-none' if (request.env.user.id == request.website.user_id.id or address_type == 'delivery') else 'd-block'">
+													<label class="col-form-label" for="ref">
+														RUC
+													</label>
+													<!-- <t t-if="can_edit_vat"> -->
+													<input id="ref" type="text" name="ref" t-att-value="partner_sudo.ref" required="required" class="form-control" />
+												</div>
+												<div id="div_vat" t-att-class=" 'd-none col-lg-6 mb-2' if (request.env.user.id != request.website.user_id.id and address_type == 'billing') else 'd-block'">
+													<label class="col-form-label fw-normal label-optional" for="o_vat">
+														<t t-out="'Numero de identificacion' if vat_label == 'Identification Number' else 'Numero de identificacion'" />
+													</label>
+													<input type="text" id="o_vat" name="vat" t-att-value="partner_sudo.vat" class="form-control" />
+													<small t-if="vat_warning" class="form-text text-muted d-block d-lg-none">
+														No se permite cambiar el número de IVA una vez emitidos los documentos para su cuenta. Para ello, contáctenos directamente.
+													</small>
+												</div>
+												<div t-if="vat_warning" class="col-12 d-none d-lg-block mb-1">
+													<small class="form-text text-muted">
+														No se permite cambiar el nombre de la empresa ni el número de IVA una vez emitidos los documentos para su cuenta. Para ello, póngase en contacto con nosotros directamente.
+													</small>
+												</div>
+												<div id="company_name_div" class="col-lg-12 mb-2">
+													<label class="col-form-label fw-normal label-optional" for="o_company_name">
+														Razón Social
+													</label>
+													<input id="o_company_name" type="text" name="company_name" t-att-value="partner_sudo.commercial_company_name" t-att-readonly="'1' if vat_warning else None" class="form-control" />
+													<small t-if="vat_warning" class="form-text text-muted d-block d-lg-none">
+														No se permite cambiar el nombre de la empresa una vez emitidos los documentos para su cuenta. Para ello, contáctenos directamente.
+													</small>
+												</div>
+												<div id="bloq_data">
+												<br />
+													<h6>
+														Datos de la Persona de Contacto
+													</h6>
+													<hr />
+												</div>
+												<t t-set="identification_types_parent" t-value="env['l10n_latam.identification.type'].sudo().search([('name', 'in', ['DNI'])])" />
+												<div id="div_identification_type_parent" class="col-md-12 mb-3">
+													<label class="col-form-label" for="l10n_latam_identification_type_id">
+														Tipo de identificación
+													</label>
+													<!-- <t t-if="can_edit_vat"> -->
+													<select name="dni_parent_id" class="form-select">
+														<option value="">
+															Tipo de identificación...
+														</option>
+														<t t-foreach="identification_types_parent" t-as="id_type">
+															<option t-att-value="id_type.id">
+																<t t-out="id_type.name" />
+															</option>
+														</t>
+													</select>
+													<div id="div_vat_parent" t-att-class=" 'd-none col-md-12 mb-2' if (request.env.user.id != request.website.user_id.id and address_type == 'billing') else 'd-block'">
+														<label class="col-form-label fw-normal label-optional" for="o_vat">
+															<t t-out="'Numero de identificacion' if vat_label == 'Identification Number' else 'Numero de identificacion'" />
+														</label>
+														<input type="text" id="o_vat_parent" name="vat_parent" class="form-control" />
+													</div>
+												</div>
+												<div id="div_name" class="col-lg-12 mb-2">
+													<label id="label_name" class="col-form-label" for="o_name">
+														Nombre completo
+													</label>
+													<input id="o_name" type="text" name="name" t-att-value="partner_sudo.name" class="form-control" />
+												</div>
+												<div class="w-100" />
+												<div class="container">
+													<div class="row">
+														<div t-if="not is_anonymous_cart" id="div_email" class="col-lg-6 mb-2">
+															<label class="col-form-label" for="o_email">
+																Correo electrónico
+															</label>
+															<input id="o_email" type="email" name="email" t-att-value="partner_sudo.email" class="form-control" />
+														</div>
+														<div id="div_phone" class="col-lg-6 mb-2">
+															<label class="col-form-label" for="o_phone">
+																Teléfono
+															</label>
+															<input id="o_phone" type="tel" name="phone" t-att-value="partner_sudo.phone" class="form-control" />
+														</div>
+													</div>
+												</div>
+												<br />
+											</div>
+											<br>
+											</br>
+											<div name="direccion_entrega" style="margin-top:20px;">
+												<h6>
+													Dirección de entrega
+												</h6>
+												<hr />
+												<div id="div_street2" class="col-lg-12 mb-2" style="display: none;">
+													<label class="col-form-label label-optional" for="o_street2">
+														Departamento, suite, etc.
+													</label>
+													<input id="o_street2" type="text" name="street2" class="form-control" t-att-value="partner_sudo.street2" />
+												</div>
+												<div class="w-100" />
+												<t t-if="zip_before_city">
+													<div id="div_zip" class="col-md-4 mb-2" style="display: none;">
+														<label class="col-form-label label-optional" for="o_zip">
+															Código postal
+														</label>
+														<input id="o_zip" type="text" name="zip" class="form-control" t-att-value="partner_sudo.l10n_pe_district.code" />
+													</div>
+												</t>
+												<div id="div_city" class="col-md-8 mb-2">
+													<label class="col-form-label" for="o_city">
+														Ciudad
+													</label>
+													<input id="o_city" type="text" name="city" class="form-control" t-att-value="partner_sudo.city" />
+												</div>
+												<t t-if="not zip_before_city">
+													<div id="div_zip" class="col-md-4 mb-2 " style="display: none;">
+														<label class="col-form-label label-optional" for="o_zip" >
+															Código postal
+														</label>
+														<input id="o_zip" type="text" name="zip" class="form-control" t-att-value="partner_sudo.l10n_pe_district.code" />
+													</div>
+												</t>
+												<div class="w-100" />
+												<div id="div_country" class="col-lg-6 mb-2">
+													<label class="col-form-label" for="o_country_id">
+														País
+													</label>
+													<select id="o_country_id" name="country_id" class="form-select">
+														<option value="">
+															País...
+														</option>
+														<t t-foreach="countries" t-as="c">
+															<option t-att-value="c.id" t-att-selected="(country and c.id == country.id) or (not country and c.code == 'PE')" t-att-code="c.code">
+																<t t-esc="c.name" />
+															</option>
+														</t>
+													</select>
+												</div>
+												<div id="div_state" class="col-md-12 mb-2" t-att-style="not country_states and 'display: none'">
+													<label class="col-form-label" for="o_state_id">
+														Departamento
+													</label>
+													<select id="o_state_id" name="state_id" class="form-select">
+														<option value="">
+															Departamento...
+														</option>
+														<t t-foreach="country_states" t-as="s">
+															<option t-att-value="s.id" t-att-selected="s.id == state_id">
+																<t t-esc="s.name" />
+															</option>
+														</t>
+													</select>
+												</div>
+												<t t-call="l10n_pe_website_sale.partner_address_info" />
+												<div id="div_street" class="col-lg-12 mb-2">
+													<label class="col-form-label" for="o_street">
+														Dirección de entrega
+													</label>
+													<input id="o_street" type="text" name="street" class="form-control" t-att-value="partner_sudo.street" />
+												</div>
+												<div id="div_mercado" class="d-block col-md-12 mb-2">
+													<label class="col-form-label" for="o_mercado">
+														Mercado
+													</label>
+													<select id="o_mercado" name="mercado" class="form-select">
+														<option value="">
+															Selecciona una opción
+														</option>
+														<option value="1" t-att-selected="'1' == str(partner_sudo.mercado)">
+															Agropecuario
+														</option>
+														<option value="4" t-att-selected="'4' == str(partner_sudo.mercado)">
+															Gran Minería
+														</option>
+														<option value="5" t-att-selected="'5' == str(partner_sudo.mercado)">
+															Minería
+														</option>
+														<option value="17" t-att-selected="'17' == str(partner_sudo.mercado)">
+															Marino
+														</option>
+														<option value="34" t-att-selected="'34' == str(partner_sudo.mercado)">
+															Utilities
+														</option>
+														<option value="35" t-att-selected="'35' == str(partner_sudo.mercado)">
+															Oil&amp;Gas
+														</option>
+														<option value="37" t-att-selected="'37' == str(partner_sudo.mercado)">
+															UGMI, Drilling
+														</option>
+														<option value="38" t-att-selected="'38' == str(partner_sudo.mercado)">
+															Automotriz
+														</option>
+														<option value="40" t-att-selected="'40' == str(partner_sudo.mercado)">
+															Portuario
+														</option>
+														<option value="41" t-att-selected="'41' == str(partner_sudo.mercado)">
+															Industrial
+														</option>
+														<option value="42" t-att-selected="'42' == str(partner_sudo.mercado)">
+															Construcción
+														</option>
+														<option value="43" t-att-selected="'43' == str(partner_sudo.mercado)">
+															Clientes diversos
+														</option>
+													</select>
+												</div>
+											</div>
+											<div class="form-check mt-2">
+												<input required="required" class="form-check-input" type="checkbox" id="accept_terminos" name="accept_terminos" />
+												<label class="form-check-label" for="accept_terminos" style="font-weight: normal;font-size:12px;">
+													Acepto las
+													<a href="https://www.cumminsperu.pe/integridad/politica-de-proteccion-de-datos-personales" target="_blank" style="font-weight: bold;">
+														Políticas de privacidad
+													</a>
+												</label>
+											</div>
+											<div class="form-check mt-2">
+												<input required="required" class="form-check-input" type="checkbox" id="accept_marketing" name="accept_marketing" />
+												<label class="form-check-label" for="accept_marketing" style="font-weight: normal;font-size:12px;">
+													Acepto recibir ofertas exclusivas, actualizaciones y promociones relacionadas con Cummins Perú y/o Komatsu-Mitsui, así como también productos y servicios de compañías relacionadas.
+													<a href="https://www.cumminsperu.pe/integridad/politica-de-proteccion-de-datos-personales" target="_blank" style="font-weight: bold;">
+														Políticas de privacidad
+													</a>
+												</label>
+											</div>
+										</t>
+										<input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" t-nocache="The csrf token must always be up to date." />
+										<input type="hidden" name="address_type" t-att-value="address_type" />
+										<input type="hidden" name="use_delivery_as_billing" t-att-value="use_delivery_as_billing" />
+										<t t-if="partner_id">
+											<input type="hidden" name="partner_id" t-att-value="partner_id" />
+										</t>
+										<t t-if="callback">
+											<input type="hidden" name="callback" t-att-value="callback" />
+										</t>
+										<!-- Example -->
+										<input type="hidden" name="required_fields" t-att-value="'name,country_id'" />
+										<div class="d-flex flex-column flex-md-row align-items-center justify-content-between mt32 mb32">
+											<a role="button" t-att-href="discard_url" class="btn btn-outline-secondary w-100 w-md-auto order-md-1 order-3">
+												<i class="fw-light fa fa-angle-left me-2" />
+												Descartar
+											</a>
+											<div class="position-relative w-100 d-flex d-md-none justify-content-center align-items-center order-2 my-2 opacity-75">
+												<hr class="w-100" />
+												<span class="px-3">
+													o
+												</span>
+												<hr class="w-100" />
+											</div>
+											<button disabled="" id="save_address" class="btn btn-primary w-100 w-md-auto order-1 order-md-3">
+												<t t-if="is_anonymous_cart">
+													Continuar al pago
+												</t>
+												<t t-else="">
+													Guardar dirección
+												</t>
+												<i class="fw-light fa fa-angle-right ms-2" />
+											</button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+						<div class="o_wsale_accordion accordion rounded col-12 col-lg-4" id="o_wsale_total_accordion" style="margin-top:0px;">
+							<div class="o_total_card sticky-lg-top ">
+								<div id="o_wsale_total_accordion_item" class="accordion-item p-lg-4 border-0">
+									<div class="accordion-header d-block align-items-center mb-4">
+										<button class="accordion-button px-0" data-bs-toggle="collapse" data-bs-target="#o_wsale_accordion_item" aria-expanded="true" aria-controls="o_wsale_accordion_item">
+											<div class="d-flex flex-wrap">
+												<b class="w-100">
+													Resumen del pedido
+												</b>
+												<span t-out="str(website_sale_order.cart_quantity)" />
+												&amp;nbsp;item(s)&amp;nbsp;-&amp;nbsp;
+												<span id="amount_total_summary" class="monetary_field ms-1" t-field="website_sale_order.amount_total" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: website_sale_order.currency_id}" />
+											</div>
+										</button>
+									</div>
+									<div name="cart_summary_info" t-if="not website_sale_order or not website_sale_order.website_order_line" class="alert alert-info">
+										Tu carrito está vacío!
+									</div>
+									<div id="o_wsale_accordion_item" class="accordion-collapse show collapse mb-4 mb-lg-0" style="     overflow-y: auto;     height: auto;     max-height: 250px; " data-bs-parent="#o_wsale_total_accordion">
+										<div t-att-class="len(website_sale_order.website_order_line) &gt; 3 and 'o_wsale_scrollable_table mt-n4 me-n4 pt-4 pe-4'">
+											<table t-if="website_sale_order and website_sale_order.website_order_line" class="table accordion-body mb-0" id="cart_products">
+												<tbody>
+													<tr t-foreach="website_sale_order.website_order_line" t-as="line" t-att-class="line_last and 'border-transparent'">
+														<t t-set="o_cart_sum_padding_top" t-value="'pt-3' if line_size &gt; 1 and not line_first else 'pt-0'" />
+														<td t-if="not line.product_id" colspan="2" />
+														<t t-else="">
+															<td t-attf-class="td-img ps-0 #{o_cart_sum_padding_top}">
+																<span t-if="line._is_not_sellable_line() and line.product_id.image_128">
+																	<img t-att-src="image_data_uri(line.product_id.image_128)" class="o_image_64_max img rounded" t-att-alt="line.name_short" />
+																</span>
+																<span t-else="" t-field="line.product_id.image_128" t-options="{'widget': 'image', 'qweb_img_responsive': False, 'class': 'o_image_64_max rounded'}" />
+															</td>
+															<td t-attf-class="#{o_cart_sum_padding_top} td-product_name td-qty w-100" name="website_sale_cart_summary_product_name">
+																<h6>
+																	<t t-out="int(line.product_uom_qty)" />
+																	<t t-if="line._get_shop_warning(clear=False)">
+																		<i class="fa fa-warning text-warning" role="img" t-att-title="line._get_shop_warning()" aria-label="Warning" />
+																	</t>
+																	x
+																	<t t-out="line.name_short" />
+																</h6>
+															</td>
+														</t>
+														<td t-attf-class="#{o_cart_sum_padding_top} td-price pe-0 text-end" name="website_sale_cart_summary_line_price">
+															<t t-call="website_sale.cart_product_price">
+																<t t-set="product_price" t-value="line._get_cart_display_price()" />
+															</t>
+														</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<t t-if="website_sale_order">
+											<t t-set="warning" t-value="website_sale_order._get_shop_warning(clear=False)" />
+											<div t-if="warning" class="alert alert-warning" role="alert">
+												<strong>
+													Advertencia!
+												</strong>
+												<t t-esc="website_sale_order._get_shop_warning()" />
+											</div>
+										</t>
+									</div>
+									<t t-call="website_sale.total">
+										<t t-set="_cart_total_classes" t-valuef="border-top pt-3" />
+									</t>
+									<div t-if="show_navigation_button" class="o_cta_navigation_container position-absolute position-lg-static start-0 bottom-0 col-12">
+										<t t-call="website_sale.navigation_buttons" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<script type="text/javascript" src="/custom_myr_cummins_payment/static/src/js/index.js" />
+		</xpath>
+	</template>
+	<template id="template_id_address" name="template_name" inherit_id="l10n_pe_website_sale.partner_address_info">
+		<xpath expr="//div[@id='div_city_id']" position="replace">
+			<div id="div_city_id" class="col-md-12 mb-3" t-att-style="(country and country.code != 'PE') and 'display:none;'">
+				<label class="col-form-label" for="city_id">
+					Provincia
+				</label>
+				<select id="city_id" name="city_id" class="form-select" data-init="1">
+					<option value="">
+						Provincia...
+					</option>
+					<t t-foreach="state_cities" t-as="city">
+						<option t-att-value="city.id" t-att-selected="city.id == partner_sudo.city_id.id">
+							<t t-out="city.name" />
+						</option>
+					</t>
+				</select>
+			</div>
+		</xpath>
+		<xpath expr="//div[@id='div_district']" position="replace">
+			<div id="div_district" class="col-md-12 mb-3" t-att-style="country and country.code != 'PE'">
+				<label class="col-form-label" for="l10n_pe_district">
+					Distrito
+				</label>
+				<select id="l10n_pe_district" name="l10n_pe_district" class="form-select" data-init="1">
+					<option value="">
+						Distrito...
+					</option>
+					<t t-foreach="city_districts" t-as="district">
+						<option t-att-value="district.id" t-att-data-zip="district.code" t-att-selected="district.id == partner_sudo.l10n_pe_district.id">
+							<t t-out="district.name" />
+						</option>
+					</t>
+				</select>
+			</div>
+		</xpath>
+	</template>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="easy_jsonapi_custom_studio_inherit" model="ir.ui.view">
+        <field name="name">easy.api.jsonapi.custom.studio.inherit</field>
+        <field name="model">easy.api</field>
+        <field name="priority" eval="5"/>
+        <field name="inherit_id" ref="api_framework_base.view_easy_api_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='page_size']" position="after">
+                <field name="enable_custom_jsonapi_studio" widget="boolean_toggle" invisible="api_type != 'jsonapi'"
+                readonly="state in ['open', 'active']"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<template id="portal_my_details_fields_inherit" inherit_id="portal.portal_my_details_fields">
+		<xpath expr="." position="replace">
+			<t>
+				<div class="w-100" />
+				<input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" />
+				<div t-if="error_message" class="alert alert-danger" role="alert">
+					<div class="col-lg-12">
+						<t t-foreach="error_message" t-as="err">
+							<t t-esc="err" />
+							<br />
+						</t>
+					</div>
+				</div>
+				<div t-if="not partner_can_edit_vat" class="col-12 d-none d-xl-block">
+					<small class="form-text text-muted">
+						Estimado cliente, por motivos de seguridad, le informamos que no es posible modificar directamente su tipo y número de documento, RUC, Razón social ni su dirección inicial en su cuenta; sin embargo, tiene la opción de añadir direcciones adicionales sin ningún problema. Si requiere realizar algún cambio en los datos no editables, por favor, póngase en contacto con nosotros vía correo electrónico a
+						<a href="mailto:contacto@cummins.com">
+							contacto@cummins.com
+						</a>
+						para asistirlo
+					</small>
+				</div>
+				<h6 class="mt-3">
+					Datos personales y contacto
+				</h6>
+				<hr />
+				<div t-attf-class="mb-1 #{error.get('vat') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label label-optional" for="vat">
+						Tipo de documento
+					</label>
+					<t t-if="partner_can_edit_vat">
+						<select name="l10n_latam_identification_type_id" id="identification_type_select" t-att-data-selected-id="partner.l10n_latam_identification_type_id.id if partner.l10n_latam_identification_type_id else identification_type_id" class="form-select">
+							<option value="">
+								Seleccione tipo de documento
+							</option>
+							<!-- Aquí se cargan dinámicamente con JS -->
+						</select>
+					</t>
+					<t t-else="">
+						<!-- Select deshabilitado (solo para mostrar) -->
+						<select name="identification_type_id_display" class="form-select" disabled="disabled">
+							<option t-att-value="partner.l10n_latam_identification_type_id.id" selected="1">
+								<t t-out="partner.l10n_latam_identification_type_id.name" />
+							</option>
+						</select>
+						<!-- Hidden para enviar el valor real -->
+						<input type="hidden" name="l10n_latam_identification_type_id" t-att-value="partner.l10n_latam_identification_type_id.id if partner.l10n_latam_identification_type_id else identification_type_id" />
+					</t>
+				</div>
+				<div t-attf-class="mb-1 #{error.get('vat') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label label-optional" for="vat">
+						Número de identificación
+					</label>
+					<!--
+					The <input> use "disabled" attribute to avoid sending an unauthorized value on form submit.
+					The user might not have rights to change company_name but should still be able to see it.
+					-->
+					<input type="text" name="vat" t-attf-class="form-control #{error.get('vat') and 'is-invalid' or ''}" t-att-value="vat or partner.vat" t-att-readonly="None if partner_can_edit_vat else '1'" />
+					<small t-if="not partner_can_edit_vat" class="form-text text-muted d-block d-xl-none">
+						No se permite cambiar el número de IVA una vez que se han emitido los documentos de su cuenta. Póngase en contacto con nosotros directamente para esta operación.
+					</small>
+				</div>
+				<div t-attf-class="mb-3 #{error.get('name') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label" for="name">
+						Nombre
+					</label>
+					<input type="text" name="name" t-attf-class="form-control #{error.get('name') and 'is-invalid' or ''}" t-att-value="name or partner.name" t-att-readonly="None if partner_can_edit_vat else '1'" />
+				</div>
+				<div t-attf-class="mb-3 #{error.get('email') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label" for="email">
+						Correo electrónico
+					</label>
+					<input type="email" name="email" t-attf-class="form-control #{error.get('email') and 'is-invalid' or ''}" t-att-value="email or partner.email" />
+				</div>
+				<div class="clearfix" />
+				<div t-attf-class="mb-1 #{error.get('company_name') and 'o_has_error' or ''} col-xl-6 d-none">
+					<label class="col-form-label label-optional" for="company_name">
+						Nombre de la compañía
+					</label>
+					<!--
+					The <input> use "disabled" attribute to avoid sending an unauthorized value on form submit.
+					The user might not have rights to change company_name but should still be able to see it.
+					-->
+					<input type="text" name="company_name" t-attf-class="form-control #{error.get('company_name') and 'is-invalid' or ''}" t-att-value="company_name or partner.commercial_company_name" t-att-readonly="None if partner_can_edit_vat else '1'" />
+					<small t-if="not partner_can_edit_vat" class="form-text text-muted d-block d-xl-none">
+						Estimado cliente, por motivos de seguridad, le informamos que no es posible modificar directamente su tipo y número de documento, RUC, Razón social ni su dirección inicial en su cuenta; sin embargo, tiene la opción de añadir direcciones adicionales sin ningún problema. Si requiere realizar algún cambio en los datos no editables, por favor, póngase en contacto con nosotros vía correo electrónico a [correo] para asistirlo
+					</small>
+				</div>
+				<div t-attf-class="mb-3 #{error.get('phone') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label" for="phone">
+						Teléfono
+					</label>
+					<input type="tel" name="phone" t-attf-class="form-control #{error.get('phone') and 'is-invalid' or ''}" t-att-value="phone or partner.phone" />
+				</div>
+				<div class="clearfix" />
+				<h6 class="mt-3">
+					Dirección de contacto
+				</h6>
+				<hr />
+				<div t-attf-class="mb-3 #{error.get('country_id') and 'o_has_error' or ''} col-xl-12 d-none">
+					<label class="col-form-label" for="country_id">
+						País
+					</label>
+					<select name="country_id" t-attf-class="form-select #{error.get('country_id') and 'is-invalid' or ''}" t-att-readonly="None if partner_can_edit_vat else '1'">
+						<option value="">
+							País...
+						</option>
+						<t t-foreach="countries or []" t-as="country">
+							<option t-att-value="country.id" t-att-selected="country.id == int(country_id) if country_id else (partner.country_id.id and country.id == partner.country_id.id) or country.id == 173">
+								<t t-esc="country.name" />
+							</option>
+						</t>
+					</select>
+					<small t-if="not partner_can_edit_vat" class="form-text text-muted d-block d-xl-none">
+						Estimado cliente, por motivos de seguridad, le informamos que no es posible modificar directamente su tipo y número de documento, RUC, Razón social ni su dirección inicial en su cuenta; sin embargo, tiene la opción de añadir direcciones adicionales sin ningún problema. Si requiere realizar algún cambio en los datos no editables, por favor, póngase en contacto con nosotros vía correo electrónico a [correo] para asistirlo
+					</small>
+				</div>
+				<div t-attf-class="mb-3 #{error.get('state_id') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label">
+						Departamento
+					</label>
+					<select name="state_id" t-attf-class="form-select #{error.get('state_id') and 'is-invalid' or ''}">
+						<option value="">
+							Seleccione...
+						</option>
+						<t t-foreach="states or []" t-as="state">
+							<option t-att-value="state.id" class="d-none" t-att-data-country_id="state.country_id.id" t-att-selected="state.id == int(state_id) if state_id else state.id == partner.state_id.id">
+								<t t-esc="state.name" />
+							</option>
+						</t>
+					</select>
+				</div>
+				<!-- Provincia (res.city) -->
+				<div t-attf-class="mb-3 #{error.get('city_id') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label" for="city_id">
+						Provincia
+					</label>
+					<select name="city_id" class="form-select" id="city_id">
+						<option value="">
+							Seleccione...
+						</option>
+						<t t-if="partner.city_id">
+							<t t-foreach="cities" t-as="city">
+								<option t-att-value="city.id" t-att-selected="city.id == int(city_id) if city_id else city.id == partner.city_id.id">
+									<t t-esc="city.name" />
+								</option>
+							</t>
+						</t>
+					</select>
+				</div>
+				<!-- Distrito -->
+				<div t-attf-class="mb-3 #{error.get('l10n_pe_district') and 'o_has_error' or ''} col-xl-12">
+					<label class="col-form-label" for="l10n_pe_district">
+						Distrito
+					</label>
+					<select name="l10n_pe_district" class="form-select" id="district_select">
+						<option value="">
+							Seleccione...
+						</option>
+						<t t-if="partner.l10n_pe_district">
+							<t t-foreach="districts" t-as="district">
+								<option t-att-value="district.id" t-att-zip="district.code" t-att-selected="district.id == int(l10n_pe_district) if l10n_pe_district else district.id == partner.l10n_pe_district.id">
+									<t t-esc="district.name" />
+								</option>
+							</t>
+						</t>
+					</select>
+				</div>
+				<div t-attf-class="mb-3 #{error.get('street') and 'o_has_error' or ''} col-xl-6">
+					<label class="col-form-label" for="street">
+						Dirección
+					</label>
+					<input type="text" name="street" t-attf-class="form-control #{error.get('street') and 'is-invalid' or ''}" t-att-value="street or partner.street" />
+				</div>
+				<div id="div_mercado" class="d-block col-md-12 mb-2">
+					<label class="col-form-label" for="o_mercado">
+						Mercado
+					</label>
+					<select id="o_mercado" name="mercado" class="form-select">
+						<option value="">
+							Selecciona una opción
+						</option>
+						<option value="1" t-att-selected="'1' == str(partner.mercado)">
+							Agropecuario
+						</option>
+						<option value="4" t-att-selected="'4' == str(partner.mercado)">
+							Gran Minería
+						</option>
+						<option value="5" t-att-selected="'5' == str(partner.mercado)">
+							Minería
+						</option>
+						<option value="17" t-att-selected="'17' == str(partner.mercado)">
+							Marino
+						</option>
+						<option value="34" t-att-selected="'34' == str(partner.mercado)">
+							Utilities
+						</option>
+						<option value="35" t-att-selected="'35' == str(partner.mercado)">
+							Oil&amp;Gas
+						</option>
+						<option value="37" t-att-selected="'37' == str(partner.mercado)">
+							UGMI, Drilling
+						</option>
+						<option value="38" t-att-selected="'38' == str(partner.mercado)">
+							Automotriz
+						</option>
+						<option value="40" t-att-selected="'40' == str(partner.mercado)">
+							Portuario
+						</option>
+						<option value="41" t-att-selected="'41' == str(partner.mercado)">
+							Industrial
+						</option>
+						<option value="42" t-att-selected="'42' == str(partner.mercado)">
+							Construcción
+						</option>
+						<option value="43" t-att-selected="'43' == str(partner.mercado)">
+							Clientes diversos
+						</option>
+					</select>
+				</div>
+				<div t-attf-class="mb-3 #{error.get('street2') and 'o_has_error' or ''} col-xl-6 d-none">
+					<label class="col-form-label" for="street2">
+						Dirección 2
+					</label>
+					<input type="text" name="street2" t-attf-class="form-control #{error.get('street2') and 'is-invalid' or ''}" t-att-value="street2 or partner.street2" />
+				</div>
+				<div t-attf-class="mb-3 #{error.get('zip') and 'o_has_error' or ''} col-xl-6 d-none">
+					<label class="col-form-label label-optional" for="zipcode">
+						Código postal
+					</label>
+					<input type="text" name="zipcode" t-attf-class="form-control #{error.get('zip') and 'is-invalid' or ''}" t-att-value="zipcode or partner.zip" />
+				</div>
+				<script type="text/javascript" src="/custom_myr_cummins_payment/static/src/js/form.js" />
+			</t>
+		</xpath>
+	</template>
+</odoo>

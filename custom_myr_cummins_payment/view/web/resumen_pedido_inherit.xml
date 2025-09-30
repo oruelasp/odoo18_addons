@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="resumen_pedido_inherit" inherit_id="website_sale.checkout_layout" name="Modificar clases del acordeón en checkout">
+        <xpath expr="//div[@id='o_wsale_total_accordion_item']" position="attributes">
+            <attribute name="class" remove="accordion"/>
+        </xpath>
+        <xpath expr="//div[@id='o_wsale_accordion_item']" position="attributes">
+            <attribute name="class" add=" show"/>
+            <attribute name="style">
+                overflow-y: auto; height: auto; max-height: 250px;
+            </attribute>
+        </xpath>
+    </template>
+</odoo>

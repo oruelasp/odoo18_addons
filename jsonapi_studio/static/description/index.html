@@ -1,0 +1,639 @@
+<!-- Header Section -->
+<section id="ekika-header-content" class="text-dark">
+    <!-- Ekika Logo -->
+    <div class="container mb-4">
+        <div class="d-flex justify-content-around text-dark">
+            <div class="align-self-center">
+                <div class="align-self-center p-4 border rounded shadow"><img src="assets/ekika-assets/EKIKA-Logo.png"
+                        loading="lazy" height="50px" alt="Ekika">
+                </div>
+                <div class="w-100 mt-3 shadow-lg fs-5 p-2 text-center border rounded-3">
+                    <a href="mailto:hello@ekika.co" class="text-dark">Email: hello@ekika.co</a>
+                </div>
+            </div>
+            <div class="" style="width: 42%;"> <!-- w-25 -->
+                <table class="table table-bordered text-center shadow">
+                    <tbody class="text-center">
+                        <tr>
+                            <th style="width:30%" class="p-1 text-muted">Supported Versions</th> <!-- small -->
+                            <th>12.0</th>
+                            <th>13.0</th>
+                            <th>14.0</th>
+                            <th>15.0</th>
+                            <th>16.0</th>
+                            <th>17.0</th>
+                            <th>18.0</th>
+                        </tr>
+                        <tr>
+                            <td class="p-1 text-secondary">Community</td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                        </tr>
+                        <tr>
+                            <td class="p-1 text-primary">Enterprise</td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                            <td class="p-1"><i class="fa fa-check-square-o"></i></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="w-100 shadow-lg fs-5 p-2 text-center border rounded-3">
+                    https://www.ekika.co/support
+                </p>
+            </div>
+        </div>
+    </div>
+    <ul class="fs-3">
+        <li>Our All API Addons: <a href="https://apps.odoo.com/apps/modules/browse?author=EKIKA&search=api&series=18.0">EKIKA API Addons</a></li>
+        <li>All-in-One is "api_framework" (Buy): <a href="https://apps.odoo.com/apps/modules/18.0/api_framework">Easy API Framework</a></li>
+    <ul>
+</section>
+
+<!-- Start App Header section Content -->
+<div class="container text-center mt-5">
+    <div class="text-success">
+        <span class="text-dark fs-4 text-center">
+        <h2 class="text-success m-0"><span class="border-5 border-bottom">
+            Odoo REST Json:API Custom Endpoint Studio
+            </span></h2>
+            <small class="fs-6">with</small>
+            <h3 class="m-0">EKIKA's "api_framework"</h3>
+        </span>
+    </div>
+</div>
+
+<!-- Start Content Section -->
+<section id="features" class="container-fluid rounded shadow-lg border my-5">
+    <img class="rounded shadow-sm img-fluid position-absolute h-100 w-100" src="assets/bg/1.jpg" loading="lazy"
+        style="z-index: 0; opacity: 0.5;" />
+    <div id="features-tabs" class="rounded m-3" style="z-index: 10;">
+        <ul role="tablist" class="nav nav-tabs justify-content-center pt-3 rounded-top fs-5" data-tabs="tabs"
+            style="background-color: #001F3F; border: 0;">
+
+            <!-- Tab-Nav: overview -->
+            <li class="nav-item mt-auto mx-2" style="background-color: #b5daff;">
+                <a href="#overview" class="nav-link rounded-0 active" data-bs-toggle="tab" style="color: #001F3F;">
+                    <span style="font-weight: 400;">Features</span>
+                </a>
+            </li>
+
+            <!-- Tab-Nav: other -->
+            <!-- <li class="nav-item mt-auto mx-2" style="background-color: #b5daff;">
+                <a href="#other" class="nav-link rounded-0" data-bs-toggle="tab" style="color: #001F3F;">
+                    <span style="font-weight: 400;">Additional Note</span>
+                </a>
+            </li> -->
+
+            <!-- Tab-Nav: FAQs -->
+            <li class="nav-item mt-auto mx-2" style="background-color: #b5daff;">
+                <a href="#faqs" class="nav-link rounded-0" data-bs-toggle="tab" style="color: #001F3F;">
+                    <span style="font-weight: 400;">FAQs</span>
+                </a>
+            </li>
+
+            <!-- Tab-Nav: Support -->
+            <li class="nav-item mt-auto mx-2" style="background-color: #b5daff;">
+                <a href="#support" class="nav-link rounded-0" data-bs-toggle="tab" style="color: #001F3F;">
+                    <span style="font-weight: 400;">Support</span>
+                </a>
+            </li>
+
+        </ul>
+        <div class="tab-content rounded-bottom py-2 bg-white"
+            style="border-top: 0px !important; border: 2px solid #001F3F;">
+
+            <!-- Started Tab-Content: overview -->
+            <div id="overview" class="tab-pane active">
+                <div id="api-auth-public-explanation-tab" class="p-4">
+                    <div>
+                        <p>This module allows you to create your custom API endpoints using the JsonAPI standard, tailored to your specific business needs. It leverages the powerful features of the api_framework, including support for multiple authentication methods, CORS (Cross-Origin Resource Sharing) configurations, and much more. This allows you to build secure, scalable, and efficient APIs that seamlessly integrate with your Odoo environment. <span class="fw-bold" style="color: #017b1c">Simply define a Python method, and your API endpoint will be ready to use.</span></p>
+                        <h3 class="m-0" id="jsonapi-studio-works" style="font-family: 'Open Sans', 'Helvetica', 'Sans';">Configuring API</h3>
+                        <img src="assets/images/API-Configuration-1.png" class="oe_screenshot my-2 w-100" alt="API Configuration"/>
+                        <h3 class="mt-3" id="jsonapi-studio-works" style="font-family: 'Open Sans', 'Helvetica', 'Sans';">How It Works:</h3>
+                        <ul>
+                            <li>To create a custom API endpoint, define methods within the "<span class="fw-bold" style="color: #017b1c">easy.jsonapi.customstudio</span>" model. You can find the relevant file at: "<span class="fw-bold" style="color: #017b1c">/models/custom_jsonapi_studio.py</span>".</li>
+                            <li>Use the "<span class="fw-bold" style="color: #017b1c">def my_custom_jsonapis(cls)</span>" method to define your endpoint. Ensure the method returns a list of endpoints.</li>
+                            <li>Define a method matching one of the names in the list above. Ensure it accepts "<span class="fw-bold" style="color: #017b1c">query(JsonAPIQuery)</span>" as a parameter.</li>
+                            <li>The methods you implement must return a dictionary object, and this object should contain at least the <span class="fw-bold" style="color: #017b1c">data</span> or <span class="fw-bold" style="color: #017b1c">errors</span> key. you may contain <span class="fw-bold" style="color: #017b1c">links</span> and <span class="fw-bold" style="color: #017b1c">included</span> in dictionary, for more information Refer <span class="fw-bold" style="color: #017b1c">JsonAPI(https://jsonapi.org/format/1.1/)</span>.</li>
+                            <li>Access your defined custom endpoints using the following format: <span class="fw-bold" style="color: #017b1c">{your-web-domain[:port]}/{your-api-endpoint}/{your-custom-endpoint}</span>.</li>
+                            <li>For more detail please refer below examples:</li>
+                        </ul>
+                        <div class="tab-pane col-12">
+                            <pre class="bg-200 p-2 border shadow-sm" style="font-family: monospace;">
+*** python ***
+
+from odoo import models
+from odoo.http import request
+from odoo.addons.easy_jsonapi.models.easy_jsonapi import JsonAPIQuery
+
+
+class MyJsonAPICustomStudio(models.AbstractModel):
+    _inherit = 'easy.jsonapi.customstudio'
+
+    @classmethod
+    def my_custom_jsonapis(cls):
+        res = super().my_custom_jsonapis()
+        res.extend([
+            'getContacts',
+            'getContactDetails',
+            'createContact',
+            'resetPasswordMail'
+        ])
+        return res
+
+    @classmethod
+    def getContacts(cls, query: JsonAPIQuery) -> dict:
+        try:
+            partners = request.env['res.partner'].search_read([], fields=['name', 'email'])
+            result = {'data': {'contacts': partners}}
+        except Exception as exc:
+            result = {'errors': exc.args}
+        return result
+
+    @classmethod
+    def getContactDetails(cls, query: JsonAPIQuery) -> dict:
+        try:
+            partner = request.env['res.partner'].browse(int(query.params['partner_id']))
+            result = {'data': {'contactDetails': partner.read(fields=['name', 'email', 'phone'])}}
+        except Exception as exc:
+            result = {'errors': exc.args}
+        return result
+
+    @classmethod
+    def createContact(cls, query: JsonAPIQuery) -> dict:
+        try:
+            data = request.get_json_data()
+            partner = request.env['res.partner'].create({'name': data['name'], 'email': data['email']})
+            result = {'data': {'contactDetails': partner.read(fields=['name', 'email'])}}
+        except Exception as exc:
+            result = {'errors': exc.args}
+        return result
+
+    @classmethod
+    def resetPasswordMail(cls, query: JsonAPIQuery) -> dict:
+        try:
+            user = request.env['res.users'].browse(int(query.params['user_id']))
+            user.action_reset_password()
+            result = {'data': {'message': 'Password reset email sent successfully.'}}
+        except Exception as exc:
+            result = {'errors': {'message': 'Failed to send the password reset email.'}}
+        return result
+</pre>
+                        </div>
+                        <h3 class="mt-4" style="font-family: 'Open Sans', 'Helvetica', 'Sans';">Request Considering above Examples:</h3>
+
+                        <!-- Get Contacts -->
+                        <h4 class="align-items-center d-flex py-1 list-unstyled mb-0 mt-4 justify-content-center" style="font-family: 'Open Sans', 'Helvetica', 'Sans';"><img src="assets/ekika-assets/bullet-tick.png" class="img-fluid me-2" alt="Round" style="width: 20px;"><b class="border-bottom border-primary" style="color: #001F3F;">Get Contacts</b></h4>
+                        <img src="/assets/images/get-partner-list-request.png" class="oe_screenshot my-2 w-100" alt="Get Partner List Request "/>
+                        <div class="sourceCode" id="python-code">
+                            <pre class="bg-200 p-1 py-2 border" style="line-height:1; font-family: monospace;">
+*** python ***
+
+import requests
+import json
+
+url = "https://api-16.dev.odoo-apps.ekika.co/user-jsonapi-apikey/getContacts"
+
+payload = {}
+headers = {
+    'Content-Type': 'application/vnd.api+json',
+    'x-api-key': 'YOUR-API-KEY'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+</pre>
+                        </div>
+
+                        <!-- Get Contact Details -->
+                        <h4 class="align-items-center d-flex py-1 list-unstyled mb-0 mt-4 justify-content-center" style="font-family: 'Open Sans', 'Helvetica', 'Sans';"><img src="assets/ekika-assets/bullet-tick.png" class="img-fluid me-2" alt="Round" style="width: 20px;"><b class="border-bottom border-primary" style="color: #001F3F;">Get Contact Details</b></h4>
+                        <img src="/assets/images/get-partner-details-request.png" class="oe_screenshot my-2 w-100" alt="Get Partner Details Request"/>
+                        <div class="sourceCode" id="python-code">
+                            <pre class="bg-200 p-1 py-2 border" style="line-height:1; font-family: monospace;">
+*** python ***
+
+import requests
+import json
+
+url = "https://api-16.dev.odoo-apps.ekika.co/user-jsonapi-apikey/getContactDetails?partner_id=3"
+
+payload = {}
+headers = {
+  'Content-Type': 'application/vnd.api+json',
+  'x-api-key': 'YOUR-API-KEY'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+</pre>
+                        </div>
+
+                        <!-- Create Contact -->
+                        <h4 class="align-items-center d-flex py-1 list-unstyled mb-0 mt-4 justify-content-center" style="font-family: 'Open Sans', 'Helvetica', 'Sans';"><img src="assets/ekika-assets/bullet-tick.png" class="img-fluid me-2" alt="Round" style="width: 20px;"><b class="border-bottom border-primary" style="color: #001F3F;">Create Contact</b></h4>
+                        <img src="/assets/images/create-partner-request.png" class="oe_screenshot my-2 w-100" alt="Create Partner Request"/>
+                        <div class="sourceCode" id="python-code">
+                            <pre class="bg-200 p-1 py-2 border" style="line-height:1; font-family: monospace;">
+*** python ***
+
+import requests
+import json
+
+url = "https://api-16.dev.odoo-apps.ekika.co/user-jsonapi-apikey/createContact"
+
+payload = json.dumps({
+  "name": "sample partner 1",
+  "email": "sample-partner-1@example.com"
+})
+headers = {
+  'Content-Type': 'application/vnd.api+json',
+  'x-api-key': 'YOUR-API-KEY'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+</pre>
+                        </div>
+
+                        <!-- Reset Password Mail -->
+                        <h4 class="align-items-center d-flex py-1 list-unstyled mb-0 mt-4 justify-content-center" style="font-family: 'Open Sans', 'Helvetica', 'Sans';"><img src="assets/ekika-assets/bullet-tick.png" class="img-fluid me-2" alt="Round" style="width: 20px;"><b class="border-bottom border-primary" style="color: #001F3F;">Reset Password Mail</b></h4>
+                        <img src="/assets/images/reset-password-mail.png" class="oe_screenshot my-2 w-100" alt="Reset Password Mail"/>
+                        <div class="sourceCode" id="python-code">
+                            <pre class="bg-200 p-1 py-2 border m-0" style="line-height:1; font-family: monospace;">
+*** python ***
+
+import requests
+import json
+
+url = "https://api-16.dev.odoo-apps.ekika.co/user-jsonapi-apikey/resetPasswordMail?user_id=6"
+
+payload = {}
+headers = {
+  'Content-Type': 'application/vnd.api+json',
+  'x-api-key': 'YOUR-API-KEY'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Started Tab-Content: FAQs -->
+            <div id="faqs" class="tab-pane">
+                <div id="faqs-tab" class="p-4">
+            
+                    <div id="faqs-tab-content">
+                        <section class="px-4">
+                            <h2>Frequently Asked Questions (FAQs)</h2>
+                            <p class="fs-4">
+                                Find answers of common questions you might have about this addon. If you don't see your question
+                                addressed here, feel free to contact us!
+                            </p>
+                            <div id="accordion-content">
+                                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                        
+                                    <!-- FAQ 1: Need Changes -->
+                                    <div class="panel-group py-2">
+                                        <div class="panel panel-default p-0 rounded-1" style="background-color: #001F3F !important; color: white;">
+                                            <div class=" panel-heading p-2">
+                                                <h4 class="panel-title px-4 py-2 m-0" style="background-color: white; border-radius: 100px;">
+                                                    <a href="#new-feature" class="collapsed" data-bs-toggle="collapse" aria-expanded="false"
+                                                        style="color: #001F3F;">
+                                                        <div class="d-flex justify-content-between">
+                                                            Need Changes? Request New Feature Now!
+                                                            <span>
+                                                                <span id="new-feature"
+                                                                    class="position-absolute panel-collapse collapse">+</span>
+                                                                <span id="new-feature"
+                                                                    class="position-absolute panel-collapse collapse show">-</span>
+                                                                &nbsp;
+                                                                &nbsp;
+                                                            </span>
+                                                        </div>
+                                                    </a>
+                                                </h4>
+                                            </div>
+                                            <div id="new-feature" class="p-4 fs-5 panel-collapse collapse show" style="min-height: 125px;">
+                                                <p>Contact Us:</p>
+                                                <ul class="text-success">
+                                                    <li>Whats App / Phone: <span class="text-white">+919510031431</span>
+                                                        --
+                                                        URGENT
+                                                    </li>
+                                                    <li>EMail: <span class="text-white">hello@ekika.co</span></li>
+                                                    <li>Skype: <span class="text-white">amshukla17</span></li>
+                                                    <li>Website: <span class="text-white">https://ekika.co</span></li>
+                                                    <li>Support Ticket: <span class="text-white">https://ekika.co/support</span>
+                                                        --
+                                                        Get Notifications of Progress.</li>
+                                                    <li>24 x 7 Available! Contact us NOW.</li>
+                                                </ul>
+                                                <p>
+                                                    We love hearing your ideas for improvement! If you have a feature in
+                                                    mind
+                                                    that
+                                                    would make your Odoo experience even better, simply contact us.
+                                                    We're happy
+                                                    to
+                                                    discuss your needs and explore the best way to implement them.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                    <!-- FAQ 2: How We Can Help? -->
+                                    <div class="panel-group py-2">
+                                        <div class="panel panel-default p-0 rounded-1" style="background-color: #001F3F !important; color: white;">
+                                            <div class=" panel-heading p-2">
+                                                <h4 class="panel-title px-4 py-2 m-0" style="background-color: white; border-radius: 100px;">
+                                                    <a href="#ekika-services-faq" class="" data-bs-toggle="collapse" aria-expanded="false"
+                                                        style="color: #001F3F;">
+                                                        <div class="d-flex justify-content-between">
+                                                            How We Can Help?
+                                                            <span>
+                                                                <span id="ekika-services-faq"
+                                                                    class="position-absolute panel-collapse collapse show">+</span>
+                                                                <span id="ekika-services-faq"
+                                                                    class="position-absolute panel-collapse collapse">-</span>
+                                                                &nbsp;
+                                                                &nbsp;
+                                                            </span>
+                                                        </div>
+                                                    </a>
+                                                </h4>
+                                            </div>
+                                            <div id="ekika-services-faq" class="p-4 fs-5 panel-collapse collapse" style="min-height: 125px;">
+                                                <p>
+                                                    We offer a wide range of Odoo services to help you at any stage,
+                                                    from
+                                                    initial
+                                                    setup
+                                                    ("implementation") to ongoing customization and support. This
+                                                    includes:
+                                                </p>
+                                                <ul class="text-warning">
+                                                    <li>Adding new features and functionalities ("addons development")
+                                                    </li>
+                                                    <li>Changing behaviour of whole system ("server and structure level
+                                                        changes")
+                                                    </li>
+                                                    <li>Server maintenance and configuration changes ("nginx /
+                                                        filestores / size
+                                                        issues
+                                                        etc.")</li>
+                                                    <li>Integration with other systems</li>
+                                                    <li>RESTful APIs, WebHooks, Slave-Master DB, Real-time data
+                                                        communication
+                                                        ("socket
+                                                        connection") etc.</li>
+                                                    <li>Improving app performance and user experience ("performance
+                                                        tuning" and
+                                                        "UI/UX
+                                                        design")</li>
+                                                    <li>Secure and reliable managed hosting solutions</li>
+                                                    <li>Annual maintenance contracts to keep your Odoo running smoothly
+                                                        and so
+                                                        much
+                                                        more...</li>
+                                                </ul>
+                                                <p>
+                                                    Basically, we're your one-stop shop for all things Odoo! We offer
+                                                    premium
+                                                    services
+                                                    at competitive rates.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                        
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Started Tab-Content: Support -->
+            <div id="support" class="tab-pane">
+                <div id="support-tab" class="p-4">
+            
+                    <div id="support-tab-content">
+                        <div class="container text-center py-4">
+                            <div class="row justify-content-center">
+                                <div class="col-md-10 text-center">
+                                    <h2 class="display-4 mb-4">Need Help?</h2>
+                                    <p class="fs-3 lead text-primary">EKIKA Has Your Back - 24/7 Support.</p>
+                                    <p class="bg-white border shadow-lg p-4 rounded-3 fs-3">
+                                        We're just a message away, no matter the time zone.
+                                    </p>
+                                    <p class="p-3 mt-n5">
+                                        <span class="bg-dark text-white border shadow px-4 py-2 rounded-3 fs-4">90 Days
+                                            Free Support</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-dark text-center fs-4">
+                            We understand that even with great documentation, you might have questions or need
+                            additional assistance. That's why we offer exceptional support for "<a href="https://apps.odoo.com/apps/modules/18.0/api_framework" class="text-danger">api_framework</a>".</p>
+                        <div class="container text-center">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card text-center shadow border rounded bg-white h-100">
+                                        <div class="card-body d-flex flex-column p-0">
+                                            <div class="p-1 fs-6 bg-warning">
+                                            </div>
+                                            <div class="p-4">
+                                                <img src="assets/ekika-assets/doc-pencil.svg" />
+                                            </div>
+                                            <div class="px-2 pb-4 fs-4 text-dark">
+                                                https://ekika.co/api
+                                            </div>
+                                            <div class="p-2 fs-5 bg-dark text-white mt-auto">
+                                                Documentation & User Guide<br />
+                                                <span class="text-danger fs-6">(copy link to clipboard)</span>
+                                            </div>
+                                            <!-- <hr class="my-1"/> -->
+            
+                                            <div class="p-1 bg-warning">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card text-center shadow border rounded bg-white h-100">
+                                        <div class="card-body d-flex flex-column p-0">
+                                            <div class="p-1 fs-6 bg-warning">
+                                            </div>
+                                            <div class="p-4">
+                                                <img src="assets/ekika-assets/video.svg" />
+                                            </div>
+                                            <div class="px-2 pb-4 fs-4 text-dark">
+                                                https://www.youtube.com/@ekika_co/videos
+                                            </div>
+                                            <div class="p-2 fs-5 bg-dark text-white mt-auto">
+                                                Video Guide<br />
+                                                <span class="text-danger fs-6">(copy link to clipboard)</span>
+                                            </div>
+                                            <!-- <hr class="my-1"/> -->
+            
+                                            <div class="p-1 bg-warning">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card text-center shadow border rounded bg-white h-100">
+                                        <div class="card-body d-flex flex-column p-0">
+                                            <div class="p-1 fs-6 bg-warning">
+                                            </div>
+                                            <div class="p-4">
+                                                <img src="assets/ekika-assets/doc-pencil.svg" />
+                                            </div>
+                                            <div class="px-2 pb-4 fs-4 text-dark">
+                                                https://ekika.co/support
+                                            </div>
+                                            <div class="p-2 fs-5 bg-dark text-success mt-auto">
+                                                Support<br />
+                                                <span class="text-warning fs-6">(copy link to clipboard)</span>
+                                            </div>
+                                            <!-- <hr class="my-1"/> -->
+            
+                                            <div class="p-1 bg-warning">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            
+                    </div>
+            
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Our Other Apps -->
+<section id="our-other-apps" class="rounded">
+    <div class="oe_screenshot border rounded shadow p-5 text-white" style="background-color: #001F3F;">
+      <a href="https://apps.odoo.com/apps/modules/browse?series=18.0&search=Ekika" target="_blank">
+        <div class="col-md-12 col-sm-12 mt32" style="padding:8px; font-size:18px; line-height:initial">
+            <h4 class="oe_slogan mt0 align-items-center m-0 fs-3 text-white"><b>Our Other Apps</b></h4>
+        </div>
+      </a>
+      <div id="demo" class="row carousel slide mt32 mb32">
+        <div id="apps-card">
+          <div class="row justify-content-center" style="justify-content: center;">
+            <div class="col-md-4 p-2">
+              <a href="https://apps.odoo.com/apps/modules/18.0/api_framework" target="_blank">
+                <div style="border-radius:10px">
+                  <img class="img img-responsive w-100 center-block" style="border-radius:10px; border: 2px solid white;"
+                    alt="Odoo RESTful API Framework with JsonAPI, GraphQL and more" src="assets/other-apps/api_framework.png">
+                </div>
+              </a>
+            </div>
+            <div class="col-md-4 p-2">
+              <a href="https://apps.odoo.com/apps/modules/18.0/api_auth_oauth2" target="_blank">
+                <div style="border-radius:10px">
+                  <img class="img img-responsive w-100 center-block" style="border-radius:10px; border: 2px solid white;"
+                    alt="API OAuth2 Authentication" src="assets/other-apps/api_auth_oauth2.png">
+                </div>
+              </a>
+            </div>
+            <div class="col-md-4 p-2">
+              <a href="https://apps.odoo.com/apps/modules/18.0/api_framework_base" target="_blank">
+                <div style="border-radius:10px">
+                  <img class="img img-responsive w-100 center-block" style="border-radius:10px; border: 2px solid white;"
+                    alt="REST API Foundation" src="assets/other-apps/api_framework_base.png">
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
+
+<!-- Our Services -->
+<section id="services-ekika-provides">
+    <div style="background-color:#fff9e5" class="container text-center my-5 p-4 shadow rounded border">
+        
+      <h2 class="my-4" style="color:#001F3F">Services EKIKA Provides</h2>
+      <!-- <h6 style="color:#001F3F; letter-spacing:2px">FEATURES</h6> -->
+      <div class="w-100 d-flex align-items-center flex-column">
+        <p class="w-75">EKIKA is your destination for expert Odoo ERP implementation and customization. We pride ourselves on building reliable, trust-based partnerships that give you full transparency and control over your business processes.</p>
+        <p class="w-75">With over 12 years of experience, we can assist you with eCommerce platforms, production planning, point-of-sale systems, managing inventory adjustments, and providing advanced field worker tracking solutions to optimize your workflows and boost operational efficiency.</p>
+      </div>
+  
+      <div class="row">
+        <!-- Implementation Card -->
+        <div class="col-md-4 mb-4">
+          <div style="border-bottom:5px solid #ffa500;" class="card h-100 rounded-3 shadow">
+            <div class="card-body">
+              <img src="assets/our-services/implementation.png" alt="Ekika Odoo Implementation" class="img-fluid mb-3" style="max-width:120px; height:auto">
+              <h3 class="card-title" style="color:#001f3f">Implementation</h3>
+              <p class="card-text fs-5" style="color:#757575">Utilise Odoo ERP tailored for your business needs for smooth operations.</p>
+            </div>
+            <div class="card-footer" style="background-color: #ffffff; border: none;">
+              <a href="skype:amshukla17?chat" class="btn btn-success rounded py-2 px-4" style="background-color: #001f3f;">Contact Us</a>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Customization Card -->
+        <div class="col-md-4 mb-4">
+          <div style="border-top:5px solid #ffa500;" class="card h-100 rounded-3 shadow">
+            <div class="card-body">
+              <img src="assets/our-services/customization.png" alt="Ekika Odoo Customization" class="img-fluid mb-3" style="max-width:180px; height:auto">
+              <h3 class="card-title" style="color:#001f3f">Customization</h3>
+              <p class="card-text fs-5" style="color:#757575">Personalized adjustments to Odoo modules for seamless management.</p>
+            </div>
+            <div class="card-footer" style="background-color: #ffffff; border: none;">
+              <a href="skype:amshukla17?chat" class="btn btn-success rounded py-2 px-4" style="background-color: #001f3f;">Contact Us</a>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Support Card -->
+        <div class="col-md-4 mb-4">
+          <div style="border-bottom:5px solid #ffa500;" class="card h-100 rounded-3 shadow">
+            <div class="card-body">
+              <img src="assets/our-services/support.png" alt="Ekika Odoo Support" class="img-fluid mb-3" style="max-width:120px; height:auto">
+              <h3 class="card-title" style="color:#001f3f">Support</h3>
+              <p class="card-text fs-5" style="color:#757575">Ongoing assistance and maintenance to optimize your Odoo system's performance.</p>
+            </div>
+            <div class="card-footer" style="background-color: #ffffff; border: none;">
+              <a href="skype:amshukla17?chat" class="btn btn-success rounded py-2 px-4" style="background-color: #001f3f;">Contact Us</a>
+            </div>
+          </div>
+        </div>
+  
+        <div class="w-100 d-flex align-items-center flex-column">
+          <p class="w-75">Are you struggling with disorganized operations, high operational costs, or lack of transparency in your processes? What sets us apart is our commitment to personalized solutions tailored to your unique business needs and our proactive support, ensuring seamless integration and ongoing success.</p>
+          <p class="w-75">Would you like to explore Odoo ERP for your business? Schedule a free consultation with EKIKA today!</p>
+          <div class="my-3 rounded bg-dark" style="border:none; background: silver;">
+            <a href="mailto:hello@ekika.co" class="btn btn-outline-success rounded py-3 px-5 fs-5"><span class="fa fa-envelope" style="font-size:30px;"></span><span class="align-middle px-4">Email</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+</section>
