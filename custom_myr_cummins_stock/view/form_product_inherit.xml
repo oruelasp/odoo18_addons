@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_template_inherit_stock" model="ir.ui.view">
+        <field name="name">product.template.view.form.inherit</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='type']" position="after">
+                <field name="stock_product" />
+                <field name="is_product_sap" />
+                <field name="codigo_sap" />
+                <field name="fecha_registro" />
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

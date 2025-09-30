@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="actiob_server_upper_vals" model="ir.actions.server">
+        <field name="name">Convertir a Mayusculas</field>
+        <!-- Se referencia al modelo de la acción, en este caso 'sale.unify' -->
+        <field name="model_id" ref="sale.model_product_template"/>
+        <!-- 'code' es la parte de Python que se ejecuta al dispararse la acción -->
+        <field name="state">code</field>
+        <field name="code">
+            action = env["ir.actions.actions"]._for_xml_id("custom_myr_cummins_stock.action_upper_windows")
+        </field>
+    </record>
+</odoo>
