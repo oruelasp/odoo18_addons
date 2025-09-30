@@ -9,11 +9,15 @@ class MrpWorkorder(models.Model):
     _order = 'sequence_ref, sequence, id'
 
     sequence_ref = fields.Integer(string='Secuencia de Referencia', default=10)
-    purchase_order_id = fields.Many2one(
+    purchase_order_ids = fields.One2many(
         "purchase.order",
-        string="Orden de Servicio",
-        readonly=True,
+        "workorder_id",
+        string="Ordenes de Servicio",
         copy=False,
+    )
+    purchase_order_count = fields.Integer(
+        compute="_compute_purchase_order_count",
+        string="Nº de Ordenes de Servicio",
     )
     is_subcontract = fields.Boolean(
         related='workcenter_id.is_subcontract',
@@ -21,6 +25,11 @@ class MrpWorkorder(models.Model):
         readonly=True,
         store=True,
     )
+
+    @api.depends('purchase_order_ids')
+    def _compute_purchase_order_count(self):
+        for wo in self:
+            wo.purchase_order_count = len(wo.purchase_order_ids)
 
     def _calc_operation_cost(self, opt):
         duration_expected = opt.duration_expected or 0
@@ -30,8 +39,6 @@ class MrpWorkorder(models.Model):
         self.ensure_one()
         if not self.workcenter_id.is_subcontract:
             raise UserError(_("This work order is not a subcontracting operation."))
-        if self.purchase_order_id:
-            raise UserError(_("A purchase order has already been created for this work order."))
         if not self.workcenter_id.partner_id:
             raise UserError(_("You must configure a Vendor on the subcontracting Work Center."))
         if not self.workcenter_id.product_id:
@@ -45,6 +52,7 @@ class MrpWorkorder(models.Model):
         po_vals = {
             'partner_id': workcenter.partner_id.id,
             'origin': f"{self.production_id.name} - {self.name}",
+            'workorder_id': self.id,
             'order_line': [Command.create({
                 'product_id': product.id,
                 'product_qty': quantity_to_purchase,
@@ -52,7 +60,6 @@ class MrpWorkorder(models.Model):
             })],
         }
         purchase_order = self.env['purchase.order'].create(po_vals)
-        self.purchase_order_id = purchase_order.id
 
         return {
             'type': 'ir.actions.act_window',

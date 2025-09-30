@@ -20,13 +20,23 @@
             <xpath expr="//header" position="inside">
                 <button name="action_create_subcontract_po" string="Crear Orden de Servicio" type="object"
                         class="oe_highlight"
-                        invisible="workcenter_id.is_subcontract == False or purchase_order_id != False"/>
+                        invisible="workcenter_id.is_subcontract == False"/>
             </xpath>
             <xpath expr="//field[@name='workcenter_id']" position="after">
                 <field name="is_subcontract"/>
             </xpath>
-            <xpath expr="//field[@name='production_id']" position="after">
-                <field name="purchase_order_id" invisible="purchase_order_id == False"/>
+            <xpath expr="//group[1]" position="after">
+                <group string="Ordenes de Servicio de Subcontratación" name="subcontracting_pos" invisible="not is_subcontract">
+                    <field name="purchase_order_ids" readonly="1">
+                        <tree>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="date_order"/>
+                            <field name="amount_total"/>
+                            <field name="state"/>
+                        </tree>
+                    </field>
+                </group>
             </xpath>
         </field>
     </record>
@@ -43,7 +53,7 @@
                 <field name="sequence_ref"/>
             </xpath>
             <xpath expr="//field[@name='state']" position="after">
-                <field name="purchase_order_id" optional="hide"/>
+                <field name="purchase_order_count" string="Nº OCs" optional="show"/>
                 <field name="is_subcontract" optional="hide"/>
             </xpath>
         </field>
