@@ -25,8 +25,8 @@
             <xpath expr="//field[@name='workcenter_id']" position="after">
                 <field name="is_subcontract"/>
             </xpath>
-            <xpath expr="//group[1]" position="after">
-                <group string="Ordenes de Servicio de Subcontratación" name="subcontracting_pos" invisible="not is_subcontract">
+            <xpath expr="//notebook" position="inside">
+                <page string="Ordenes de Servicio" name="subcontracting_pos" invisible="not is_subcontract">
                     <field name="purchase_order_ids" readonly="1">
                         <list>
                             <field name="name"/>
@@ -36,7 +36,7 @@
                             <field name="state"/>
                         </list>
                     </field>
-                </group>
+                </page>
             </xpath>
         </field>
     </record>
